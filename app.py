@@ -2,7 +2,7 @@ import sqlite3
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-DB_NAME = 'database.db'
+DB_NAME = 'queue_system.db'
 
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
