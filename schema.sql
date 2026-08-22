@@ -1,5 +1,17 @@
--- (Member 1 will write the CREATE TABLE user here...)
--- (Member 1 will write the CREATE TABLE store here...)
+-- Member 1 (Syahmi): user table
+CREATE TABLE IF NOT EXISTS user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'CUSTOMER'
+);
+-- Member 1 (Syahmi): store table
+CREATE TABLE IF NOT EXISTS store (
+    name TEXT NOT NULL,
+    status TEXT DEFAULT 'PENDING',
+    operating_hours TEXT,
+    estimated_wait_time INTEGER DEFAULT 0
+);
 -- (Member 3 will write the CREATE TABLE service here...)
 -- (Member 3 will write the CREATE TABLE counter here...)
 
