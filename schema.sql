@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS appointment (
     status TEXT DEFAULT 'BOOKED',
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (service_id) REFERENCES service(id)
-)
+);
 
 -- Member 2(Eugene): queue table
 CREATE TABLE IF NOT EXISTS queue (
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS queue (
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (service_id) REFERENCES service(id),
     FOREIGN KEY (counter_id) REFERENCES counter(id)
-)
+);
 
 -- (Member 3 will write the CREATE TABLE queue_history here...)
 
@@ -36,4 +36,4 @@ CREATE TABLE IF NOT EXISTS notification (
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES user(id)
-)
+);
