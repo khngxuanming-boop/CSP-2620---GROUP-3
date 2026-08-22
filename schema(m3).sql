@@ -33,4 +33,4 @@ CREATE TABLE Queue_History (
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (queue_id)
     REFERENCES Queue(queue_id)
-);
+); 
