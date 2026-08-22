@@ -21,16 +21,3 @@ CREATE TABLE Counter (
     FOREIGN KEY (store_id)
     REFERENCES Store(store_id)
 );
-
-
--- =========================================
--- Queue history table
--- =========================================
-CREATE TABLE Queue_History (
-    queue_history_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    queue_id INTEGER NOT NULL,
-    status_changed_to TEXT NOT NULL,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (queue_id)
-    REFERENCES Queue(queue_id)
-); 
