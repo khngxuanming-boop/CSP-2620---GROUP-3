@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS store (
     estimated_wait_time INTEGER DEFAULT 0
 );
 -- (Member 3 will write the CREATE TABLE service here...)
-CREATE TABLE Service (
+CREATE TABLE IF NOT EXISTS Service (
     service_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     service_name TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE Service (
 );
 
 -- (Member 3 will write the CREATE TABLE counter here...)
-CREATE TABLE Counter (
+CREATE TABLE IF NOT EXISTS Counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS queue (
 );
 
 -- (Member 3 will write the CREATE TABLE queue_history here...)
-CREATE TABLE Queue_History (
+CREATE TABLE IF NOT EXISTS Queue_History (
     queue_history_id INTEGER PRIMARY KEY AUTOINCREMENT,
     queue_id INTEGER NOT NULL,
     status_changed_to TEXT NOT NULL,
