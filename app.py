@@ -37,6 +37,26 @@ def store_discovery():
 
     return render_template('stores.html', stores=stores, search_query=search_query)
 
+# User Registration
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        #Receive what they typed in the boxes
+        username = request.form['username']
+        password = request.form['password']
+
+    conn = get_db_connection()
+    #Save into the database as 'CUSTOMER'
+    conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
+    conn.commit()
+    conn.close()
+
+    # Send them to login page
+    return redirect(url_for('login'))
+
+    return render_template('register.html')
+
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
