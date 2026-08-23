@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 
 app = Flask(__name__)
 DB_NAME = 'queue_system.db'
@@ -17,10 +17,83 @@ def init_db():
     conn.close()
 
 #======================================================================
-# -- Member 1: User & Store Api
+# -- Member 1 (Syahmi): User & Store Api
 #======================================================================
 
+# Store Discovery/Main Page
+@app.route('/')
+def store_discovery():
+    # Grab searched text from the web address (if user typed something)
+    search_query = request.args.get('search', '')
 
+    conn = get_db_connection()
+    if search_query:
+        # Search the database for stores matching text typed by the customer
+        stores = conn.execute('SELECT * FROM store WHERE name LIKE ?', ('%' + search_query + '%',)).fetchall()
+    else:
+        # If no search was made, select all store in the database instead
+        stores = conn.execute('SELECT * FROM store').fetchall()
+    conn.close()
+
+    return render_template('stores.html', stores=stores, search_query=search_query)
+
+# User Registration
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        #Receive what they typed in the boxes
+        username = request.form['username']
+        password = request.form['password']
+
+    conn = get_db_connection()
+    #Save into the database as 'CUSTOMER'
+    conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
+    conn.commit()
+    conn.close()
+
+    # Send them to login page
+    return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+# User Login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+    conn = get_db_connection()
+    # Search for the exact username and password
+    user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (username, password)).fetchone()
+    conn.close()
+
+    if user:
+        # Match found
+        return redirect(url_for('store_discovery'))
+    else: 
+        # Match not found
+        return "Incorrect password or username. Please try again!"
+    return render_template('login.html')
+
+# Store registration
+@app.route('/register_store', methods=['GET', 'POST'])
+def register_store():
+    # If the business owner clicks "Submit"
+    if request.method == 'POST':
+        store_name = request.form['name']
+        hours = request.form['hours']
+        
+        conn = get_db_connection()
+        # Insert the new store, automatically setting its status to 'Pending'
+        conn.execute('INSERT INTO store (name, operating_hours, status) VALUES (?, ?, ?)', (store_name, hours, 'PENDING'))
+        conn.commit()
+        conn.close()
+        
+        return redirect(url_for('store_discovery'))
+    # Show the blank store registration form    
+    return render_template('register_store.html')
 
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
