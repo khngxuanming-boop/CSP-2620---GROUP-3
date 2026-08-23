@@ -46,14 +46,14 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
-    conn = get_db_connection()
-    #Save into the database as 'CUSTOMER'
-    conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
-    conn.commit()
-    conn.close()
+        conn = get_db_connection()
+        #Save into the database as 'CUSTOMER'
+        conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
+        conn.commit()
+        conn.close()
 
     # Send them to login page
-    return redirect(url_for('login'))
+        return redirect(url_for('login'))
 
     return render_template('register.html')
 
