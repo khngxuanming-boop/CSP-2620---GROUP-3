@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Discover Stores</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="card" style="max-width: 800px;">
+        <h1>Directory</h1>
+        <form method="GET" action="/">
+            <input type="text" name="search" placeholder="Search for a business..." value="{{ search_query }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1000px;">
+        {% for store in stores %}
+            <div class="card" style="width: 300px;">
+                <h2>{{ store['name'] }}</h2>
+                <p><strong>Status:</strong> {{ store['status'] }}</p>
+                <p><strong>Wait Time:</strong> {{ store['estimated_wait_time'] }} mins</p>
+                <a href="/store/{{ store['id'] }}"><button>View Details</button></a>
+            </div>
+        {% else %}
+            <p>No stores found. Try a different search!</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
