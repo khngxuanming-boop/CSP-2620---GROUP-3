@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 -- Member 1(Syahmi): user table
 CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,6 +17,11 @@ CREATE TABLE IF NOT EXISTS store (
 );
 
 -- (Member 3 will write the CREATE TABLE service here...)
+=======
+-- =========================================
+-- Service table
+-- =========================================
+>>>>>>> feature/member3
 CREATE TABLE IF NOT EXISTS Service (
     service_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
@@ -24,8 +30,14 @@ CREATE TABLE IF NOT EXISTS Service (
     REFERENCES Store(store_id)
 );
 
+<<<<<<< HEAD
 
 -- (Member 3 will write the CREATE TABLE counter here...)
+=======
+-- =========================================
+-- Counter table 
+-- =========================================
+>>>>>>> feature/member3
 CREATE TABLE IF NOT EXISTS Counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
@@ -35,6 +47,7 @@ CREATE TABLE IF NOT EXISTS Counter (
     REFERENCES Store(store_id)
 );
 
+<<<<<<< HEAD
 -- Member 2(Eugene): appoinment table
 CREATE TABLE IF NOT EXISTS appointment (
     appt_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,6 +74,11 @@ CREATE TABLE IF NOT EXISTS queue (
 
 
 -- (Member 3 will write the CREATE TABLE queue_history here...)
+=======
+-- =========================================
+-- Queue history table
+-- =========================================
+>>>>>>> feature/member3
 CREATE TABLE IF NOT EXISTS Queue_History (
     queue_history_id INTEGER PRIMARY KEY AUTOINCREMENT,
     queue_id INTEGER NOT NULL,
