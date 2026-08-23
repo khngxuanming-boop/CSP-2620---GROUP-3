@@ -1,18 +1,20 @@
--- Member 1 (Syahmi): user table
+-- Member 1(Syahmi): user table
 CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     role TEXT DEFAULT 'CUSTOMER'
 );
--- Member 1 (Syahmi): store table
+
+-- Member 1(Syahmi): store table
 CREATE TABLE IF NOT EXISTS store (
     name TEXT NOT NULL,
     status TEXT DEFAULT 'PENDING',
     operating_hours TEXT,
     estimated_wait_time INTEGER DEFAULT 0
 );
--- (Member 3 will write the CREATE TABLE service here...)
+
+-- Member 3(Kh'Ng): service table
 CREATE TABLE Service (
     service_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
@@ -21,7 +23,7 @@ CREATE TABLE Service (
     REFERENCES Store(store_id)
 );
 
--- (Member 3 will write the CREATE TABLE counter here...)
+-- Member 3(Kh'Ng): counter table
 CREATE TABLE Counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
@@ -55,7 +57,7 @@ CREATE TABLE IF NOT EXISTS queue (
     FOREIGN KEY (counter_id) REFERENCES counter(id)
 );
 
--- (Member 3 will write the CREATE TABLE queue_history here...)
+-- Member 3(Kh'Ng): queue_history table
 CREATE TABLE Queue_History (
     queue_history_id INTEGER PRIMARY KEY AUTOINCREMENT,
     queue_id INTEGER NOT NULL,
@@ -73,4 +75,3 @@ CREATE TABLE IF NOT EXISTS notification (
     is_read BOOLEAN DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
->>>>>>> 03ae27ba10caa3814800abe837e4ad5287049f42
