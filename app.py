@@ -57,6 +57,26 @@ def register():
 
     return render_template('register.html')
 
+# User Login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+    conn = get_db_connection()
+    # Search for the exact username and password
+    user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (username, password)).fetchone()
+    conn.close()
+
+    if user:
+        # Match found
+        return redirect(url_for('store_discovery'))
+    else: 
+        # Match not found
+        return "Incorrect password or username. Please try again!"
+    return render_template('login.html')
+
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
