@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Member 1(Syahmi): user table
 CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,8 +29,6 @@ CREATE TABLE IF NOT EXISTS Service (
     REFERENCES Store(store_id)
 );
 
-<<<<<<< HEAD
-
 -- (Member 3 will write the CREATE TABLE counter here...)
 =======
 -- =========================================
@@ -47,7 +44,6 @@ CREATE TABLE IF NOT EXISTS Counter (
     REFERENCES Store(store_id)
 );
 
-<<<<<<< HEAD
 -- Member 2(Eugene): appoinment table
 CREATE TABLE IF NOT EXISTS appointment (
     appt_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +67,6 @@ CREATE TABLE IF NOT EXISTS queue (
     FOREIGN KEY (service_id) REFERENCES service(service_id),
     FOREIGN KEY (counter_id) REFERENCES counter(counter_id)
 );
-
 
 -- (Member 3 will write the CREATE TABLE queue_history here...)
 =======
