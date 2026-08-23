@@ -9,7 +9,6 @@ CREATE TABLE Service (
     REFERENCES Store(store_id)
 );
 
-
 -- =========================================
 -- Counter table 
 -- =========================================
