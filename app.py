@@ -37,64 +37,6 @@ def store_discovery():
 
     return render_template('stores.html', stores=stores, search_query=search_query)
 
-# User Registration
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        #Receive what they typed in the boxes
-        username = request.form['username']
-        password = request.form['password']
-
-    conn = get_db_connection()
-    #Save into the database as 'CUSTOMER'
-    conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
-    conn.commit()
-    conn.close()
-
-    # Send them to login page
-    return redirect(url_for('login'))
-
-    return render_template('register.html')
-
-# User Login
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-    conn = get_db_connection()
-    # Search for the exact username and password
-    user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (username, password)).fetchone()
-    conn.close()
-
-    if user:
-        # Match found
-        return redirect(url_for('store_discovery'))
-    else: 
-        # Match not found
-        return "Incorrect password or username. Please try again!"
-    return render_template('login.html')
-
-# Store registration
-@app.route('/register_store', methods=['GET', 'POST'])
-def register_store():
-    # If the business owner clicks "Submit"
-    if request.method == 'POST':
-        store_name = request.form['name']
-        hours = request.form['hours']
-        
-        conn = get_db_connection()
-        # Insert the new store, automatically setting its status to 'Pending'
-        conn.execute('INSERT INTO store (name, operating_hours, status) VALUES (?, ?, ?)', (store_name, hours, 'PENDING'))
-        conn.commit()
-        conn.close()
-        
-        return redirect(url_for('store_discovery'))
-    # Show the blank store registration form    
-    return render_template('register_store.html')
-
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
