@@ -77,6 +77,24 @@ def login():
         return "Incorrect password or username. Please try again!"
     return render_template('login.html')
 
+# Store registration
+@app.route('/register_store', methods=['GET', 'POST'])
+def register_store():
+    # If the business owner clicks "Submit"
+    if request.method == 'POST':
+        store_name = request.form['name']
+        hours = request.form['hours']
+        
+        conn = get_db_connection()
+        # Insert the new store, automatically setting its status to 'Pending'
+        conn.execute('INSERT INTO store (name, operating_hours, status) VALUES (?, ?, ?)', (store_name, hours, 'PENDING'))
+        conn.commit()
+        conn.close()
+        
+        return redirect(url_for('store_discovery'))
+    # Show the blank store registration form    
+    return render_template('register_store.html')
+
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
