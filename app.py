@@ -1,8 +1,7 @@
 from flask import request, jsonify
 
-# -------------------------------------------------------------------
-# SERVICE MANAGEMENT API
-# -------------------------------------------------------------------
+
+# Service management api
 
 @app.route('/api/service', methods=['POST'])
 def create_service():
@@ -36,3 +35,42 @@ def get_services(store_id):
     conn.close()
 
     return jsonify([dict(row) for row in services]), 200
+
+# Counter managment api
+
+@app.route('/api/counter', methods=['POST'])
+def create_counter():
+    """Create a new counter and assign a service"""
+    data = request.get_json()
+    store_id = data.get('store_id')
+    counter_name = data.get('counter_name') # e.g., "Counter 1"
+    service_id = data.get('service_id')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO Counter (store_id, counter_name, service_id, status) VALUES (?, ?, ?, 'closed')",
+        (store_id, counter_name, service_id)
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'Counter created successfully'}), 201
+
+
+@app.route('/api/counter/<int:counter_id>/status', methods=['PATCH'])
+def toggle_counter_status(counter_id):
+    """Open or close a counter"""
+    data = request.get_json()
+    new_status = data.get('status') # 'open' or 'closed'
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE Counter SET status = ? WHERE counter_id = ?",
+        (new_status, counter_id)
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': f'Counter status updated to {new_status}'}), 200
