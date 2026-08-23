@@ -1,7 +1,7 @@
 -- =========================================
 -- Service table
 -- =========================================
-CREATE TABLE Service (
+CREATE TABLE IF NOT EXISTS Service (
     service_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     service_name TEXT NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE Service (
 -- =========================================
 -- Counter table 
 -- =========================================
-CREATE TABLE Counter (
+CREATE TABLE IF NOT EXISTS Counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE Counter (
 -- =========================================
 -- Queue history table
 -- =========================================
-CREATE TABLE Queue_History (
+CREATE TABLE IF NOT EXISTS Queue_History (
     queue_history_id INTEGER PRIMARY KEY AUTOINCREMENT,
     queue_id INTEGER NOT NULL,
     status_changed_to TEXT NOT NULL,
