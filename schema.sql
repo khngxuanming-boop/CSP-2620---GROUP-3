@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS user (
 );
 -- Member 1 (Syahmi): store table
 CREATE TABLE IF NOT EXISTS store (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     status TEXT DEFAULT 'PENDING',
     operating_hours TEXT,
