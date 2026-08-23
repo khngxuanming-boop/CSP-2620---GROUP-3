@@ -35,26 +35,26 @@ CREATE TABLE Counter (
 
 -- Member 2(Eugene): appoinment table
 CREATE TABLE IF NOT EXISTS appointment (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    appt_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     service_id INTEGER NOT NULL,
     appt_datetime DATETIME NOT NULL,
     status TEXT DEFAULT 'BOOKED',
-    FOREIGN KEY (user_id) REFERENCES user(id),
-    FOREIGN KEY (service_id) REFERENCES service(id)
+    FOREIGN KEY (user_id) REFERENCES user(user_id),
+    FOREIGN KEY (service_id) REFERENCES service(service_id)
 );
 
 -- Member 2(Eugene): queue table
 CREATE TABLE IF NOT EXISTS queue (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    queue_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     service_id INTEGER NOT NULL,
     counter_id INTEGER,
     queue_number TEXT NOT NULL,
     status TEXT DEFAULT 'WAITING',
-    FOREIGN KEY (user_id) REFERENCES user(id),
-    FOREIGN KEY (service_id) REFERENCES service(id),
-    FOREIGN KEY (counter_id) REFERENCES counter(id)
+    FOREIGN KEY (user_id) REFERENCES user(user_id),
+    FOREIGN KEY (service_id) REFERENCES service(service_id),
+    FOREIGN KEY (counter_id) REFERENCES counter(counter_id)
 );
 
 -- Member 3(Kh'Ng): queue_history table
@@ -69,9 +69,9 @@ CREATE TABLE Queue_History (
 
 -- Member 2(Eugene): notification table
 CREATE TABLE IF NOT EXISTS notification (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (user_id) REFERENCES user(user_id)
 );
