@@ -64,10 +64,10 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-    conn = get_db_connection()
-    # Search for the exact username and password
-    user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (username, password)).fetchone()
-    conn.close()
+        conn = get_db_connection()
+        # Search for the exact username and password
+        user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (username, password)).fetchone()
+        conn.close()
 
     if user:
         # Match found
