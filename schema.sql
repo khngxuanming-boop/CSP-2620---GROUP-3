@@ -15,8 +15,13 @@ CREATE TABLE IF NOT EXISTS store (
     estimated_wait_time INTEGER DEFAULT 0
 );
 
--- Member 3(Kh'Ng): service table
-CREATE TABLE Service (
+-- (Member 3 will write the CREATE TABLE service here...)
+=======
+-- =========================================
+-- Service table
+-- =========================================
+>>>>>>> feature/member3
+CREATE TABLE IF NOT EXISTS Service (
     service_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     service_name TEXT NOT NULL,
@@ -24,8 +29,13 @@ CREATE TABLE Service (
     REFERENCES Store(store_id)
 );
 
--- Member 3(Kh'Ng): counter table
-CREATE TABLE Counter (
+-- (Member 3 will write the CREATE TABLE counter here...)
+=======
+-- =========================================
+-- Counter table 
+-- =========================================
+>>>>>>> feature/member3
+CREATE TABLE IF NOT EXISTS Counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
@@ -58,8 +68,13 @@ CREATE TABLE IF NOT EXISTS queue (
     FOREIGN KEY (counter_id) REFERENCES counter(counter_id)
 );
 
--- Member 3(Kh'Ng): queue_history table
-CREATE TABLE Queue_History (
+-- (Member 3 will write the CREATE TABLE queue_history here...)
+=======
+-- =========================================
+-- Queue history table
+-- =========================================
+>>>>>>> feature/member3
+CREATE TABLE IF NOT EXISTS Queue_History (
     queue_history_id INTEGER PRIMARY KEY AUTOINCREMENT,
     queue_id INTEGER NOT NULL,
     status_changed_to TEXT NOT NULL,
