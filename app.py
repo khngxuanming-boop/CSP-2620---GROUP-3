@@ -29,7 +29,7 @@ def store_discovery():
     conn = get_db_connection()
     if search_query:
         # Search the database for stores matching text typed by the customer
-        stores = conn.execute('SELECT * FROM store WHERE name LIKE ?', ('%' + search_query + '%',)).fetchall()
+        stores = conn.execute('SELECT * FROM store WHERE store_name LIKE ?', ('%' + search_query + '%',)).fetchall()
     else:
         # If no search was made, select all store in the database instead
         stores = conn.execute('SELECT * FROM store').fetchall()
@@ -87,7 +87,7 @@ def register_store():
         
         conn = get_db_connection()
         # Insert the new store, automatically setting its status to 'Pending'
-        conn.execute('INSERT INTO store (name, operating_hours, status) VALUES (?, ?, ?)', (store_name, hours, 'PENDING'))
+        conn.execute('INSERT INTO store (store_name, operating_hours, store_status) VALUES (?, ?, ?)', (store_name, hours, 'PENDING'))
         conn.commit()
         conn.close()
         
