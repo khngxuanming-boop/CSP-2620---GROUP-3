@@ -6,11 +6,11 @@ cur = connection. cursor()
 
 # Adding test values
 
-cur.execute("INSERT INTO store (name, operating_hours, status) VALUES ('Trading Cardz Haven', '9 AM - 5PM', 'APPROVED')")
+cur.execute("INSERT INTO store (store_name, operating_hours, store_status) VALUES ('Trading Cardz Haven', '9 AM - 5PM', 'APPROVED')")
 
 cur.execute("INSERT INTO user (username, password, role) VALUES ('testuser', 'password123', 'CUSTOMER')")
 
 connection.commit()
 connection.close()
 
-print ("Databse created successfully.")
+print ("Database created successfully.")
