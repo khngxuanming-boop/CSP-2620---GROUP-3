@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS Service (
 -- Counter table 
 -- =========================================
 >>>>>>> feature/member3
-CREATE TABLE IF NOT EXISTS Counter (
+CREATE TABLE IF NOT EXISTS counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS queue (
 -- Queue history table
 -- =========================================
 >>>>>>> feature/member3
-CREATE TABLE IF NOT EXISTS Queue_History (
+CREATE TABLE IF NOT EXISTS queue_history (
     queue_history_id INTEGER PRIMARY KEY AUTOINCREMENT,
     queue_id INTEGER NOT NULL,
     status_changed_to TEXT NOT NULL,
