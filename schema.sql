@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS Counter (
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
     counter_status TEXT NOT NULL DEFAULT 'Closed',
-    FOREIGN KEY (store_id)
+    FOREIGN KEY (store_id) 
     REFERENCES Store(store_id)
 );
 
