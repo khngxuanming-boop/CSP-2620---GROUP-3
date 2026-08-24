@@ -261,3 +261,7 @@ if __name__ == '__main__':
     init_db()
     print("Database initialized successfully from schema.sql")
     app.run(debug=True, port=5000)
+    
+if __name__ == '__main__':
+    init_db()  # <-- This runs schema.sql and creates queue_system.db
+    app.run(debug=True)

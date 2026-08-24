@@ -16,17 +16,13 @@ CREATE TABLE IF NOT EXISTS store (
 );
 
 -- (Member 3 will write the CREATE TABLE service here...)
-=======
--- =========================================
--- Service table
--- =========================================
->>>>>>> feature/member3
-CREATE TABLE IF NOT EXISTS Service (
+
+CREATE TABLE IF NOT EXISTS service (
     service_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     service_name TEXT NOT NULL,
     FOREIGN KEY (store_id)
-    REFERENCES Store(store_id)
+    REFERENCES store(store_id)
 );
 
 <<<<<<< HEAD
@@ -35,18 +31,14 @@ CREATE TABLE IF NOT EXISTS Service (
 
 >>>>>>> b495fb2 (little change)
 -- (Member 3 will write the CREATE TABLE counter here...)
-=======
--- =========================================
--- Counter table 
--- =========================================
->>>>>>> feature/member3
+
 CREATE TABLE IF NOT EXISTS counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
     counter_status TEXT NOT NULL DEFAULT 'Closed',
     FOREIGN KEY (store_id)
-    REFERENCES Store(store_id)
+    REFERENCES store(store_id)
 );
 
 <<<<<<< HEAD
@@ -78,18 +70,14 @@ CREATE TABLE IF NOT EXISTS queue (
 );
 
 -- (Member 3 will write the CREATE TABLE queue_history here...)
-=======
--- =========================================
--- Queue history table
--- =========================================
->>>>>>> feature/member3
+
 CREATE TABLE IF NOT EXISTS queue_history (
     queue_history_id INTEGER PRIMARY KEY AUTOINCREMENT,
     queue_id INTEGER NOT NULL,
     status_changed_to TEXT NOT NULL,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (queue_id)
-    REFERENCES Queue(queue_id)
+    REFERENCES queue(queue_id)
 ); 
 
 -- Member 2(Eugene): notification table
