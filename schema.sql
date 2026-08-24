@@ -29,6 +29,11 @@ CREATE TABLE IF NOT EXISTS Service (
     REFERENCES Store(store_id)
 );
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> b495fb2 (little change)
 -- (Member 3 will write the CREATE TABLE counter here...)
 =======
 -- =========================================
@@ -44,6 +49,10 @@ CREATE TABLE IF NOT EXISTS Counter (
     REFERENCES Store(store_id)
 );
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b495fb2 (little change)
 -- Member 2(Eugene): appoinment table
 CREATE TABLE IF NOT EXISTS appointment (
     appt_id INTEGER PRIMARY KEY AUTOINCREMENT,
