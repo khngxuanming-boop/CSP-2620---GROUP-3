@@ -95,6 +95,7 @@ def register_store():
     # Show the blank store registration form    
     return render_template('register_store.html')
 
+
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
