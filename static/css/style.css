@@ -1,0 +1,302 @@
+/* UI for Booking, Check-In, and Dashboard Pages */
+:root {
+  --primary: #007aff;
+  --primary-dark: #0066d6;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --background: #f5f5f7;
+  --card: rgba(255, 255, 255, 0.88);
+  --border: rgba(0, 0, 0, 0.08);
+  --shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+}
+
+/* Global Foundation Settings */
+body {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0, 122, 255, 0.08),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(120, 80, 255, 0.06),
+      transparent 35%
+    ),
+    var(--background) !important;
+
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Segoe UI", sans-serif;
+
+  min-height: 100vh;
+}
+
+/* Main Container */
+.container {
+  max-width: 900px;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid var(--border) !important;
+  border-radius: 24px !important;
+
+  box-shadow: var(--shadow) !important;
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* Only lift interactive cards */
+.action-card {
+  cursor: pointer;
+}
+
+.action-card {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12) !important;
+}
+
+.action-card {
+  transform: translateY(-2px);
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5 {
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.text-muted {
+  color: var(--muted) !important;
+}
+
+/* Appointment Header */
+.card-header {
+  background: linear-gradient(135deg, #007aff, #0066d6) !important;
+
+  border: none;
+  border-radius: 24px 24px 0 0 !important;
+
+  padding: 20px;
+}
+
+.card-header h4 {
+  color: white;
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Form */
+.form-label {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.form-control,
+.form-select {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+
+  padding: 12px 15px;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.form-control,
+.form-select {
+  border-color: var(--primary);
+
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12);
+
+  transform: translateY(-1px);
+}
+
+.form-control {
+  background: #f2f2f2;
+  color: #555;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 14px;
+
+  font-weight: 600;
+
+  padding: 11px 20px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007aff, #0066d6);
+
+  border: none;
+
+  box-shadow: 0 6px 18px rgba(0, 122, 255, 0.25);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0084ff, #006bdc);
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3);
+}
+
+.btn-outline-primary,
+.btn-outline-success,
+.btn-outline-danger {
+  border-width: 1.5px;
+}
+
+.btn {
+  transform: translateY(-2px);
+}
+
+.btn {
+  transform: translateY(0);
+}
+
+/* Walk-In / Check-In Cards */
+.action-card {
+  min-height: 300px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  position: relative;
+}
+
+/* subtle background glow */
+
+.action-card::before {
+  content: "";
+
+  position: absolute;
+
+  width: 180px;
+  height: 180px;
+
+  border-radius: 50%;
+
+  top: -80px;
+  right: -60px;
+
+  background: rgba(0, 122, 255, 0.08);
+
+  filter: blur(20px);
+}
+
+.action-card .card-body {
+  position: relative;
+  z-index: 1;
+}
+
+.action-card h1 {
+  font-size: 4rem;
+}
+
+/* Queue Dashboard */
+.display-1 {
+  font-size: clamp(4rem, 12vw, 7rem);
+
+  letter-spacing: -0.06em;
+
+  text-shadow: 0 8px 30px rgba(0, 122, 255, 0.15);
+}
+
+#queueStatus {
+  border-radius: 999px;
+
+  padding: 8px 18px;
+
+  font-size: 0.9rem !important;
+
+  font-weight: 700;
+
+  letter-spacing: 0.04em;
+}
+
+#peopleAhead,
+#waitTime {
+  font-size: 2.2rem;
+}
+
+#cancelQueueBtn {
+  border-radius: 14px;
+  padding: 12px 30px;
+}
+
+/* Toast */
+.toast {
+  border-radius: 16px !important;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
+
+  backdrop-filter: blur(15px);
+}
+
+/* Divider */
+hr {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    margin-top: 30px !important;
+  }
+
+  .action-card {
+    min-height: 250px;
+  }
+
+  .display-1 {
+    font-size: 4.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .action-card {
+    min-height: 230px;
+  }
+
+  .action-card h1 {
+    font-size: 3.5rem;
+  }
+
+  #peopleAhead,
+  #waitTime {
+    font-size: 1.8rem;
+  }
+}
