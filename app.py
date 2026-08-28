@@ -177,10 +177,9 @@ def walk_in_queue():
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
+    
 #======================================================================
-# -- Member 3: Service & Counter Api
+# -- Member 3: Store, Service & Counter API
 #======================================================================
 
 # Service management api
@@ -257,11 +256,142 @@ def toggle_counter_status(counter_id):
 
     return jsonify({'message': f'Counter status updated to {new_status}'}), 200
 
+# Store CRUD API
+
+# READ - Get all stores
+@app.route('/api/stores', methods=['GET'])
+def get_stores():
+    conn = get_db_connection()
+
+    stores = conn.execute(
+        'SELECT * FROM store'
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([dict(row) for row in stores]), 200
+
+# CREATE - Add a new store
+@app.route('/api/stores', methods=['POST'])
+def create_store():
+    data = request.get_json()
+
+    store_name = data.get('store_name')
+    store_status = data.get('store_status', 'PENDING')
+    operating_hours = data.get('operating_hours')
+    estimated_wait_time = data.get('estimated_wait_time', 0)
+
+    if not store_name:
+        return jsonify({
+            'error': 'store_name is required'
+        }), 400
+
+    conn = get_db_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO store
+        (store_name, store_status, operating_hours, estimated_wait_time)
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            store_name,
+            store_status,
+            operating_hours,
+            estimated_wait_time
+        )
+    )
+
+    conn.commit()
+
+    store_id = cursor.lastrowid
+
+    conn.close()
+
+    return jsonify({
+        'message': 'Store created successfully',
+        'store_id': store_id
+    }), 201
+
+# UPDATE - Update an existing store
+@app.route('/api/stores/<int:store_id>', methods=['PUT'])
+def update_store(store_id):
+    data = request.get_json()
+
+    store_name = data.get('store_name')
+    store_status = data.get('store_status')
+    operating_hours = data.get('operating_hours')
+    estimated_wait_time = data.get('estimated_wait_time')
+
+    conn = get_db_connection()
+
+    existing_store = conn.execute(
+        'SELECT * FROM store WHERE store_id = ?',
+        (store_id,)
+    ).fetchone()
+
+    if not existing_store:
+        conn.close()
+        return jsonify({
+            'error': 'Store not found'
+        }), 404
+
+    conn.execute(
+        """
+        UPDATE store
+        SET store_name = ?,
+            store_status = ?,
+            operating_hours = ?,
+            estimated_wait_time = ?
+        WHERE store_id = ?
+        """,
+        (
+            store_name,
+            store_status,
+            operating_hours,
+            estimated_wait_time,
+            store_id
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'message': 'Store updated successfully'
+    }), 200
+
+# DELETE - Delete a store
+@app.route('/api/stores/<int:store_id>', methods=['DELETE'])
+def delete_store(store_id):
+    conn = get_db_connection()
+
+    existing_store = conn.execute(
+        'SELECT * FROM store WHERE store_id = ?',
+        (store_id,)
+    ).fetchone()
+
+    if not existing_store:
+        conn.close()
+        return jsonify({
+            'error': 'Store not found'
+        }), 404
+
+    conn.execute(
+        'DELETE FROM store WHERE store_id = ?',
+        (store_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'message': 'Store deleted successfully'
+    }), 200
+
 if __name__ == '__main__':
     init_db()
     print("Database initialized successfully from schema.sql")
     app.run(debug=True, port=5000)
-    
-if __name__ == '__main__':
-    init_db()  # <-- This runs schema.sql and creates queue_system.db
-    app.run(debug=True)
