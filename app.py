@@ -393,6 +393,4 @@ def delete_store(store_id):
     }), 200
 
 if __name__ == '__main__':
-    init_db()
-    print("Database initialized successfully from schema.sql")
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, use_reloader=False)
