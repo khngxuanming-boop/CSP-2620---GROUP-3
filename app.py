@@ -102,7 +102,6 @@ def register_store():
 @app.route('/api/appointments', methods=['POST'])
 def create_appointment():
     data = request.get_json()
-
     user_id = data.get('user_id')
     service_id = data.get('service_id')
     appt_datetime = data.get('appt_datetime')
@@ -125,13 +124,11 @@ def create_appointment():
         appt_id = cursor.lastrowid
         conn.close()
 
-        return (
-            jsonify({
+        return jsonify({
                 'message': 'Appointment created successfully!',
                 'appointment_id': appt_id
-            }),
-            201
-        )
+            }),201
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -140,7 +137,6 @@ def create_appointment():
 @app.route('/api/queues/walk-in', methods=['POST'])
 def walk_in_queue():
     data = request.get_json()
-
     user_id = data.get('user_id')
     service_id = data.get('service_id')
     counter_id = data.get('counter_id')
@@ -167,14 +163,12 @@ def walk_in_queue():
         queue_id = cursor.lastrowid
         conn.close()
 
-        return (
-            jsonify({
+        return jsonify({
                 'message': 'Successfully joined the walk-in queue!',
                 'queue_id': queue_id,
                 'queue_number': queue_number,
-            }),
-            201
-        )
+            }),201
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
