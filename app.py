@@ -177,6 +177,7 @@ def walk_in_queue():
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
     
 #======================================================================
 # -- Member 3: Store, Service & Counter API

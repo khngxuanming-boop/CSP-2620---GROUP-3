@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login to Queues </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="card">
+        <h1>Welcome Back</h1>
+        <form method="POST">
+            <label>Username</label>
+            <input type="text" name="username" required>
+            
+            <label>Password</label>
+            <input type="password" name="password" required>
+            
+            <button type="submit">Sign In</button>
+        </form>
+        <p style="text-align: center; margin-top: 20px;">
+            Need an account? <a href="/register">Register here</a>
+        </p>
+    </div>
+</body>
+</html>
