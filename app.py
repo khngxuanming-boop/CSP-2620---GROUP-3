@@ -41,21 +41,29 @@ def store_discovery():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    error = None
     if request.method == 'POST':
         #Receive what they typed in the boxes
         username = request.form['username']
         password = request.form['password']
+        role = request.form.get('role', 'CUSTOMER')
 
         conn = get_db_connection()
-        #Save into the database as 'CUSTOMER'
-        conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
-        conn.commit()
-        conn.close()
+        #Check if the username is already taken.
+        existing_user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()        #Save into the database as 'CUSTOMER'
 
-    # Send them to login page
-        return redirect(url_for('login'))
+        if existing_user:
+            error = "That username is already taken! Choose another one."
+            conn.close()
+        else:
+            conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, role))
+            conn.commit()
+            conn.close()
 
-    return render_template('register.html')
+            # Send them to login page
+            return redirect(url_for('login'))
+        
+    return render_template('register.html', error=error)
 
 # User Login
 @app.route('/', methods=['GET', 'POST'])
