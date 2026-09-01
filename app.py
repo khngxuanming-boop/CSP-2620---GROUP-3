@@ -58,8 +58,9 @@ def register():
     return render_template('register.html')
 
 # User Login
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -75,7 +76,7 @@ def login():
     else: 
         # Match not found
         return "Incorrect password or username. Please try again!"
-    return render_template('login.html')
+    return render_template('login.html', error=error)
 
 # Store registration
 @app.route('/register_store', methods=['GET', 'POST'])
