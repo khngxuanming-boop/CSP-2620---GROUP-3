@@ -25,7 +25,14 @@ def init_db():
 @app.route('/stores')
 def store_discovery():
     # Grab searched text from the web address (if user typed something)
+    # ---> Week 3: Authentication
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
     search_query = request.args.get('search', '')
+
+    # Grab current logged-in user's name from memory
+    current_username = session.get('username')
 
     conn = get_db_connection()
     if search_query:
@@ -36,7 +43,7 @@ def store_discovery():
         stores = conn.execute('SELECT * FROM store').fetchall()
     conn.close()
 
-    return render_template('stores.html', stores=stores, search_query=search_query)
+    return render_template('stores.html', stores=stores, search_query=search_query, username=current_username)
 
 # User Registration
 
