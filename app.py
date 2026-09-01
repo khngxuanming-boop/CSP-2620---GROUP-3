@@ -85,7 +85,7 @@ def login():
         session['user_id'] = user['user_id']
         session['username'] = user['username']
         session['role'] = user['role']
-        
+
         return redirect(url_for('store_discovery'))
     else: 
         # Match not found
@@ -110,6 +110,12 @@ def register_store():
     # Show the blank store registration form    
     return render_template('register_store.html')
 
+# User logout
+@app.route('/logout')
+def logout():
+    # Clear the session memory
+    session.clear()
+    return redirect(url_for('login'))
 
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
