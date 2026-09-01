@@ -183,42 +183,157 @@ def walk_in_queue():
 # -- Member 3: Store, Service & Counter API
 #======================================================================
 
-# Service management api
+# =========================
+# SERVICE CRUD API
+# =========================
 
-@app.route('/api/service', methods=['POST'])
+# CREATE - Add a new service
+@app.route('/api/services', methods=['POST'])
 def create_service():
-    """Create a new service for a store"""
     data = request.get_json()
+
     store_id = data.get('store_id')
     service_name = data.get('service_name')
 
+    # Check required fields
     if not store_id or not service_name:
-        return jsonify({'error': 'store_id and service_name are required'}), 400
+        return jsonify({
+            'error': 'store_id and service_name are required'
+        }), 400
 
-    conn = get_db_connection() # Replace with your actual DB helper function
+    conn = get_db_connection()
+
+    # Check whether the store exists
+    store = conn.execute(
+        'SELECT * FROM store WHERE store_id = ?',
+        (store_id,)
+    ).fetchone()
+
+    if not store:
+        conn.close()
+        return jsonify({
+            'error': 'Store not found'
+        }), 404
+
+    # Insert service
     cursor = conn.cursor()
+
     cursor.execute(
-        "INSERT INTO Service (store_id, service_name) VALUES (?, ?)",
+        """
+        INSERT INTO service (store_id, service_name)
+        VALUES (?, ?)
+        """,
         (store_id, service_name)
     )
+
+    conn.commit()
+
+    service_id = cursor.lastrowid
+
+    conn.close()
+
+    return jsonify({
+        'message': 'Service created successfully',
+        'service_id': service_id
+    }), 201
+
+
+# READ - Get all services for a store
+@app.route('/api/services/<int:store_id>', methods=['GET'])
+def get_services(store_id):
+    conn = get_db_connection()
+
+    services = conn.execute(
+        """
+        SELECT *
+        FROM service
+        WHERE store_id = ?
+        """,
+        (store_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(row) for row in services
+    ]), 200
+
+
+# UPDATE - Update a service
+@app.route('/api/services/<int:service_id>', methods=['PUT'])
+def update_service(service_id):
+    data = request.get_json()
+
+    service_name = data.get('service_name')
+
+    if not service_name:
+        return jsonify({
+            'error': 'service_name is required'
+        }), 400
+
+    conn = get_db_connection()
+
+    # Check whether service exists
+    service = conn.execute(
+        'SELECT * FROM service WHERE service_id = ?',
+        (service_id,)
+    ).fetchone()
+
+    if not service:
+        conn.close()
+        return jsonify({
+            'error': 'Service not found'
+        }), 404
+
+    # Update service
+    conn.execute(
+        """
+        UPDATE service
+        SET service_name = ?
+        WHERE service_id = ?
+        """,
+        (service_name, service_id)
+    )
+
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'Service created successfully'}), 201
+    return jsonify({
+        'message': 'Service updated successfully'
+    }), 200
 
 
-@app.route('/api/services/<int:store_id>', methods=['GET'])
-def get_services(store_id):
-    """Get all services belonging to a specific store"""
+# DELETE - Delete a service
+@app.route('/api/services/<int:service_id>', methods=['DELETE'])
+def delete_service(service_id):
     conn = get_db_connection()
-    services = conn.execute(
-        "SELECT * FROM Service WHERE store_id = ?", (store_id,)
-    ).fetchall()
+
+    # Check whether service exists
+    service = conn.execute(
+        'SELECT * FROM service WHERE service_id = ?',
+        (service_id,)
+    ).fetchone()
+
+    if not service:
+        conn.close()
+        return jsonify({
+            'error': 'Service not found'
+        }), 404
+
+    # Delete service
+    conn.execute(
+        'DELETE FROM service WHERE service_id = ?',
+        (service_id,)
+    )
+
+    conn.commit()
     conn.close()
 
-    return jsonify([dict(row) for row in services]), 200
+    return jsonify({
+        'message': 'Service deleted successfully'
+    }), 200
 
-# Counter managment api
+# Counter management api
 
 @app.route('/api/counter', methods=['POST'])
 def create_counter():
