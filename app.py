@@ -1,7 +1,8 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 
 app = Flask(__name__)
+app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
 
 def get_db_connection():
@@ -21,10 +22,17 @@ def init_db():
 #======================================================================
 
 # Store Discovery/Main Page
-@app.route('/')
+@app.route('/stores')
 def store_discovery():
     # Grab searched text from the web address (if user typed something)
+    # ---> Week 3: Authentication
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
     search_query = request.args.get('search', '')
+
+    # Grab current logged-in user's name from memory
+    current_username = session.get('username')
 
     conn = get_db_connection()
     if search_query:
@@ -35,31 +43,40 @@ def store_discovery():
         stores = conn.execute('SELECT * FROM store').fetchall()
     conn.close()
 
-    return render_template('stores.html', stores=stores, search_query=search_query)
+    return render_template('stores.html', stores=stores, search_query=search_query, username=current_username)
 
 # User Registration
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    error = None
     if request.method == 'POST':
-        #Receive what they typed in the boxes
+        # Receive what they typed in the boxes
         username = request.form['username']
         password = request.form['password']
+        role = request.form.get('role', 'CUSTOMER')
 
         conn = get_db_connection()
-        #Save into the database as 'CUSTOMER'
-        conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
-        conn.commit()
-        conn.close()
+        # Check if the username is already taken.
+        existing_user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()        #Save into the database as 'CUSTOMER'
 
-    # Send them to login page
-        return redirect(url_for('login'))
+        if existing_user:
+            error = "That username is already taken! Choose another one."
+            conn.close()
+        else:
+            conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, role))
+            conn.commit()
+            conn.close()
 
-    return render_template('register.html')
+            # Send them to login page
+            return redirect(url_for('login'))
+        
+    return render_template('register.html', error=error)
 
 # User Login
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -71,11 +88,16 @@ def login():
 
     if user:
         # Match found
+        # ---> Week 3: Remember the session
+        session['user_id'] = user['user_id']
+        session['username'] = user['username']
+        session['role'] = user['role']
+
         return redirect(url_for('store_discovery'))
     else: 
         # Match not found
         return "Incorrect password or username. Please try again!"
-    return render_template('login.html')
+    return render_template('login.html', error=error)
 
 # Store registration
 @app.route('/register_store', methods=['GET', 'POST'])
@@ -95,6 +117,12 @@ def register_store():
     # Show the blank store registration form    
     return render_template('register_store.html')
 
+# User logout
+@app.route('/logout')
+def logout():
+    # Clear the session memory
+    session.clear()
+    return redirect(url_for('login'))
 
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
