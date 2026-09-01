@@ -1,7 +1,8 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 
 app = Flask(__name__)
+app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
 
 def get_db_connection():
@@ -21,7 +22,7 @@ def init_db():
 #======================================================================
 
 # Store Discovery/Main Page
-@app.route('/')
+@app.route('/stores')
 def store_discovery():
     # Grab searched text from the web address (if user typed something)
     search_query = request.args.get('search', '')
@@ -43,13 +44,13 @@ def store_discovery():
 def register():
     error = None
     if request.method == 'POST':
-        #Receive what they typed in the boxes
+        # Receive what they typed in the boxes
         username = request.form['username']
         password = request.form['password']
         role = request.form.get('role', 'CUSTOMER')
 
         conn = get_db_connection()
-        #Check if the username is already taken.
+        # Check if the username is already taken.
         existing_user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()        #Save into the database as 'CUSTOMER'
 
         if existing_user:
@@ -80,6 +81,11 @@ def login():
 
     if user:
         # Match found
+        # ---> Week 3: Remember the session
+        session['user_id'] = user['user_id']
+        session['username'] = user['username']
+        session['role'] = user['role']
+        
         return redirect(url_for('store_discovery'))
     else: 
         # Match not found
