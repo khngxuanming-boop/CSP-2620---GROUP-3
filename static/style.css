@@ -10,7 +10,7 @@ body {
     align-items: center;
 }
 
-h1, h2 {color: #fbbf24}
+h1, h2 {color: #c5c7cc}
 
 .card {
     background: rgba(30, 41, 59, 0.8);
@@ -34,7 +34,7 @@ input[type="text"], input[type="password"] {
 }
 
 button {
-    background-color: #fbbf24;
+    background-color: #2461fb;
     color: #0f172a;
     font-weight: bold;
     padding: 12px 20px;
@@ -46,9 +46,9 @@ button {
 }
 
 button:hover {
-    background-color: #f59e0b;
+    background-color: #303768;
     transform: translateY(-2px);
 }
 
-a { color: #fbbf24; text-decoration: none; }
+a { color: #1f275e; text-decoration: none; }
 a:hover { text-decoration: underline; }
