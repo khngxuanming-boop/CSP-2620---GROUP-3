@@ -1,7 +1,8 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 
 app = Flask(__name__)
+app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
 
 def get_db_connection():
@@ -13,11 +14,19 @@ def get_db_connection():
 # -- Member 1 (Syahmi): User & Store Api
 #======================================================================
 
-# Store Discovery/Main Page
-@app.route('/')
+# Store Discovery Engine
+@app.route('/stores')
 def store_discovery():
+    # Check if they are logged in. ---> Week 3; Check authentication
+    if 'user_id' not in session:
+        # If not logged in, redirect to login page instead.
+        return redirect(url_for('login'))
+
     # Grab searched text from the web address (if user typed something)
     search_query = request.args.get('search', '')
+
+    # Grab the logged in user's name from memory
+    current_username = session.get('username')
 
     conn = get_db_connection()
     if search_query:
@@ -28,31 +37,45 @@ def store_discovery():
         stores = conn.execute('SELECT * FROM store').fetchall()
     conn.close()
 
-    return render_template('stores.html', stores=stores, search_query=search_query)
+    # Pass the username to HTML template
+    return render_template('stores.html', stores=stores, search_query=search_query, username=current_username)
 
 # User Registration
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    error = None
     if request.method == 'POST':
-        #Receive what they typed in the boxes
+        # Receive what they typed in the boxes
         username = request.form['username']
         password = request.form['password']
 
-        conn = get_db_connection()
-        #Save into the database as 'CUSTOMER'
-        conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
-        conn.commit()
-        conn.close()
+        # Grab the role they picked from the dropdown menu/
+        role = request.form.get('role', 'CUSTOMER')
 
-    # Send them to login page
+        conn = get_db_connection()
+         # Check if username already exists
+        existing_user = conn.execute('SELECT * FROM user WHERE username =?', (username,)).fetchone()
+
+        if existing_user:
+            error = "That username is already taken! Choose another one."
+            conn.close() # Close since failed.
+        else:
+        # Save into the database as 'CUSTOMER'
+            conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
+            conn.commit()
+            conn.close()
+
+        # ONLY send them to login page if success
         return redirect(url_for('login'))
 
-    return render_template('register.html')
+    # If it's a GET request or if there was an error, show the page with the error message
+    return render_template('register.html', error=error)
 
 # User Login
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -63,12 +86,16 @@ def login():
         conn.close()
 
     if user:
-        # Match found
+        # Match found ----> Week 3; Remember the user
+        session['user_id'] = user['user_id']
+        session['username'] = user['username']
+        session['role'] = user['role']
+
         return redirect(url_for('store_discovery'))
     else: 
         # Match not found
-        return "Incorrect password or username. Please try again!"
-    return render_template('login.html')
+        error = "Incorrect password or username. Please try again!"
+    return render_template('login.html', error=error)
 
 # Store registration
 @app.route('/register_store', methods=['GET', 'POST'])
@@ -88,6 +115,37 @@ def register_store():
     # Show the blank store registration form    
     return render_template('register_store.html')
 
+# Store Details Page ---> Week 3
+@app.route('/store/<int:store_id>')
+def store_details(store_id):
+    # Check if the user has a session, if not, redirect to login
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+
+    # Grab the specific store record based on the clicked store id.
+    store = conn.execute('SELECT * FROM store WHERE store_id =?', (store_id,)).fetchone()
+
+    # Grab all active services linked to this store from Member 3's service table
+    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id)).fetchall()
+
+    conn.close()
+
+    # Fall back error response if someone manually type a fake store ID in the URL
+    if not store:
+        return "Store not found", 404
+
+    # Render the template and pass along the user's session name
+    return render_template('store_details.html', store=store, services=services, username=session.get('username'))
+
+# User Logout ---> Week 3
+@app.route('/logout')
+def logout():
+        # Clear the session memory
+        session.clear()
+        # Redirect user back to login
+        return redirect(url_for('login'))
 
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
