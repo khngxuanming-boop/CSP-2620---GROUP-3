@@ -955,5 +955,26 @@ def get_counter_queue(counter_id):
         dict(row) for row in queues
     ]), 200
 
+# GET - View queue history
+@app.route('/api/queues/history', methods=['GET'])
+def get_queue_history():
+
+    conn = get_db_connection()
+
+    queues = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
+        ORDER BY queue_id DESC
+        """
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(row) for row in queues
+    ]), 200
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)
