@@ -20,22 +20,43 @@ def init_db():
 # -- Member 1 (Syahmi): User & Store Api
 #======================================================================
 
-# Store Discovery/Main Page
+# =========================
+# HOME PAGE
+# =========================
+
 @app.route('/')
+def home():
+    return redirect(url_for('login'))
+
+
+# =========================
+# STORE DIRECTORY
+# =========================
+
+@app.route('/stores')
 def store_discovery():
-    # Grab searched text from the web address (if user typed something)
+
     search_query = request.args.get('search', '')
 
     conn = get_db_connection()
+
     if search_query:
-        # Search the database for stores matching text typed by the customer
-        stores = conn.execute('SELECT * FROM store WHERE store_name LIKE ?', ('%' + search_query + '%',)).fetchall()
+        stores = conn.execute(
+            'SELECT * FROM store WHERE store_name LIKE ?',
+            ('%' + search_query + '%',)
+        ).fetchall()
     else:
-        # If no search was made, select all store in the database instead
-        stores = conn.execute('SELECT * FROM store').fetchall()
+        stores = conn.execute(
+            'SELECT * FROM store'
+        ).fetchall()
+
     conn.close()
 
-    return render_template('stores.html', stores=stores, search_query=search_query)
+    return render_template(
+        'stores.html',
+        stores=stores,
+        search_query=search_query
+    )
 
 # User Registration
 
@@ -60,21 +81,31 @@ def register():
 # User Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+
     if request.method == 'POST':
+
         username = request.form['username']
         password = request.form['password']
 
         conn = get_db_connection()
-        # Search for the exact username and password
-        user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (username, password)).fetchone()
+
+        user = conn.execute(
+            '''
+            SELECT *
+            FROM user
+            WHERE username = ?
+            AND password = ?
+            ''',
+            (username, password)
+        ).fetchone()
+
         conn.close()
 
-    if user:
-        # Match found
-        return redirect(url_for('store_discovery'))
-    else: 
-        # Match not found
-        return "Incorrect password or username. Please try again!"
+        if user:
+            return redirect(url_for('store_discovery'))
+        else:
+            return "Incorrect password or username. Please try again!"
+
     return render_template('login.html')
 
 # Store registration
