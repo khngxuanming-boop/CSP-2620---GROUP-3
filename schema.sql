@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS appointment (
     user_id INTEGER NOT NULL,
     service_id INTEGER NOT NULL,
     appt_datetime DATETIME NOT NULL,
-    status TEXT DEFAULT 'BOOKED',
+    appt_status TEXT DEFAULT 'BOOKED',
     FOREIGN KEY (user_id) REFERENCES user(user_id),
     FOREIGN KEY (service_id) REFERENCES service(service_id)
 );
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS queue (
     service_id INTEGER NOT NULL,
     counter_id INTEGER,
     queue_number TEXT NOT NULL,
-    status TEXT DEFAULT 'WAITING',
+    queue_status TEXT DEFAULT 'WAITING',
     FOREIGN KEY (user_id) REFERENCES user(user_id),
     FOREIGN KEY (service_id) REFERENCES service(service_id),
     FOREIGN KEY (counter_id) REFERENCES counter(counter_id)
