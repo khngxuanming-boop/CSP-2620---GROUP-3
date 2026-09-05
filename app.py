@@ -14,31 +14,47 @@ def get_db_connection():
 # -- Member 1 (Syahmi): User & Store Api
 #======================================================================
 
-# Store Discovery Engine
+
+# =========================
+# HOME PAGE
+# =========================
+
+@app.route('/')
+def home():
+    return redirect(url_for('login'))
+
+
+# =========================
+# STORE DIRECTORY
+# =========================
+
 @app.route('/stores')
 def store_discovery():
-    # Check if they are logged in. ---> Week 3; Check authentication
-    if 'user_id' not in session:
-        # If not logged in, redirect to login page instead.
-        return redirect(url_for('login'))
 
-    # Grab searched text from the web address (if user typed something)
     search_query = request.args.get('search', '')
 
     # Grab the logged in user's name from memory
     current_username = session.get('username')
 
     conn = get_db_connection()
+
     if search_query:
-        # Search the database for stores matching text typed by the customer
-        stores = conn.execute('SELECT * FROM store WHERE store_name LIKE ?', ('%' + search_query + '%',)).fetchall()
+        stores = conn.execute(
+            'SELECT * FROM store WHERE store_name LIKE ?',
+            ('%' + search_query + '%',)
+        ).fetchall()
     else:
-        # If no search was made, select all store in the database instead
-        stores = conn.execute('SELECT * FROM store').fetchall()
+        stores = conn.execute(
+            'SELECT * FROM store'
+        ).fetchall()
+
     conn.close()
 
-    # Pass the username to HTML template
-    return render_template('stores.html', stores=stores, search_query=search_query, username=current_username)
+    return render_template(
+        'stores.html',
+        stores=stores,
+        search_query=search_query
+    )
 
 # User Registration
 
@@ -73,29 +89,33 @@ def register():
     return render_template('register.html', error=error)
 
 # User Login
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    error = None
     if request.method == 'POST':
+
         username = request.form['username']
         password = request.form['password']
 
         conn = get_db_connection()
-        # Search for the exact username and password
-        user = conn.execute('SELECT * FROM user WHERE username = ? AND password = ?', (username, password)).fetchone()
+
+        user = conn.execute(
+            '''
+            SELECT *
+            FROM user
+            WHERE username = ?
+            AND password = ?
+            ''',
+            (username, password)
+        ).fetchone()
+
         conn.close()
 
-    if user:
-        # Match found ----> Week 3; Remember the user
-        session['user_id'] = user['user_id']
-        session['username'] = user['username']
-        session['role'] = user['role']
+        if user:
+            return redirect(url_for('store_discovery'))
+        else:
+            return "Incorrect password or username. Please try again!"
 
-        return redirect(url_for('store_discovery'))
-    else: 
-        # Match not found
-        error = "Incorrect password or username. Please try again!"
-    return render_template('login.html', error=error)
+    return render_template('login.html')
 
 # Store registration
 @app.route('/register_store', methods=['GET', 'POST'])
@@ -1018,6 +1038,71 @@ def cancel_queue(queue_id):
         'queue_id': queue_id,
         'status': 'CANCELLED'
     }), 200
+
+# =========================
+# QUEUE STATUS & HISTORY API
+# =========================
+
+# GET - View current queue for a counter
+@app.route('/api/counters/<int:counter_id>/queue', methods=['GET'])
+def get_counter_queue(counter_id):
+
+    conn = get_db_connection()
+
+    # Check whether counter exists
+    counter = conn.execute(
+        """
+        SELECT *
+        FROM counter
+        WHERE counter_id = ?
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    if not counter:
+        conn.close()
+        return jsonify({
+            'error': 'Counter not found'
+        }), 404
+
+    # Get queues for this counter
+    queues = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE counter_id = ?
+        AND status IN ('WAITING', 'SERVING')
+        ORDER BY queue_id ASC
+        """,
+        (counter_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(row) for row in queues
+    ]), 200
+
+# GET - View queue history
+@app.route('/api/queues/history', methods=['GET'])
+def get_queue_history():
+
+    conn = get_db_connection()
+
+    queues = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
+        ORDER BY queue_id DESC
+        """
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(row) for row in queues
+    ]), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)
