@@ -306,6 +306,13 @@ def check_in_page():
 def dashboard_page():
     return render_template('dashboard.html')
 
+# Test Session Route for Development Purposes
+@app.route('/set-test-session')
+def set_test_session():
+    session['user_id'] = 1
+    session['username'] = 'testuser'
+    return "Test session set! Now you can test your pages."
+
 
 #======================================================================
 # -- Member 3: Store, Service & Counter API
