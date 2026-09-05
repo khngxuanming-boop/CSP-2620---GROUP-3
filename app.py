@@ -146,6 +146,39 @@ def walk_in_queue():
     finally:
         conn.close()
 
+# PUT /api/appointments/<appt_id>/check-in
+@app.route('/api/appointments/<int:appt_id>/check-in', methods=['PUT'])
+def check_in_appointment(appt_id):
+    conn = get_db_connection()
+    try:
+        with conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT * FROM appointment WHERE id = ?", (appt_id,))
+            appt = cursor.fetchone()
+
+            if not appt:
+                return jsonify({'error': 'Appointment not found'}), 404
+            if appt['status'] != 'BOOKED':
+                return jsonify({'error': 'Appointment cannot be checked in'}), 400
+
+            cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'A-%' ORDER BY id DESC LIMIT 1")
+            last_record = cursor.fetchone()
+            next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
+            queue_number = f"A-{next_num:03d}"
+
+            cursor.execute("UPDATE appointment SET status = 'CHECKED_IN' WHERE id = ?", (appt_id,))
+            cursor.execute(
+                "INSERT INTO queue (user_id, service_id, counter_id, queue_number, status) VALUES (?, ?, NULL, ?, 'WAITING')",
+                (appt['user_id'], appt['service_id'], queue_number)
+            )
+            queue_id = cursor.lastrowid
+
+        return jsonify({'message': 'Appointment checked in successfully!', 'queue_id': queue_id, 'queue_number': queue_number}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
   
 #======================================================================
 # -- Member 3: Store, Service & Counter API
