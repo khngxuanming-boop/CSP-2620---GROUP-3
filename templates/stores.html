@@ -5,6 +5,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <!-- Welcome Message & Logout -->
+    <div style="text-align: right; padding: 20px; max-width: 1000px; margin: 0 auto;">
+        <span>Welcome, <strong style="color: #2563eb;">{{ username }}</strong>!</span> | 
+        <a href="/logout" style="color: #ef4444; text-decoration: none; font-weight: bold;">Logout</a>
+    </div>
+
+    <!-- Search Bar Section -->
     <div class="card" style="max-width: 800px; margin: 0 auto 20px auto;">
         <h1>Directory</h1>
         <form method="GET" action="/stores">
@@ -12,17 +19,8 @@
             <button type="submit">Search</button>
         </form>
     </div>
-    <div style="text-align: right; padding: 20px; max-width: 1000px; margin: 0 auto;">
-        <span>Welcome, <strong style="color: #2563eb;">{{ username }}</strong>!</span> | 
-        <a href="/logout" style="color: #d1d5e3; text-decoration: none; font-weight: bold;">Logout</a>
-    </div>
 
- <form method="GET" action="/stores">
-            <input type="text" name="search" placeholder="Search for a business..." value="{{ search_query }}">
-            <button type="submit">Search</button>
-        </form>
-    </div>
-
+    <!-- Store Cards -->
     <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1000px; margin: 0 auto;">
         {% for store in stores %}
             <div class="card" style="width: 300px;">
