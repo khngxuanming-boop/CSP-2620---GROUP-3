@@ -179,6 +179,42 @@ def check_in_appointment(appt_id):
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+# GET /api/queues/my-status
+@app.route('/api/queues/my-status', methods=['GET'])
+def get_my_queue_status():
+    queue_id = request.args.get('queue_id')
+    if not queue_id:
+        return jsonify({'error': 'Missing queue_id parameter'}), 400
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT status, queue_number, service_id FROM queue WHERE id = ?", (queue_id,))
+        my_queue = cursor.fetchone()
+
+        if not my_queue:
+            return jsonify({'error': 'Queue not found'}), 404
+
+        status = my_queue['status']
+        queue_number = my_queue['queue_number']
+
+        if status != 'WAITING':
+            return jsonify({'queue_number': queue_number, 'status': status, 'people_ahead': 0, 'wait_time': 0}), 200
+
+        cursor.execute(
+            "SELECT COUNT(*) as people_ahead FROM queue WHERE service_id = ? AND status = 'WAITING' AND id < ?",
+            (my_queue['service_id'], queue_id)
+        )
+        people_ahead = cursor.fetchone()['people_ahead']
+        wait_time = (people_ahead + 1) * 5  # Assuming each customer takes 5 minutes
+
+        return jsonify({'queue_number': queue_number, 'status': status, 'people_ahead': people_ahead, 'wait_time': wait_time}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
   
 #======================================================================
 # -- Member 3: Store, Service & Counter API
