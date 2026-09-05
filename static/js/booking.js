@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
               "Appointment booked successfully! Appointment Status: BOOKED.",
             );
 
-            window.location.href = `/check_in?service_id=${serviceIdFromUrl}`;
+            window.location.href = `/check-in?service_id=${serviceIdFromUrl}`;
           }
         })
         .catch((error) => {
