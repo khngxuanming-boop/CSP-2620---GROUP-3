@@ -825,7 +825,7 @@ def call_next_customer(counter_id):
         SELECT *
         FROM queue
         WHERE counter_id = ?
-        AND status = 'WAITING'
+        AND queue_status = 'WAITING'
         ORDER BY queue_id ASC
         LIMIT 1
         """,
@@ -842,7 +842,7 @@ def call_next_customer(counter_id):
     conn.execute(
         """
         UPDATE queue
-        SET status = 'SERVING'
+        SET queue_status = 'SERVING'
         WHERE queue_id = ?
         """,
         (queue['queue_id'],)
@@ -890,7 +890,7 @@ def skip_queue(queue_id):
         }), 404
 
     # Only SERVING customer can be skipped
-    if queue['status'] != 'SERVING':
+    if queue['queue_status'] != 'SERVING':
         conn.close()
         return jsonify({
             'error': 'Only a serving customer can be skipped'
@@ -899,7 +899,7 @@ def skip_queue(queue_id):
     conn.execute(
         """
         UPDATE queue
-        SET status = 'SKIPPED'
+        SET queue_status = 'SKIPPED'
         WHERE queue_id = ?
         """,
         (queue_id,)
@@ -937,7 +937,7 @@ def recall_queue(queue_id):
         }), 404
 
     # Customer must currently be SERVING
-    if queue['status'] != 'SERVING':
+    if queue['queue_status'] != 'SERVING':
         conn.close()
         return jsonify({
             'error': 'Only a serving customer can be recalled'
@@ -975,7 +975,7 @@ def complete_queue(queue_id):
         }), 404
 
     # Only SERVING customer can be completed
-    if queue['status'] != 'SERVING':
+    if queue['queue_status'] != 'SERVING':
         conn.close()
         return jsonify({
             'error': 'Only a serving customer can be completed'
@@ -984,7 +984,7 @@ def complete_queue(queue_id):
     conn.execute(
         """
         UPDATE queue
-        SET status = 'COMPLETED'
+        SET queue_status = 'COMPLETED'
         WHERE queue_id = ?
         """,
         (queue_id,)
@@ -1022,7 +1022,7 @@ def cancel_queue(queue_id):
         }), 404
 
     # Cannot cancel completed/skipped/cancelled queue
-    if queue['status'] in ['COMPLETED', 'SKIPPED', 'CANCELLED']:
+    if queue['queue_status'] in ['COMPLETED', 'SKIPPED', 'CANCELLED']:
         conn.close()
         return jsonify({
             'error': 'Queue can no longer be cancelled'
@@ -1031,7 +1031,7 @@ def cancel_queue(queue_id):
     conn.execute(
         """
         UPDATE queue
-        SET status = 'CANCELLED'
+        SET queue_status = 'CANCELLED'
         WHERE queue_id = ?
         """,
         (queue_id,)
@@ -1078,7 +1078,7 @@ def get_counter_queue(counter_id):
         SELECT *
         FROM queue
         WHERE counter_id = ?
-        AND status IN ('WAITING', 'SERVING')
+        AND queue_status IN ('WAITING', 'SERVING')
         ORDER BY queue_id ASC
         """,
         (counter_id,)
@@ -1100,7 +1100,7 @@ def get_queue_history():
         """
         SELECT *
         FROM queue
-        WHERE status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
+        WHERE queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
         ORDER BY queue_id DESC
         """
     ).fetchall()
