@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // 1. On-site numbering logic (Walk-in)
   if (walkInBtn) {
     walkInBtn.addEventListener("click", function () {
-      const requestUserId = localStorage.getItem("user_id");
+      const requestUserId = document.getElementById("currentUserId").value;
 
       if (!requestUserId) {
         alert("User ID not found. Please log in first.");
@@ -13,9 +13,17 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const serviceIdFromUrl = urlParams.get("service_id");
+
+      if (!serviceIdFromUrl) {
+        alert("Service ID not found. Please select a service first.");
+        return;
+      }
+
       const payload = {
         user_id: parseInt(requestUserId),
-        service_id: 1,
+        service_id: parseInt(serviceIdFromUrl),
       };
 
       fetch("/api/queues/walk-in", {
