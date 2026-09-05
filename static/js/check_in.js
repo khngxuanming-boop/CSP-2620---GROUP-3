@@ -55,9 +55,15 @@ document.addEventListener("DOMContentLoaded", function () {
   // 2. Appointment check-in logic (Check-in)
   if (checkInBtn) {
     checkInBtn.addEventListener("click", function () {
-      const apptId = prompt(
-        "Welcome to check-in! Please enter your appointment number or ID to check in:",
-      );
+      const urlParams = new URLSearchParams(window.location.search);
+      let apptId = urlParams.get("appt_id");
+
+      if (!apptId) {
+        apptId = prompt(
+          "Welcome to check-in! Please enter your appointment number or ID to check in:",
+        );
+      }
+
       if (!apptId) return;
 
       fetch(`/api/appointments/${apptId}/check-in`, {
