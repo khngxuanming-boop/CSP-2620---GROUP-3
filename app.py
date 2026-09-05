@@ -465,6 +465,55 @@ def delete_counter(counter_id):
         'message': 'Counter deleted successfully'
     }), 200
 
+# =========================
+# COUNTER OPEN / CLOSE
+# =========================
+
+@app.route('/api/counters/<int:counter_id>/status', methods=['PATCH'])
+def update_counter_status(counter_id):
+    data = request.get_json()
+
+    counter_status = data.get('counter_status')
+
+    # Only allow open or closed
+    if counter_status not in ['open', 'closed']:
+        return jsonify({
+            'error': 'counter_status must be open or closed'
+        }), 400
+
+    conn = get_db_connection()
+
+    # Check whether counter exists
+    counter = conn.execute(
+        'SELECT * FROM counter WHERE counter_id = ?',
+        (counter_id,)
+    ).fetchone()
+
+    if not counter:
+        conn.close()
+        return jsonify({
+            'error': 'Counter not found'
+        }), 404
+
+    # Update counter status
+    conn.execute(
+        """
+        UPDATE counter
+        SET counter_status = ?
+        WHERE counter_id = ?
+        """,
+        (counter_status, counter_id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'message': f'Counter status updated to {counter_status}',
+        'counter_id': counter_id,
+        'counter_status': counter_status
+    }), 200
+    
 #----------------------------------------------------------------------
 # Store CRUD API
 #----------------------------------------------------------------------
