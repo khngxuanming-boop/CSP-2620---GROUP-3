@@ -184,7 +184,7 @@ def create_appointment():
         with conn:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO appointment (user_id, service_id, appt_datetime, status) VALUES (?, ?, ?, 'BOOKED')",
+                "INSERT INTO appointment (user_id, service_id, appt_datetime, appt_status) VALUES (?, ?, ?, 'BOOKED')",
                 (data['user_id'], data['service_id'], data['appt_datetime'])
             )
             appt_id = cursor.lastrowid
@@ -207,13 +207,13 @@ def walk_in_queue():
         with conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'W-%' ORDER BY id DESC LIMIT 1")
+            cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'W-%' ORDER BY queue_id DESC LIMIT 1")
             last_record = cursor.fetchone()
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
             queue_number = f"W-{next_num:03d}"
 
             cursor.execute(
-                "INSERT INTO queue (user_id, service_id, counter_id, queue_number, status) VALUES (?, ?, NULL, ?, 'WAITING')",
+                "INSERT INTO queue (user_id, service_id, counter_id, queue_number, queue_status) VALUES (?, ?, NULL, ?, 'WAITING')",
                 (data['user_id'], data['service_id'], queue_number)
             )
             queue_id = cursor.lastrowid
@@ -232,22 +232,22 @@ def check_in_appointment(appt_id):
         with conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT * FROM appointment WHERE id = ?", (appt_id,))
+            cursor.execute("SELECT * FROM appointment WHERE appt_id = ?", (appt_id,))
             appt = cursor.fetchone()
 
             if not appt:
                 return jsonify({'error': 'Appointment not found'}), 404
-            if appt['status'] != 'BOOKED':
+            if appt['appt_status'] != 'BOOKED':
                 return jsonify({'error': 'Appointment cannot be checked in'}), 400
 
-            cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'A-%' ORDER BY id DESC LIMIT 1")
+            cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'A-%' ORDER BY queue_id DESC LIMIT 1")
             last_record = cursor.fetchone()
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
             queue_number = f"A-{next_num:03d}"
 
-            cursor.execute("UPDATE appointment SET status = 'CHECKED_IN' WHERE id = ?", (appt_id,))
+            cursor.execute("UPDATE appointment SET appt_status = 'CHECKED_IN' WHERE appt_id = ?", (appt_id,))
             cursor.execute(
-                "INSERT INTO queue (user_id, service_id, counter_id, queue_number, status) VALUES (?, ?, NULL, ?, 'WAITING')",
+                "INSERT INTO queue (user_id, service_id, counter_id, queue_number, queue_status) VALUES (?, ?, NULL, ?, 'WAITING')",
                 (appt['user_id'], appt['service_id'], queue_number)
             )
             queue_id = cursor.lastrowid
@@ -268,20 +268,20 @@ def get_my_queue_status():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT status, queue_number, service_id FROM queue WHERE id = ?", (queue_id,))
+        cursor.execute("SELECT queue_status, queue_number, service_id FROM queue WHERE queue_id = ?", (queue_id,))
         my_queue = cursor.fetchone()
 
         if not my_queue:
             return jsonify({'error': 'Queue not found'}), 404
 
-        status = my_queue['status']
+        status = my_queue['queue_status']
         queue_number = my_queue['queue_number']
 
         if status != 'WAITING':
             return jsonify({'queue_number': queue_number, 'status': status, 'people_ahead': 0, 'wait_time': 0}), 200
 
         cursor.execute(
-            "SELECT COUNT(*) as people_ahead FROM queue WHERE service_id = ? AND status = 'WAITING' AND id < ?",
+            "SELECT COUNT(*) as people_ahead FROM queue WHERE service_id = ? AND queue_status = 'WAITING' AND queue_id < ?",
             (my_queue['service_id'], queue_id)
         )
         people_ahead = cursor.fetchone()['people_ahead']
