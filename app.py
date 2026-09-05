@@ -513,7 +513,7 @@ def update_counter_status(counter_id):
         'counter_id': counter_id,
         'counter_status': counter_status
     }), 200
-    
+
 #----------------------------------------------------------------------
 # Store CRUD API
 #----------------------------------------------------------------------
@@ -649,6 +649,266 @@ def delete_store(store_id):
 
     return jsonify({
         'message': 'Store deleted successfully'
+    }), 200
+
+# =========================
+# STAFF QUEUE CONTROL API
+# =========================
+
+# CALL NEXT CUSTOMER
+@app.route('/api/counters/<int:counter_id>/call-next', methods=['POST'])
+def call_next_customer(counter_id):
+
+    conn = get_db_connection()
+
+    # Check whether counter exists
+    counter = conn.execute(
+        """
+        SELECT *
+        FROM counter
+        WHERE counter_id = ?
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    if not counter:
+        conn.close()
+        return jsonify({
+            'error': 'Counter not found'
+        }), 404
+
+    # Check whether counter is open
+    if counter['counter_status'] != 'open':
+        conn.close()
+        return jsonify({
+            'error': 'Counter is closed'
+        }), 400
+
+    # Find the next waiting customer assigned to this counter
+    queue = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE counter_id = ?
+        AND status = 'WAITING'
+        ORDER BY queue_id ASC
+        LIMIT 1
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    if not queue:
+        conn.close()
+        return jsonify({
+            'message': 'No customers waiting'
+        }), 404
+
+    # Change queue status to SERVING
+    conn.execute(
+        """
+        UPDATE queue
+        SET status = 'SERVING'
+        WHERE queue_id = ?
+        """,
+        (queue['queue_id'],)
+    )
+
+    conn.commit()
+
+    # Get updated queue
+    updated_queue = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE queue_id = ?
+        """,
+        (queue['queue_id'],)
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify({
+        'message': 'Next customer called successfully',
+        'queue': dict(updated_queue)
+    }), 200
+
+
+# SKIP CUSTOMER
+@app.route('/api/queues/<int:queue_id>/skip', methods=['PATCH'])
+def skip_queue(queue_id):
+
+    conn = get_db_connection()
+
+    queue = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE queue_id = ?
+        """,
+        (queue_id,)
+    ).fetchone()
+
+    if not queue:
+        conn.close()
+        return jsonify({
+            'error': 'Queue not found'
+        }), 404
+
+    # Only SERVING customer can be skipped
+    if queue['status'] != 'SERVING':
+        conn.close()
+        return jsonify({
+            'error': 'Only a serving customer can be skipped'
+        }), 400
+
+    conn.execute(
+        """
+        UPDATE queue
+        SET status = 'SKIPPED'
+        WHERE queue_id = ?
+        """,
+        (queue_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'message': 'Customer skipped successfully',
+        'queue_id': queue_id,
+        'status': 'SKIPPED'
+    }), 200
+
+
+# RECALL CUSTOMER
+@app.route('/api/queues/<int:queue_id>/recall', methods=['PATCH'])
+def recall_queue(queue_id):
+
+    conn = get_db_connection()
+
+    queue = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE queue_id = ?
+        """,
+        (queue_id,)
+    ).fetchone()
+
+    if not queue:
+        conn.close()
+        return jsonify({
+            'error': 'Queue not found'
+        }), 404
+
+    # Customer must currently be SERVING
+    if queue['status'] != 'SERVING':
+        conn.close()
+        return jsonify({
+            'error': 'Only a serving customer can be recalled'
+        }), 400
+
+    conn.close()
+
+    return jsonify({
+        'message': 'Customer recalled successfully',
+        'queue_id': queue_id,
+        'queue_number': queue['queue_number'],
+        'status': 'SERVING'
+    }), 200
+
+
+# COMPLETE CUSTOMER SERVICE
+@app.route('/api/queues/<int:queue_id>/complete', methods=['PATCH'])
+def complete_queue(queue_id):
+
+    conn = get_db_connection()
+
+    queue = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE queue_id = ?
+        """,
+        (queue_id,)
+    ).fetchone()
+
+    if not queue:
+        conn.close()
+        return jsonify({
+            'error': 'Queue not found'
+        }), 404
+
+    # Only SERVING customer can be completed
+    if queue['status'] != 'SERVING':
+        conn.close()
+        return jsonify({
+            'error': 'Only a serving customer can be completed'
+        }), 400
+
+    conn.execute(
+        """
+        UPDATE queue
+        SET status = 'COMPLETED'
+        WHERE queue_id = ?
+        """,
+        (queue_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'message': 'Service completed successfully',
+        'queue_id': queue_id,
+        'status': 'COMPLETED'
+    }), 200
+
+
+# CANCEL QUEUE
+@app.route('/api/queues/<int:queue_id>/cancel', methods=['PATCH'])
+def cancel_queue(queue_id):
+
+    conn = get_db_connection()
+
+    queue = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE queue_id = ?
+        """,
+        (queue_id,)
+    ).fetchone()
+
+    if not queue:
+        conn.close()
+        return jsonify({
+            'error': 'Queue not found'
+        }), 404
+
+    # Cannot cancel completed/skipped/cancelled queue
+    if queue['status'] in ['COMPLETED', 'SKIPPED', 'CANCELLED']:
+        conn.close()
+        return jsonify({
+            'error': 'Queue can no longer be cancelled'
+        }), 400
+
+    conn.execute(
+        """
+        UPDATE queue
+        SET status = 'CANCELLED'
+        WHERE queue_id = ?
+        """,
+        (queue_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'message': 'Queue cancelled successfully',
+        'queue_id': queue_id,
+        'status': 'CANCELLED'
     }), 200
 
 if __name__ == '__main__':
