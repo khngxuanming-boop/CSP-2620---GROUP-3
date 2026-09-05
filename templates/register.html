@@ -5,26 +5,30 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="card">
+    <div class="card" style="max-width: 400px; margin: 50px auto;">
         <h1>Create Account</h1>
+        
         {% if error %}
-            <p style="color: #ef4444; font-weight: bold; text-align: center;">{{ error }}</p>
+            <p style="color: #ef4444; font-weight: bold; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 5px;">{{ error }}</p>
         {% endif %}
+
         <form method="POST">
-            <label>Choose a Username</label>
+            <label>Username</label>
             <input type="text" name="username" required>
             
-            <label>Choose a Password</label>
+            <label>Password</label>
             <input type="password" name="password" required>
+
             <label>Account Type</label>
-            <select name="role">
-            <option value="CUSTOMER">Customer</option>
-            <option value="STAFF">Store Administrator / Staff</option>
+            <select name="role" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #d1d5db;">
+                <option value="CUSTOMER">Customer</option>
+                <option value="STAFF">Store Administrator / Staff</option>
             </select>
-            <button type="submit">Register</button>
+            
+            <button type="submit" style="width: 100%;">Register</button>
         </form>
-        <p style="text-align: center; margin-top: 20px;">
-            <a href="/login">Back to Login?</a>
+        <p style="text-align: center; margin-top: 15px;">
+            Already have an account? <a href="/" style="color: #2563eb;">Login here</a>
         </p>
     </div>
 </body>
