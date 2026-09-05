@@ -48,6 +48,12 @@
       </div>
     </div>
 
+    <input
+      type="hidden"
+      id="currentUserId"
+      value="{{ session.get('user_id') }}"
+    />
+
     <script src="../static/js/check_in.js"></script>
   </body>
 </html>
