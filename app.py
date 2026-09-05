@@ -1,8 +1,7 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 
 app = Flask(__name__)
-app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
 
 def get_db_connection():
@@ -22,17 +21,10 @@ def init_db():
 #======================================================================
 
 # Store Discovery/Main Page
-@app.route('/stores')
+@app.route('/')
 def store_discovery():
     # Grab searched text from the web address (if user typed something)
-    # ---> Week 3: Authentication
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
     search_query = request.args.get('search', '')
-
-    # Grab current logged-in user's name from memory
-    current_username = session.get('username')
 
     conn = get_db_connection()
     if search_query:
@@ -43,40 +35,31 @@ def store_discovery():
         stores = conn.execute('SELECT * FROM store').fetchall()
     conn.close()
 
-    return render_template('stores.html', stores=stores, search_query=search_query, username=current_username)
+    return render_template('stores.html', stores=stores, search_query=search_query)
 
 # User Registration
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    error = None
     if request.method == 'POST':
-        # Receive what they typed in the boxes
+        #Receive what they typed in the boxes
         username = request.form['username']
         password = request.form['password']
-        role = request.form.get('role', 'CUSTOMER')
 
         conn = get_db_connection()
-        # Check if the username is already taken.
-        existing_user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()        #Save into the database as 'CUSTOMER'
+        #Save into the database as 'CUSTOMER'
+        conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
+        conn.commit()
+        conn.close()
 
-        if existing_user:
-            error = "That username is already taken! Choose another one."
-            conn.close()
-        else:
-            conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, role))
-            conn.commit()
-            conn.close()
+    # Send them to login page
+        return redirect(url_for('login'))
 
-            # Send them to login page
-            return redirect(url_for('login'))
-        
-    return render_template('register.html', error=error)
+    return render_template('register.html')
 
 # User Login
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    error = None
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -88,16 +71,11 @@ def login():
 
     if user:
         # Match found
-        # ---> Week 3: Remember the session
-        session['user_id'] = user['user_id']
-        session['username'] = user['username']
-        session['role'] = user['role']
-
         return redirect(url_for('store_discovery'))
     else: 
         # Match not found
         return "Incorrect password or username. Please try again!"
-    return render_template('login.html', error=error)
+    return render_template('login.html')
 
 # Store registration
 @app.route('/register_store', methods=['GET', 'POST'])
@@ -117,13 +95,6 @@ def register_store():
     # Show the blank store registration form    
     return render_template('register_store.html')
 
-# User logout
-@app.route('/logout')
-def logout():
-    # Clear the session memory
-    session.clear()
-    return redirect(url_for('login'))
-
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
@@ -131,6 +102,7 @@ def logout():
 @app.route('/api/appointments', methods=['POST'])
 def create_appointment():
     data = request.get_json()
+
     user_id = data.get('user_id')
     service_id = data.get('service_id')
     appt_datetime = data.get('appt_datetime')
@@ -153,11 +125,13 @@ def create_appointment():
         appt_id = cursor.lastrowid
         conn.close()
 
-        return jsonify({
+        return (
+            jsonify({
                 'message': 'Appointment created successfully!',
                 'appointment_id': appt_id
-            }),201
-
+            }),
+            201
+        )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -166,6 +140,7 @@ def create_appointment():
 @app.route('/api/queues/walk-in', methods=['POST'])
 def walk_in_queue():
     data = request.get_json()
+
     user_id = data.get('user_id')
     service_id = data.get('service_id')
     counter_id = data.get('counter_id')
@@ -192,12 +167,14 @@ def walk_in_queue():
         queue_id = cursor.lastrowid
         conn.close()
 
-        return jsonify({
+        return (
+            jsonify({
                 'message': 'Successfully joined the walk-in queue!',
                 'queue_id': queue_id,
                 'queue_number': queue_number,
-            }),201
-
+            }),
+            201
+        )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
