@@ -215,7 +215,20 @@ def get_my_queue_status():
     finally:
         conn.close()
 
-  
+# Page Routes
+@app.route('/booking')
+def booking_page():
+    return render_template('booking.html')
+
+@app.route('/check-in')
+def check_in_page():
+    return render_template('check_in.html')
+
+@app.route('/dashboard')
+def dashboard_page():
+    return render_template('dashboard.html')
+
+
 #======================================================================
 # -- Member 3: Store, Service & Counter API
 #======================================================================
