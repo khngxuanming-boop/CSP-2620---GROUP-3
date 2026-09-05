@@ -5,25 +5,74 @@ document.addEventListener("DOMContentLoaded", function () {
   // 1. On-site numbering logic (Walk-in)
   if (walkInBtn) {
     walkInBtn.addEventListener("click", function () {
-      alert(
-        "You have successfully joined the queue! Your queue number is: A-015",
-      );
-      window.location.href = "dashboard.html"; // Redirect to the dashboard
+      const requestUserId = localStorage.getItem("user_id");
+
+      if (!requestUserId) {
+        alert("User ID not found. Please log in first.");
+        window.location.href = "/login"; // Redirect to login page
+        return;
+      }
+
+      const payload = {
+        user_id: parseInt(requestUserId),
+        service_id: 1,
+      };
+
+      fetch("/api/queues/walk-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            alert("Failed to obtain queue number: " + data.error);
+          } else {
+            alert(
+              "Queue number obtained successfully! Your queue number is: " +
+                data.queue_number,
+            );
+            window.location.href = `/dashboard?queue_id=${data.queue_id}`; // Redirect to the dashboard with queue_id
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("System busy. Please try again later.");
+        });
     });
   }
 
   // 2. Appointment check-in logic (Check-in)
   if (checkInBtn) {
     checkInBtn.addEventListener("click", function () {
-      let apptId = prompt(
-        "Please enter your appointment phone number or ID to check in:",
+      const apptId = prompt(
+        "Welcome to check-in! Please enter your appointment number or ID to check in:",
       );
-      if (apptId) {
-        alert(
-          "Check-in successful! Appointment Status: CHECKED-IN.\nThe queue number generated for you is: A-015",
-        );
-        window.location.href = "dashboard.html"; // Redirect to the dashboard
-      }
+      if (!apptId) return;
+
+      fetch(`/api/appointments/${apptId}/check-in`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            alert("Check-in failed: " + data.error);
+          } else {
+            alert(
+              "Check-in successful! Your queue number is: " + data.queue_number,
+            );
+            window.location.href = `/dashboard?queue_id=${data.queue_id}`; // Redirect to the dashboard with queue_id
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Server not responding. Please try again later.");
+        });
     });
   }
 });
