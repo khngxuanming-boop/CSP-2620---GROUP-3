@@ -1,9 +1,16 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Initial fake data
-  let peopleAhead = 4;
-  let waitTime = 20;
+  // From URL get the queue_id
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentQueueId = urlParams.get("queue_id");
+
+  if (!currentQueueId) {
+    alert("Queue ID not found! Redirecting to home.");
+    window.location.href = "/stores";
+    return;
+  }
 
   // Get references to the DOM elements
+  const queueNumberEl = document.getElementById("queueNumberDisplay");
   const peopleAheadEl = document.getElementById("peopleAhead");
   const waitTimeEl = document.getElementById("waitTime");
   const queueStatusEl = document.getElementById("queueStatus");
@@ -25,50 +32,89 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Mock interval to simulate real-time data updates from the server (every 5 seconds)
-  const mockInterval = setInterval(() => {
-    if (peopleAhead > 0) {
-      // Simulate the queue moving forward
-      peopleAhead -= 1;
-      waitTime -= 5;
+  // Flag to track if the approaching notification has been shown
+  let hasNotifiedApproaching = false;
 
-      // Update the numbers on the page
-      if (peopleAheadEl) peopleAheadEl.innerText = peopleAhead;
-      if (waitTimeEl) waitTimeEl.innerText = waitTime;
-
-      // Trigger notification: Alert when only 2 people are left
-      if (peopleAhead === 2) {
-        showNotification(
-          "🔔 Warm reminder: Only 2 people left ahead of you. Please proceed to the service counter.",
-        );
-      }
-
-      // When it's your turn (status changes from WAITING to CALLED)
-      if (peopleAhead === 0) {
-        if (queueStatusEl) {
-          queueStatusEl.className =
-            "badge bg-success text-white fs-5 mt-3 mb-4";
-          queueStatusEl.innerText = "CALLED (please proceed to counter 2)";
+  // Request the actual queue data from the backend API
+  function fetchQueueStatus() {
+    fetch(`/api/queues/my-status?queue_id=${currentQueueId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.error) {
+          console.error("Error fetching queue status:", data.error);
+          return;
         }
-        showNotification(
-          "🎉 It's your turn! Please proceed to counter 2 immediately.",
-        );
-        clearInterval(mockInterval); // Stop the timer
-      }
-    }
-  }, 5000);
 
-  // Cancel queue logic
+        // Update the queue number and status on the page
+        if (queueNumberEl) queueNumberEl.innerText = data.queue_number;
+
+        // Status UI change color logic
+        if (queueStatusEl) {
+          queueStatusEl.innerText = data.status;
+          if (data.status === "WAITING") {
+            queueStatusEl.className =
+              "badge bg-warning text-dark fs-5 mt-3 mb-4";
+          } else if (data.status === "CALLED") {
+            queueStatusEl.className =
+              "badge bg-success text-white fs-5 mt-3 mb-4";
+          } else if (data.status === "SERVING") {
+            queueStatusEl.className =
+              "badge bg-primary text-white fs-5 mt-3 mb-4";
+          } else {
+            queueStatusEl.className =
+              "badge bg-secondary text-white fs-5 mt-3 mb-4";
+          }
+        }
+        // Update the people ahead and wait time
+        if (peopleAheadEl) peopleAheadEl.innerText = data.people_ahead || 0;
+        if (waitTimeEl) waitTimeEl.innerText = data.wait_time || 0;
+
+        // Trigger notification: Alert when only 2 people are left
+        if (
+          data.status === "WAITING" &&
+          data.people_ahead === 2 &&
+          !hasNotifiedApproaching
+        ) {
+          showNotification(
+            "🔔 Warm reminder: Only 2 people left ahead of you. Please proceed to the service counter.",
+          );
+          hasNotifiedApproaching = true;
+        }
+      })
+      .catch((error) => console.error("Error fetching queue status:", error));
+  }
+
+  // Initial fetch
+  fetchQueueStatus();
+
+  // Fake HTTP Polling: Check the queue status every 5 seconds
+  // Will change it during Week4
+  const pollingInterval = setInterval(fetchQueueStatus, 5000);
+
+  // Cancel Queue Button Click Handler
   if (cancelBtn) {
     cancelBtn.addEventListener("click", function () {
-      if (
-        confirm(
-          "Are you sure you want to cancel your current queue? This action cannot be undone.",
-        )
-      ) {
-        alert("Queue cancelled, status changed to CANCELLED.");
-        clearInterval(mockInterval); // Stop the timer
-        window.location.href = "check_in.html"; // Return to main page
+      if (confirm("Are you sure you want to cancel your queue?")) {
+        fetch(`/api/queues/${currentQueueId}/cancel`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) {
+              alert("Failed to cancel queue: " + data.error);
+            } else {
+              alert("Queue cancelled successfully!");
+              clearInterval(pollingInterval); // Stop polling
+              window.location.href = "/stores"; // Redirect to stores page
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while trying to cancel the queue.");
+          });
       }
     });
   }
