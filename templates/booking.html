@@ -11,6 +11,12 @@
     <link rel="stylesheet" href="../static/css/style.css" />
   </head>
   <body class="bg-light">
+    <input
+      type="hidden"
+      id="currentUserId"
+      value="{{ session.get('user_id') }}"
+    />
+
     <div class="container mt-5">
       <div class="row justify-content-center">
         <div class="col-md-6">
@@ -28,7 +34,7 @@
                     type="text"
                     class="form-control"
                     id="storeService"
-                    value="Apple Store - Technical Support"
+                    value="Service Selected"
                     disabled
                   />
                 </div>
