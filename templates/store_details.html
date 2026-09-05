@@ -1,24 +1,46 @@
-HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>{{ store['name'] }} Details</title>
+    <title>{{ store['store_name'] }} - Details</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="card">
-        <h1>{{ store['name'] }}</h1>
-        <hr style="border-color: #334155;">
-        <p><strong>Operating Hours:</strong> {{ store['operating_hours'] }}</p>
-        <p><strong>Current Status:</strong> {{ store['store_status'] }}</p>
-        <p><strong>Estimated Wait:</strong> {{ store['estimated_wait_time'] }} minutes</p>
+    <div style="text-align: right; padding: 20px; max-width: 1000px; margin: 0 auto;">
+        <span>Welcome, <strong style="color: #2563eb;">{{ username }}</strong>!</span> | 
+        <a href="/stores" style="color: #10b981; font-weight: bold; margin-right: 15px; text-decoration: none;">Back to Directory</a> |
+        <a href="/logout" style="color: #ef4444; font-weight: bold; text-decoration: none;">Logout</a>
+    </div>
+
+    <div class="card" style="max-width: 800px; margin: 0 auto; text-align: left;">
+        <h1 style="font-size: 2.5em; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+            {{ store['store_name'] }}
+        </h1>
         
-        <br>
-        <button style="background-color: #334155; color: white;">Join Queue</button>
-        <!--To be continued/Coming soon!-->
-        <p style="text-align: center; margin-top: 20px;">
-            <a href="/">&larr; Back to Directory</a>
-        </p>
+        <div style="display: flex; gap: 40px; margin-top: 20px;">
+            <!-- Left Column: Store Info -->
+            <div style="flex: 1;">
+                <h3 style="color: #4b5563;">Store Information</h3>
+                <p><strong>Status:</strong> <span style="color: #10b981;">{{ store['store_status'] }}</span></p>
+                <p><strong>Operating Hours:</strong> {{ store['operating_hours'] }}</p>
+                <p><strong>Current Wait Time:</strong> {{ store['estimated_wait_time'] }} minutes</p>
+            </div>
+
+            <!-- Right Column: Services Available -->
+            <div style="flex: 1; background: rgba(255, 255, 255, 0.5); padding: 20px; border-radius: 10px;">
+                <h3 style="color: #4b5563; margin-top: 0;">Available Services</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for service in services %}
+                        <li style="padding: 10px 0; border-bottom: 1px solid #d1d5db; display: flex; justify-content: space-between; align-items: center;">
+                            <span>{{ service['service_name'] }}</span>
+                            <!-- Ready for the queue logic -->
+                            <button style="padding: 5px 15px; font-size: 0.9em;">Join Queue</button>
+                        </li>
+                    {% else %}
+                        <p style="color: #6b7280; font-style: italic;">No services listed yet.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
     </div>
 </body>
 </html>
