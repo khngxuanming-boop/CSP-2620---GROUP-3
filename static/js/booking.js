@@ -5,7 +5,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Cannot select past dates for the appointment
   if (dateInput) {
-    dateInput.min = new Date().toISOString().split("T")[0];
+    const today = new Date();
+    const localDate = new Date(
+      today.getTime() - today.getTimezoneOffset() * 60000,
+    )
+      .toISOString()
+      .split("T")[0];
+    dateInput.min = localDate;
   }
 
   // Handle form submission
@@ -51,7 +57,8 @@ document.addEventListener("DOMContentLoaded", function () {
               "Appointment booked successfully! Appointment Status: BOOKED.",
             );
 
-            window.location.href = `/check-in?service_id=${serviceIdFromUrl}`;
+            const apptId = data.appt_id;
+            window.location.href = `/check-in?appt_id=${apptId}`;
           }
         })
         .catch((error) => {
