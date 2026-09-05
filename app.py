@@ -9,13 +9,6 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-def init_db():
-    conn = get_db_connection()
-    with open('schema.sql') as f:
-        conn.executescript(f.read())
-    conn.commit()
-    conn.close()
-
 #======================================================================
 # -- Member 1 (Syahmi): User & Store Api
 #======================================================================
@@ -95,90 +88,65 @@ def register_store():
     # Show the blank store registration form    
     return render_template('register_store.html')
 
+
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
-# W1 T2: POST /api/appointments
+# POST /api/appointments
 @app.route('/api/appointments', methods=['POST'])
 def create_appointment():
     data = request.get_json()
 
-    user_id = data.get('user_id')
-    service_id = data.get('service_id')
-    appt_datetime = data.get('appt_datetime')
-
-    if not user_id or not service_id or not appt_datetime:
+    required = ['user_id', 'service_id', 'appt_datetime']
+    if not all(data.get(key) for key in required):
         return jsonify({'error': 'Missing required fields'}), 400
 
+    conn = get_db_connection()    
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO appointment (user_id, service_id, appt_datetime, status) VALUES (?, ?, ?, 'BOOKED')",
+                (data['user_id'], data['service_id'], data['appt_datetime'])
+            )
+            appt_id = cursor.lastrowid
 
-        cursor.execute(
-            """
-            INSERT INTO appointment (user_id, service_id, appt_datetime, status)
-            VALUES (?, ?, ?, 'BOOKED')
-            """,
-            (user_id, service_id, appt_datetime),
-        )
-        conn.commit()
-        appt_id = cursor.lastrowid
-        conn.close()
-
-        return (
-            jsonify({
-                'message': 'Appointment created successfully!',
-                'appointment_id': appt_id
-            }),
-            201
-        )
+        return jsonify({'message': 'Appointment created successfully!', 'appointment_id': appt_id}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
 
-
-# W1 T3: POST /api/queues/walk-in
+# POST /api/queues/walk-in
 @app.route('/api/queues/walk-in', methods=['POST'])
 def walk_in_queue():
     data = request.get_json()
-
-    user_id = data.get('user_id')
-    service_id = data.get('service_id')
-    counter_id = data.get('counter_id')
-
-    if not user_id or not service_id:
+    if not data.get('user_id') or not data.get('service_id'):
         return jsonify({'error': 'Missing required fields'}), 400
 
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        with conn:
+            cursor = conn.cursor()
 
-        cursor.execute("SELECT COUNT(*) FROM queue")
-        count = cursor.fetchone()[0]
-        queue_number = f"Q{count + 1:03d}"
+            cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'W-%' ORDER BY id DESC LIMIT 1")
+            last_record = cursor.fetchone()
+            next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
+            queue_number = f"W-{next_num:03d}"
 
-        cursor.execute(
-            """
-            INSERT INTO queue (user_id, service_id, counter_id, queue_number, status)
-            VALUES (?, ?, ?, ?, 'WAITING')
-            """,
-            (user_id, service_id, counter_id, queue_number)
-        )
-        conn.commit()
-        queue_id = cursor.lastrowid
-        conn.close()
+            cursor.execute(
+                "INSERT INTO queue (user_id, service_id, counter_id, queue_number, status) VALUES (?, ?, NULL, ?, 'WAITING')",
+                (data['user_id'], data['service_id'], queue_number)
+            )
+            queue_id = cursor.lastrowid
 
-        return (
-            jsonify({
-                'message': 'Successfully joined the walk-in queue!',
-                'queue_id': queue_id,
-                'queue_number': queue_number,
-            }),
-            201
-        )
+        return jsonify({'message': 'Successfully joined the walk-in queue!', 'queue_id': queue_id, 'queue_number': queue_number}),201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
 
-    
+  
 #======================================================================
 # -- Member 3: Store, Service & Counter API
 #======================================================================
