@@ -911,5 +911,49 @@ def cancel_queue(queue_id):
         'status': 'CANCELLED'
     }), 200
 
+# =========================
+# QUEUE STATUS & HISTORY API
+# =========================
+
+# GET - View current queue for a counter
+@app.route('/api/counters/<int:counter_id>/queue', methods=['GET'])
+def get_counter_queue(counter_id):
+
+    conn = get_db_connection()
+
+    # Check whether counter exists
+    counter = conn.execute(
+        """
+        SELECT *
+        FROM counter
+        WHERE counter_id = ?
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    if not counter:
+        conn.close()
+        return jsonify({
+            'error': 'Counter not found'
+        }), 404
+
+    # Get queues for this counter
+    queues = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE counter_id = ?
+        AND status IN ('WAITING', 'SERVING')
+        ORDER BY queue_id ASC
+        """,
+        (counter_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(row) for row in queues
+    ]), 200
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)
