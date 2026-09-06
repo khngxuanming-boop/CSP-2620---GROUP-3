@@ -51,6 +51,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // Status UI change color logic
         if (queueStatusEl) {
           queueStatusEl.innerText = data.status;
+          if (["COMPLETED", "CANCELLED", "SKIPPED"].includes(data.status)) {
+            clearInterval(pollingInterval);
+          }
           if (data.status === "WAITING") {
             queueStatusEl.className =
               "badge bg-warning text-dark fs-5 mt-3 mb-4";
