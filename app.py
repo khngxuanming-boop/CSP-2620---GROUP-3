@@ -1083,5 +1083,119 @@ def get_queue_status_history(queue_id):
         dict(row) for row in history
     ]), 200
 
+# =========================
+# STAFF DASHBOARD API
+# =========================
+
+@app.route('/api/staff/dashboard/<int:store_id>', methods=['GET'])
+def get_staff_dashboard(store_id):
+
+    conn = get_db_connection()
+
+    # Check whether store exists
+    store = conn.execute(
+        """
+        SELECT *
+        FROM store
+        WHERE store_id = ?
+        """,
+        (store_id,)
+    ).fetchone()
+
+    if not store:
+        conn.close()
+        return jsonify({
+            'error': 'Store not found'
+        }), 404
+
+    # Get all counters for this store
+    counters = conn.execute(
+        """
+        SELECT *
+        FROM counter
+        WHERE store_id = ?
+        """,
+        (store_id,)
+    ).fetchall()
+
+    # Count waiting customers
+    waiting = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'WAITING'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    # Count currently serving
+    serving = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'SERVING'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    # Count completed
+    completed = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'COMPLETED'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    # Count skipped
+    skipped = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'SKIPPED'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    # Count cancelled
+    cancelled = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'CANCELLED'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify({
+        'store': dict(store),
+
+        'counters': [
+            dict(counter)
+            for counter in counters
+        ],
+
+        'queue_summary': {
+            'waiting': waiting['total'],
+            'serving': serving['total'],
+            'completed': completed['total'],
+            'skipped': skipped['total'],
+            'cancelled': cancelled['total']
+        }
+    }), 200
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)
