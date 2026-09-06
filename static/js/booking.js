@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
               "Appointment booked successfully! Appointment Status: BOOKED.",
             );
 
-            const apptId = data.appt_id;
+            const apptId = data.appointment_id;
             window.location.href = `/check-in?appt_id=${apptId}`;
           }
         })
