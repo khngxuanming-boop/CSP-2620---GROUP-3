@@ -1007,5 +1007,81 @@ def get_queue_history():
         dict(row) for row in queues
     ]), 200
 
+# GET - View queue status summary
+@app.route('/api/counters/<int:counter_id>/queue/status', methods=['GET'])
+def get_queue_status(counter_id):
+
+    conn = get_db_connection()
+
+    # Check counter
+    counter = conn.execute(
+        """
+        SELECT *
+        FROM counter
+        WHERE counter_id = ?
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    if not counter:
+        conn.close()
+        return jsonify({
+            'error': 'Counter not found'
+        }), 404
+
+    # Find currently serving customer
+    serving = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE counter_id = ?
+        AND status = 'SERVING'
+        ORDER BY queue_id ASC
+        LIMIT 1
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    # Count waiting customers
+    waiting = conn.execute(
+        """
+        SELECT COUNT(*) AS waiting_count
+        FROM queue
+        WHERE counter_id = ?
+        AND status = 'WAITING'
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify({
+        'counter_id': counter_id,
+        'serving': dict(serving) if serving else None,
+        'waiting_count': waiting['waiting_count']
+    }), 200
+
+# GET - View status history for one queue
+@app.route('/api/queues/<int:queue_id>/history', methods=['GET'])
+def get_queue_status_history(queue_id):
+
+    conn = get_db_connection()
+
+    history = conn.execute(
+        """
+        SELECT *
+        FROM queue_history
+        WHERE queue_id = ?
+        ORDER BY timestamp ASC
+        """,
+        (queue_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(row) for row in history
+    ]), 200
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)
