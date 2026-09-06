@@ -16,6 +16,11 @@ def init_db():
     conn.commit()
     conn.close()
 
+@app.route('/logout')
+def logout():
+    # logout code
+    return redirect(url_for('login'))
+
 #======================================================================
 # -- Member 1 (Syahmi): User & Store Api
 #======================================================================
