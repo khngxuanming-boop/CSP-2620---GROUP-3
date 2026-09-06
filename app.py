@@ -1,13 +1,20 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template, redirect, url_for
-
+from flask import Flask, request, jsonify, render_template, redirect, url_for, g
 app = Flask(__name__)
 DB_NAME = 'queue_system.db'
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    return conn
+    if 'db' not in g:
+        # Adding timeout=20 gives SQLite 20 seconds to wait for open locks before raising an error
+        g.db = sqlite3.connect(DB_NAME, timeout=20)
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(exception):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 def init_db():
     conn = get_db_connection()
