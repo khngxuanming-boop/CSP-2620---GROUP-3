@@ -16,8 +16,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Get open and close times from URL parameters or use default values
   const urlParams = new URLSearchParams(window.location.search);
-  const openTime = parseInt(urlParams.get("open_time")) || 8;
-  const closeTime = parseInt(urlParams.get("close_time")) || 18;
+  const openParam = urlParams.get("open");
+  const closeParam = urlParams.get("close");
+  const openTime = openParam !== null ? parseInt(openParam) : 8;
+  const closeTime = closeParam !== null ? parseInt(closeParam) : 18;
   function generateTimeSlots(startHour, endHour) {
     if (!timeInput) return;
     timeInput.innerHTML = '<option value="">Please select a time...</option>';
