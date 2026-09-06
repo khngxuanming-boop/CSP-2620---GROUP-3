@@ -14,6 +14,25 @@ document.addEventListener("DOMContentLoaded", function () {
     dateInput.min = localDate;
   }
 
+  // Get open and close times from URL parameters or use default values
+  const urlParams = new URLSearchParams(window.location.search);
+  const openTime = parseInt(urlParams.get("open_time")) || 8;
+  const closeTime = parseInt(urlParams.get("close_time")) || 18;
+  function generateTimeSlots(startHour, endHour) {
+    if (!timeInput) return;
+    timeInput.innerHTML = '<option value="">Please select a time...</option>';
+    for (let i = startHour; i < endHour; i++) {
+      let currentHour = i.toString().padStart(2, "0") + ":00";
+      let nextHour = (i + 1).toString().padStart(2, "0") + ":00";
+      let option = document.createElement("option");
+      option.value = currentHour;
+      option.text = `${currentHour} - ${nextHour}`;
+      timeInput.appendChild(option);
+    }
+  }
+  // Generate time slots from open time to close time
+  generateTimeSlots(openTime, closeTime);
+
   // Handle form submission
   if (bookingForm) {
     bookingForm.addEventListener("submit", function (e) {
