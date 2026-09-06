@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Staff Dashboard - Queue Management</title>
+
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Your CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+
+  <body class="bg-light">
+
+    <div class="container mt-5 mb-5">
+
+      <!-- HEADER -->
+      <div class="card shadow border-0 rounded-4 mb-4">
+        <div class="card-body p-4">
+
+          <div class="d-flex justify-content-between align-items-center">
+
+            <div>
+              <h2 class="fw-bold mb-1">Staff Dashboard</h2>
+              <p class="text-muted mb-0">
+                Queue Management System
+              </p>
+            </div>
+
+            <a
+              href="{{ url_for('logout') }}"
+              class="btn btn-outline-danger"
+            >
+              Logout
+            </a>
+
+          </div>
+
+          <hr />
+
+          <h4 id="storeName" class="fw-bold">
+            Store
+          </h4>
+
+          <p class="text-muted mb-0">
+            Store ID:
+            <strong>{{ store_id }}</strong>
+          </p>
+
+        </div>
+      </div>
+
+
+      <!-- QUEUE SUMMARY -->
+      <div class="row g-3 mb-4">
+
+        <!-- WAITING -->
+        <div class="col-md-4">
+          <div class="card shadow border-0 rounded-4">
+            <div class="card-body text-center p-4">
+
+              <h5 class="text-muted">
+                Waiting
+              </h5>
+
+              <h1
+                class="display-4 fw-bold text-warning"
+                id="waitingCount"
+              >
+                0
+              </h1>
+
+              <p class="mb-0">
+                customers
+              </p>
+
+            </div>
+          </div>
+        </div>
+
+
+        <!-- SERVING -->
+        <div class="col-md-4">
+          <div class="card shadow border-0 rounded-4">
+            <div class="card-body text-center p-4">
+
+              <h5 class="text-muted">
+                Serving
+              </h5>
+
+              <h1
+                class="display-4 fw-bold text-primary"
+                id="servingCount"
+              >
+                0
+              </h1>
+
+              <p class="mb-0">
+                customers
+              </p>
+
+            </div>
+          </div>
+        </div>
+
+
+        <!-- COMPLETED -->
+        <div class="col-md-4">
+          <div class="card shadow border-0 rounded-4">
+            <div class="card-body text-center p-4">
+
+              <h5 class="text-muted">
+                Completed
+              </h5>
+
+              <h1
+                class="display-4 fw-bold text-success"
+                id="completedCount"
+              >
+                0
+              </h1>
+
+              <p class="mb-0">
+                customers
+              </p>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- COUNTERS -->
+      <div class="card shadow border-0 rounded-4 mb-4">
+
+        <div class="card-body p-4">
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <div>
+              <h4 class="fw-bold mb-1">
+                Counters
+              </h4>
+
+              <p class="text-muted mb-0">
+                Manage your store counters
+              </p>
+            </div>
+
+          </div>
+
+          <div
+            class="row g-3"
+            id="counterContainer"
+          >
+
+            <!-- Counters will be inserted here -->
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- CURRENT QUEUE -->
+      <div class="card shadow border-0 rounded-4 mb-4">
+
+        <div class="card-body p-4">
+
+          <h4 class="fw-bold mb-3">
+            Current Queue
+          </h4>
+
+          <div
+            id="queueContainer"
+            class="table-responsive"
+          >
+
+            <table class="table align-middle">
+
+              <thead>
+                <tr>
+                  <th>Queue Number</th>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Counter</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody id="queueTableBody">
+
+                <tr>
+                  <td
+                    colspan="5"
+                    class="text-center text-muted"
+                  >
+                    Loading queue...
+                  </td>
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- QUEUE HISTORY -->
+      <div class="card shadow border-0 rounded-4 mb-4">
+
+        <div class="card-body p-4">
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <div>
+              <h4 class="fw-bold mb-1">
+                Queue History
+              </h4>
+
+              <p class="text-muted mb-0">
+                Recently completed, skipped and cancelled queues
+              </p>
+            </div>
+
+            <button
+              class="btn btn-outline-primary"
+              onclick="loadHistory()"
+            >
+              Refresh
+            </button>
+
+          </div>
+
+
+          <div class="table-responsive">
+
+            <table class="table align-middle">
+
+              <thead>
+                <tr>
+                  <th>Queue</th>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Counter</th>
+                </tr>
+              </thead>
+
+              <tbody id="historyTableBody">
+
+                <tr>
+                  <td
+                    colspan="4"
+                    class="text-center text-muted"
+                  >
+                    Loading history...
+                  </td>
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- TOAST -->
+    <div
+      class="position-fixed bottom-0 end-0 p-3"
+      style="z-index: 11"
+    >
+
+      <div
+        id="alertToast"
+        class="toast align-items-center text-white bg-info border-0"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+
+        <div class="d-flex">
+
+          <div
+            class="toast-body fs-6"
+            id="toastMessage"
+          ></div>
+
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Bootstrap -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    ></script>
+
+
+    <!-- STAFF DASHBOARD JAVASCRIPT -->
+    <script>
+
+      const storeId = JSON.parse('{{ store_id | tojson }}');
+
+
+      // ==============================
+      // TOAST MESSAGE
+      // ==============================
+
+      function showMessage(message, type = "info") {
+
+        const toast = document.getElementById("alertToast");
+        const toastMessage = document.getElementById("toastMessage");
+
+        toastMessage.textContent = message;
+
+        toast.classList.remove(
+          "bg-info",
+          "bg-success",
+          "bg-danger",
+          "bg-warning"
+        );
+
+        toast.classList.add("bg-" + type);
+
+        const toastObject =
+          bootstrap.Toast.getOrCreateInstance(toast);
+
+        toastObject.show();
+      }
+
+
+      // ==============================
+      // LOAD STAFF DASHBOARD
+      // ==============================
+
+      async function loadDashboard() {
+
+        try {
+
+          const response = await fetch(
+            `/api/staff/dashboard/${storeId}`
+          );
+
+          const data = await response.json();
+
+          if (!response.ok) {
+
+            showMessage(
+              data.error || "Unable to load dashboard",
+              "danger"
+            );
+
+            return;
+          }
+
+
+          // Store name
+          if (data.store) {
+
+            document.getElementById("storeName").textContent =
+              data.store.store_name;
+          }
+
+
+          // Summary
+          if (data.summary) {
+
+            document.getElementById("waitingCount").textContent =
+              data.summary.waiting || 0;
+
+            document.getElementById("servingCount").textContent =
+              data.summary.serving || 0;
+
+            document.getElementById("completedCount").textContent =
+              data.summary.completed || 0;
+          }
+
+
+          // Counters
+          loadCounters(data.counters || []);
+
+
+          // Queue
+          loadQueues(data.counters || []);
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            "Failed to connect to server",
+            "danger"
+          );
+        }
+      }
+
+
+      // ==============================
+      // DISPLAY COUNTERS
+      // ==============================
+
+      function loadCounters(counters) {
+
+        const container =
+          document.getElementById("counterContainer");
+
+        container.innerHTML = "";
+
+
+        if (counters.length === 0) {
+
+          container.innerHTML = `
+            <div class="col-12">
+              <div class="alert alert-secondary">
+                No counters found.
+              </div>
+            </div>
+          `;
+
+          return;
+        }
+
+
+        counters.forEach(counter => {
+
+          const status =
+            counter.counter_status || "closed";
+
+          const isOpen =
+            status.toLowerCase() === "open";
+
+
+          container.innerHTML += `
+
+            <div class="col-md-4">
+
+              <div class="card border rounded-4 h-100">
+
+                <div class="card-body">
+
+                  <div class="d-flex justify-content-between">
+
+                    <h5 class="fw-bold">
+                      ${counter.counter_name}
+                    </h5>
+
+                    <span class="badge ${
+                      isOpen
+                        ? "bg-success"
+                        : "bg-secondary"
+                    }">
+
+                      ${status.toUpperCase()}
+
+                    </span>
+
+                  </div>
+
+
+                  <hr>
+
+
+                  <p class="text-muted mb-3">
+
+                    Counter ID:
+                    ${counter.counter_id}
+
+                  </p>
+
+
+                  <button
+                    class="btn ${
+                      isOpen
+                        ? "btn-danger"
+                        : "btn-success"
+                    } w-100"
+                    onclick="changeCounterStatus(
+                      ${counter.counter_id},
+                      '${isOpen ? "closed" : "open"}'
+                    )"
+                  >
+
+                    ${
+                      isOpen
+                        ? "Close Counter"
+                        : "Open Counter"
+                    }
+
+                  </button>
+                  <button
+                     class="btn btn-primary w-100 mt-2"
+                     onclick="callNext(${counter.counter_id})"
+                     ${!isOpen ? "disabled" : ""}
+                  >
+                     Call Next Customer
+                 
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+
+          `;
+
+        });
+
+      }
+
+
+      // ==============================
+      // OPEN / CLOSE COUNTER
+      // ==============================
+
+      async function changeCounterStatus(
+        counterId,
+        newStatus
+      ) {
+
+        try {
+
+          const response = await fetch(
+            `/api/counters/${counterId}/status`,
+            {
+
+              method: "PATCH",
+
+              headers: {
+                "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+                status: newStatus
+              })
+
+            }
+          );
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            showMessage(
+              data.error || "Unable to change counter status",
+              "danger"
+            );
+
+            return;
+          }
+
+
+          showMessage(
+            `Counter ${newStatus} successfully`,
+            "success"
+          );
+
+
+          loadDashboard();
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            "Failed to update counter",
+            "danger"
+          );
+        }
+
+      }
+
+
+      // ==============================
+      // LOAD QUEUES
+      // ==============================
+
+      async function loadQueues(counters) {
+
+        const tbody =
+          document.getElementById("queueTableBody");
+
+        tbody.innerHTML = "";
+
+
+        let queues = [];
+
+
+        for (const counter of counters) {
+
+          try {
+
+            const response = await fetch(
+              `/api/counters/${counter.counter_id}/queue`
+            );
+
+            const data =
+              await response.json();
+
+
+            if (response.ok) {
+
+              data.forEach(queue => {
+
+                queues.push({
+                  ...queue,
+                  counter_name:
+                    counter.counter_name
+                });
+
+              });
+
+            }
+
+          }
+
+          catch (error) {
+
+            console.error(error);
+
+          }
+
+        }
+
+
+        if (queues.length === 0) {
+
+          tbody.innerHTML = `
+
+            <tr>
+
+              <td
+                colspan="5"
+                class="text-center text-muted"
+              >
+
+                No active queues.
+
+              </td>
+
+            </tr>
+
+          `;
+
+          return;
+
+        }
+
+
+        queues.forEach(queue => {
+
+          let actionButtons = "";
+
+
+          if (queue.status === "SERVING") {
+
+            actionButtons = `
+
+              <button
+                class="btn btn-warning btn-sm me-1"
+                onclick="recallQueue(${queue.queue_id})"
+              >
+                Recall
+              </button>
+
+              <button
+                class="btn btn-success btn-sm me-1"
+                onclick="completeQueue(${queue.queue_id})"
+              >
+                Complete
+              </button>
+
+              <button
+                class="btn btn-danger btn-sm"
+                onclick="skipQueue(${queue.queue_id})"
+              >
+                Skip
+              </button>
+
+            `;
+
+          }
+
+
+          tbody.innerHTML += `
+
+            <tr>
+
+              <td class="fw-bold">
+                Q-${String(queue.queue_id).padStart(3, "0")}
+              </td>
+
+              <td>
+                ${queue.service_id || "-"}
+              </td>
+
+              <td>
+
+                <span class="badge ${
+                  queue.status === "SERVING"
+                    ? "bg-primary"
+                    : "bg-warning text-dark"
+                }">
+
+                  ${queue.status}
+
+                </span>
+
+              </td>
+
+              <td>
+                ${queue.counter_name}
+              </td>
+
+              <td>
+
+                ${actionButtons}
+
+              </td>
+
+            </tr>
+
+          `;
+
+        });
+
+      }
+
+
+      // ==============================
+      // CALL NEXT CUSTOMER
+      // ==============================
+
+      async function callNext(counterId) {
+
+        try {
+
+          const response = await fetch(
+            `/api/counters/${counterId}/call-next`,
+            {
+              method: "POST"
+            }
+          );
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            showMessage(
+              data.error || data.message || "No customer waiting",
+              "warning"
+            );
+
+            return;
+          }
+
+
+          showMessage(
+            "Next customer called successfully",
+            "success"
+          );
+
+
+          loadDashboard();
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            "Failed to call next customer",
+            "danger"
+          );
+
+        }
+
+      }
+
+
+      // ==============================
+      // RECALL
+      // ==============================
+
+      async function recallQueue(queueId) {
+
+        await queueAction(
+          `/api/queues/${queueId}/recall`,
+          "PATCH",
+          "Customer recalled successfully"
+        );
+
+      }
+
+
+      // ==============================
+      // SKIP
+      // ==============================
+
+      async function skipQueue(queueId) {
+
+        await queueAction(
+          `/api/queues/${queueId}/skip`,
+          "PATCH",
+          "Customer skipped successfully"
+        );
+
+      }
+
+
+      // ==============================
+      // COMPLETE
+      // ==============================
+
+      async function completeQueue(queueId) {
+
+        await queueAction(
+          `/api/queues/${queueId}/complete`,
+          "PATCH",
+          "Queue completed successfully"
+        );
+
+      }
+
+
+      // ==============================
+      // GENERIC QUEUE ACTION
+      // ==============================
+
+      async function queueAction(
+        url,
+        method,
+        successMessage
+      ) {
+
+        try {
+
+          const response =
+            await fetch(url, {
+              method: method
+            });
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            showMessage(
+              data.error || "Action failed",
+              "danger"
+            );
+
+            return;
+          }
+
+
+          showMessage(
+            successMessage,
+            "success"
+          );
+
+
+          loadDashboard();
+
+          loadHistory();
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            "Failed to perform action",
+            "danger"
+          );
+
+        }
+
+      }
+
+
+      // ==============================
+      // QUEUE HISTORY
+      // ==============================
+
+      async function loadHistory() {
+
+        const tbody =
+          document.getElementById("historyTableBody");
+
+
+        try {
+
+          const response =
+            await fetch("/api/queues/history");
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            showMessage(
+              data.error || "Unable to load history",
+              "danger"
+            );
+
+            return;
+          }
+
+
+          tbody.innerHTML = "";
+
+
+          if (data.length === 0) {
+
+            tbody.innerHTML = `
+
+              <tr>
+
+                <td
+                  colspan="4"
+                  class="text-center text-muted"
+                >
+
+                  No queue history.
+
+                </td>
+
+              </tr>
+
+            `;
+
+            return;
+
+          }
+
+
+          data.forEach(queue => {
+
+            tbody.innerHTML += `
+
+              <tr>
+
+                <td class="fw-bold">
+
+                  Q-${String(queue.queue_id)
+                    .padStart(3, "0")}
+
+                </td>
+
+                <td>
+                  ${queue.service_id || "-"}
+                </td>
+
+                <td>
+
+                  <span class="badge ${
+                    queue.status === "COMPLETED"
+                      ? "bg-success"
+                      : queue.status === "SKIPPED"
+                        ? "bg-warning text-dark"
+                        : "bg-danger"
+                  }">
+
+                    ${queue.status}
+
+                  </span>
+
+                </td>
+
+                <td>
+                  ${queue.counter_id || "-"}
+                </td>
+
+              </tr>
+
+            `;
+
+          });
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          tbody.innerHTML = `
+
+            <tr>
+
+              <td
+                colspan="4"
+                class="text-center text-danger"
+              >
+
+                Failed to load history.
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+
+      }
+
+
+      // ==============================
+      // START DASHBOARD
+      // ==============================
+
+      loadDashboard();
+
+      loadHistory();
+
+      // Refresh every 5 seconds
+      setInterval(() => {
+
+        loadDashboard();
+
+        loadHistory();
+
+      }, 5000);
+
+    </script>
+
+  </body>
+</html>

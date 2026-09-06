@@ -1,15 +1,40 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session
-
+from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
 app = Flask(__name__)
 app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    return conn
+    if 'db' not in g:
+        # Adding timeout=20 gives SQLite 20 seconds to wait for open locks before raising an error
+        g.db = sqlite3.connect(DB_NAME, timeout=20)
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
+@app.teardown_appcontext
+def close_db(exception):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+def init_db():
+    conn = get_db_connection()
+    with open('schema.sql') as f:
+        conn.executescript(f.read())
+    conn.commit()
+    conn.close()
+
+@app.route('/logout')
+def logout():
+    # logout code
+    return redirect(url_for('login'))
+
+@app.route('/staff/dashboard/<int:store_id>')
+def staff_dashboard(store_id):
+    return render_template(
+        'staff_dashboard.html',
+        store_id=store_id
+    )
 #======================================================================
 # -- Member 1 (Syahmi): User & Store Api
 #======================================================================
@@ -1110,6 +1135,197 @@ def get_queue_history():
     return jsonify([
         dict(row) for row in queues
     ]), 200
+
+# GET - View queue status summary
+@app.route('/api/counters/<int:counter_id>/queue/status', methods=['GET'])
+def get_queue_status(counter_id):
+
+    conn = get_db_connection()
+
+    # Check counter
+    counter = conn.execute(
+        """
+        SELECT *
+        FROM counter
+        WHERE counter_id = ?
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    if not counter:
+        conn.close()
+        return jsonify({
+            'error': 'Counter not found'
+        }), 404
+
+    # Find currently serving customer
+    serving = conn.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE counter_id = ?
+        AND status = 'SERVING'
+        ORDER BY queue_id ASC
+        LIMIT 1
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    # Count waiting customers
+    waiting = conn.execute(
+        """
+        SELECT COUNT(*) AS waiting_count
+        FROM queue
+        WHERE counter_id = ?
+        AND status = 'WAITING'
+        """,
+        (counter_id,)
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify({
+        'counter_id': counter_id,
+        'serving': dict(serving) if serving else None,
+        'waiting_count': waiting['waiting_count']
+    }), 200
+
+# GET - View status history for one queue
+@app.route('/api/queues/<int:queue_id>/history', methods=['GET'])
+def get_queue_status_history(queue_id):
+
+    conn = get_db_connection()
+
+    history = conn.execute(
+        """
+        SELECT *
+        FROM queue_history
+        WHERE queue_id = ?
+        ORDER BY timestamp ASC
+        """,
+        (queue_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(row) for row in history
+    ]), 200
+
+# =========================
+# STAFF DASHBOARD API
+# =========================
+
+@app.route('/api/staff/dashboard/<int:store_id>', methods=['GET'])
+def get_staff_dashboard(store_id):
+
+    conn = get_db_connection()
+
+    # Check whether store exists
+    store = conn.execute(
+        """
+        SELECT *
+        FROM store
+        WHERE store_id = ?
+        """,
+        (store_id,)
+    ).fetchone()
+
+    if not store:
+        conn.close()
+        return jsonify({
+            'error': 'Store not found'
+        }), 404
+
+    # Get all counters for this store
+    counters = conn.execute(
+        """
+        SELECT *
+        FROM counter
+        WHERE store_id = ?
+        """,
+        (store_id,)
+    ).fetchall()
+
+    # Count waiting customers
+    waiting = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'WAITING'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    # Count currently serving
+    serving = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'SERVING'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    # Count completed
+    completed = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'COMPLETED'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    # Count skipped
+    skipped = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'SKIPPED'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    # Count cancelled
+    cancelled = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.status = 'CANCELLED'
+        """,
+        (store_id,)
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify({
+        'store': dict(store),
+
+        'counters': [
+            dict(counter)
+            for counter in counters
+        ],
+
+        'queue_summary': {
+            'waiting': waiting['total'],
+            'serving': serving['total'],
+            'completed': completed['total'],
+            'skipped': skipped['total'],
+            'cancelled': cancelled['total']
+        }
+    }), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)
