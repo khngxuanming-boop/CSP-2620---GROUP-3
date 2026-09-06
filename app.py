@@ -1202,5 +1202,16 @@ def get_staff_dashboard(store_id):
         }
     }), 200
 
+# =========================
+# STAFF DASHBOARD PAGE
+# =========================
+
+@app.route('/staff/dashboard/<int:store_id>')
+def staff_dashboard(store_id):
+    return render_template(
+        'dashboard.html',
+        store_id=store_id
+    )
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)
