@@ -24,10 +24,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-@app.route('/logout')
-def logout():
-    # logout code
-    return redirect(url_for('login'))
 
 @app.route('/staff/dashboard/<int:store_id>')
 def staff_dashboard(store_id):
