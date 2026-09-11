@@ -132,6 +132,9 @@ def login():
         conn.close()
 
         if user:
+            session['user_id'] = user['user_id']
+            session['username'] = user['username']
+            session['role'] = user['role']
             return redirect(url_for('store_discovery'))
         else:
             return "Incorrect password or username. Please try again!"
