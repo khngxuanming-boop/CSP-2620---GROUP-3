@@ -132,6 +132,9 @@ def login():
         conn.close()
 
         if user:
+            session['user_id'] = user['user_id']
+            session['username'] = user['username']
+            session['role'] = user['role']
             return redirect(url_for('store_discovery'))
         else:
             return "Incorrect password or username. Please try again!"
@@ -169,8 +172,7 @@ def store_details(store_id):
     store = conn.execute('SELECT * FROM store WHERE store_id =?', (store_id,)).fetchone()
 
     # Grab all active services linked to this store from Member 3's service table
-    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id)).fetchall()
-
+    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
     conn.close()
 
     # Fall back error response if someone manually type a fake store ID in the URL
