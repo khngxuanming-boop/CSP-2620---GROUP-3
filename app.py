@@ -1,8 +1,11 @@
 import sqlite3
 from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
+from flask_socketio import SocketIO
+
 app = Flask(__name__)
 app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 def get_db_connection():
     if 'db' not in g:
@@ -1324,4 +1327,4 @@ def get_staff_dashboard(store_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, use_reloader=False)
+    socketio.run(app, debug=True)
