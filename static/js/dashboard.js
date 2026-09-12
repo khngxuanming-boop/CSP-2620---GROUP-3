@@ -51,9 +51,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // Status UI change color logic
         if (queueStatusEl) {
           queueStatusEl.innerText = data.status;
-          if (["COMPLETED", "CANCELLED", "SKIPPED"].includes(data.status)) {
-            clearInterval(pollingInterval);
-          }
           if (data.status === "WAITING") {
             queueStatusEl.className =
               "badge bg-warning text-dark fs-5 mt-3 mb-4";
@@ -69,8 +66,8 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
         // Update the people ahead and wait time
-        if (peopleAheadEl) peopleAheadEl.innerText = data.people_ahead || 0;
-        if (waitTimeEl) waitTimeEl.innerText = data.wait_time || 0;
+        if (peopleAheadEl) peopleAheadEl.innerText = data.people_ahead ?? 0;
+        if (waitTimeEl) waitTimeEl.innerText = data.wait_time ?? 0;
 
         // Trigger notification: Alert when only 2 people are left
         if (
@@ -90,9 +87,18 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initial fetch
   fetchQueueStatus();
 
-  // Fake HTTP Polling: Check the queue status every 5 seconds
-  // Will change it during Week4
-  const pollingInterval = setInterval(fetchQueueStatus, 5000);
+  // Socket.IO: Real time queue update
+  const socket = io();
+  socket.on("connect", function () {
+    console.log("WebSocket connected successfully!");
+  });
+  socket.on("queue_updated", function (data) {
+    console.log("Queue data changed! Fetching new status instantly...");
+    fetchQueueStatus();
+  });
+  socket.on("disconnect", function () {
+    console.log("WebSocket disconnected.");
+  });
 
   // Cancel Queue Button Click Handler
   if (cancelBtn) {
@@ -110,7 +116,6 @@ document.addEventListener("DOMContentLoaded", function () {
               alert("Failed to cancel queue: " + data.error);
             } else {
               alert("Queue cancelled successfully!");
-              clearInterval(pollingInterval); // Stop polling
               window.location.href = "/stores"; // Redirect to stores page
             }
           })
