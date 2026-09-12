@@ -77,7 +77,8 @@ def store_discovery():
     return render_template(
         'stores.html',
         stores=stores,
-        search_query=search_query
+        search_query=search_query,
+        username=current_username
     )
 
 # User Registration
