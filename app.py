@@ -176,7 +176,7 @@ def store_details(store_id):
     store = conn.execute('SELECT * FROM store WHERE store_id =?', (store_id,)).fetchone()
 
     # Grab all active services linked to this store from Member 3's service table
-    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id)).fetchall()
+    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
 
     conn.close()
 
