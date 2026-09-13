@@ -243,6 +243,7 @@ def logout():
 @app.route('/admin/dashboard')
 def admin_required():
     return session.get('role') == 'SYS_ADMIN' and session.get('user_id') is not None
+
 def admin_dashboard():
     if not admin_required():
         return redirect(url_for('login'))
