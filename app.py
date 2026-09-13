@@ -102,8 +102,13 @@ def register():
             error = "That username is already taken! Choose another one."
             conn.close() # Close since failed.
         else:
-        # Save into the database as 'CUSTOMER'
-            conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
+        # Admins start PENDING until an existing admin approves them; everyone else is auto-approved
+            account_status = 'PENDING' if role == 'SYS_ADMIN' else 'APPROVED'
+
+            conn.execute(
+                'INSERT INTO user (username, password, role, account_status) VALUES (?, ?, ?, ?)',
+                (username, password, role, account_status)
+            )
             conn.commit()
             conn.close()
 
@@ -145,7 +150,7 @@ def login():
 
     return render_template('login.html')
 
-# Store registration ----> Week 4: Adding
+# Store registration ----> Week 4: Adding form
 @app.route('/register_store', methods=['GET', 'POST'])
 def register_store():
     if 'user_id' not in session:
