@@ -4,6 +4,11 @@ CREATE TABLE IF NOT EXISTS user (
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     role TEXT DEFAULT 'CUSTOMER'
+    email TEXT, -- Week 4: Verification + forget password
+    is_verified BOOLEAN DEFAULT 0, --  Email verification flag
+    verification_code TEXT, -- Holds the OTP/code sent to email
+    reset_token TEXT, -- For forgot-password flow
+    reset_token_expire DATETIME -- So reset links expire
 );
 
 -- Member 1(Syahmi): store table
