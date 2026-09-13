@@ -141,6 +141,13 @@ def login():
         conn.close()
 
         if user:
+            if user['role'] == 'SYS_ADMIN' and user['account_status'] != 'APPROVED':
+                status_msg = {
+                    'PENDING': "Your admin request is still pending approval.",
+                    'REJECTED': "Your admin request was rejected."
+                }.get(user['account_status'], "Your account isn't active yet.")
+                return status_msg
+
             session['user_id'] = user['user_id']
             session['username'] = user['username']
             session['role'] = user['role']
