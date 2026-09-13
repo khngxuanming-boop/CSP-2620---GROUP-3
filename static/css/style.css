@@ -1,13 +1,15 @@
 /* UI for Booking, Check-In, and Dashboard Pages */
 :root {
-  --primary: #5c6b73;         
-  --primary-dark: #3a4750;    
-  --text: #2b2d42;             
-  --muted: #7b8895;            
-  --background: #f0f2f5;       
-  --card: rgba(255, 255, 255, 0.95);
+
+  --primary: #007aff;
+  --primary-dark: #0066d6;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --background: #cacad3;
+  --card: rgba(255, 255, 255, 0.88);
   --border: rgba(0, 0, 0, 0.08);
-  --shadow: 0 12px 35px rgba(0, 0, 0, 0.05);
+  --shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+
 }
 
 /* Global Foundation Settings */
@@ -31,6 +33,7 @@ body {
     "Segoe UI", sans-serif;
   min-height: 100vh;
 }
+
 
 /* Main Container */
 .container {
@@ -252,3 +255,4 @@ hr {
     font-size: 1.8rem;
   }
 }
+

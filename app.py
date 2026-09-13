@@ -27,6 +27,26 @@ def init_db():
     conn.commit()
     conn.close()
 
+def create_admin():
+    conn = get_db_connection()
+
+    existing_admin = conn.execute(
+        'SELECT * FROM user WHERE username = ?',
+        ('admin',)
+    ).fetchone()
+
+    if not existing_admin:
+        conn.execute(
+            '''
+            INSERT INTO user (username, password, role)
+            VALUES (?, ?, ?)
+            ''',
+            ('admin', 'admin123', 'ADMIN')
+        )
+        conn.commit()
+        print("Admin account created.")
+
+    conn.close()
 
 @app.route('/staff/dashboard/<int:store_id>')
 def staff_dashboard(store_id):
@@ -1354,4 +1374,8 @@ def get_staff_dashboard(store_id):
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    with app.app_context():
+        init_db()
+        create_admin()
+
+    socketio.run(app, debug=True, port=5000)
