@@ -1,8 +1,11 @@
 import sqlite3
 from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
+from flask_socketio import SocketIO, emit
+
 app = Flask(__name__)
 app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 def get_db_connection():
     if 'db' not in g:
@@ -74,7 +77,8 @@ def store_discovery():
     return render_template(
         'stores.html',
         stores=stores,
-        search_query=search_query
+        search_query=search_query,
+        username=current_username
     )
 
 # User Registration
@@ -196,7 +200,7 @@ def logout():
 # POST /api/appointments
 @app.route('/api/appointments', methods=['POST'])
 def create_appointment():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
     required = ['user_id', 'service_id', 'appt_datetime']
     if not all(data.get(key) for key in required):
@@ -204,6 +208,14 @@ def create_appointment():
 
     conn = get_db_connection()    
     try:
+        user = conn.execute('SELECT 1 FROM user WHERE user_id = ?', (data['user_id'],)).fetchone()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        service = conn.execute('SELECT 1 FROM service WHERE service_id = ?', (data['service_id'],)).fetchone()
+        if not service:
+            return jsonify({'error': 'Service not found'}), 404
+        
         with conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -227,6 +239,15 @@ def walk_in_queue():
 
     conn = get_db_connection()
     try:
+        user = conn.execute('SELECT 1 FROM user WHERE user_id = ?', (data['user_id'],)).fetchone()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        service = conn.execute('SELECT 1 FROM service WHERE service_id = ?', (data['service_id'],)).fetchone()
+        if not service:
+            return jsonify({'error': 'Service not found'}), 404
+
+        conn.execute("BEGIN IMMEDIATE")
         with conn:
             cursor = conn.cursor()
 
@@ -241,6 +262,8 @@ def walk_in_queue():
             )
             queue_id = cursor.lastrowid
 
+        socketio.emit('queue_updated')
+
         return jsonify({'message': 'Successfully joined the walk-in queue!', 'queue_id': queue_id, 'queue_number': queue_number}),201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -252,6 +275,7 @@ def walk_in_queue():
 def check_in_appointment(appt_id):
     conn = get_db_connection()
     try:
+        conn.execute("BEGIN IMMEDIATE")
         with conn:
             cursor = conn.cursor()
 
@@ -275,6 +299,8 @@ def check_in_appointment(appt_id):
             )
             queue_id = cursor.lastrowid
 
+        socketio.emit('queue_updated')
+
         return jsonify({'message': 'Appointment checked in successfully!', 'queue_id': queue_id, 'queue_number': queue_number}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -284,7 +310,7 @@ def check_in_appointment(appt_id):
 # GET /api/queues/my-status
 @app.route('/api/queues/my-status', methods=['GET'])
 def get_my_queue_status():
-    queue_id = request.args.get('queue_id')
+    queue_id = request.args.get('queue_id', type=int)
     if not queue_id:
         return jsonify({'error': 'Missing queue_id parameter'}), 400
 
@@ -1062,6 +1088,7 @@ def cancel_queue(queue_id):
 
     conn.commit()
     conn.close()
+    socketio.emit('queue_updated')
 
     return jsonify({
         'message': 'Queue cancelled successfully',
@@ -1326,4 +1353,4 @@ def get_staff_dashboard(store_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, use_reloader=False)
+    socketio.run(app, debug=True)
