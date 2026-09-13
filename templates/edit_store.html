@@ -1,0 +1,27 @@
+<!-- WEEK 4 ADDITION OF EDIT STORE FORM -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Edit Store</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="card" style="max-width: 500px; margin: 50px auto;">
+        <h1>Edit {{ store['store_name'] }}</h1>
+        <p style="color: #6b7280;">Editing will send this store back to Pending for re-review.</p>
+
+        <form method="POST">
+            <label>Store Name</label>
+            <input type="text" name="name" value="{{ store['store_name'] }}" required>
+
+            <label>Operating Hours</label>
+            <input type="text" name="hours" value="{{ store['operating_hours'] }}" required>
+
+            <button type="submit" style="width: 100%; margin-top: 15px;">Save & Resubmit</button>
+        </form>
+        <p style="text-align: center; margin-top: 15px;">
+            <a href="/my-store" style="color: #2563eb;">← Back to My Stores</a>
+        </p>
+    </div>
+</body>
+</html>
