@@ -163,10 +163,18 @@ def login():
         conn.close()
 
         if user:
-            session['user_id'] = user['user_id']
-            session['username'] = user['username']
-            session['role'] = user['role']
-            return redirect(url_for('store_discovery'))
+               session['user_id'] = user['user_id']
+               session['username'] = user['username']
+               session['role'] = user['role']
+
+               if user['role'] == 'ADMIN':
+                    return redirect(url_for('admin_dashboard'))
+
+               elif user['role'] == 'STAFF':
+                    return redirect(url_for('staff_dashboard', store_id=1))
+
+               else:
+                    return redirect(url_for('store_discovery'))
         else:
             return "Incorrect password or username. Please try again!"
 
