@@ -1,0 +1,63 @@
+<!-- WEEK 4 ADDITION OF ADMIN DASHBOARD -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div style="text-align: right; padding: 20px; max-width: 1000px; margin: 0 auto;">
+        <span>Welcome, <strong style="color: #2563eb;">{{ username }}</strong>!</span> |
+        <a href="/logout" style="color: #ef4444; text-decoration: none; font-weight: bold;">Logout</a>
+    </div>
+
+    <div class="card" style="max-width: 800px; margin: 0 auto 20px auto; display: flex; gap: 20px; text-align: center;">
+        <div style="flex: 1;">
+            <h2 style="margin-bottom: 0; color: #f59e0b;">{{ store_counts['pending'] or 0 }}</h2>
+            <p>Pending</p>
+        </div>
+        <div style="flex: 1;">
+            <h2 style="margin-bottom: 0; color: #10b981;">{{ store_counts['approved'] or 0 }}</h2>
+            <p>Approved</p>
+        </div>
+        <div style="flex: 1;">
+            <h2 style="margin-bottom: 0; color: #ef4444;">{{ store_counts['rejected'] or 0 }}</h2>
+            <p>Rejected</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 800px; margin: 0 auto 20px auto;">
+        <h1>Pending Stores</h1>
+        {% for store in pending_stores %}
+            <div style="border-bottom: 1px solid #d1d5db; padding: 10px 0;">
+                <strong>{{ store['store_name'] }}</strong> — {{ store['operating_hours'] }}
+                <form method="POST" action="/admin/store/{{ store['store_id'] }}/approve" style="display:inline;">
+                    <button type="submit">Approve</button>
+                </form>
+                <form method="POST" action="/admin/store/{{ store['store_id'] }}/reject" style="display:inline;">
+                    <button type="submit">Reject</button>
+                </form>
+            </div>
+        {% else %}
+            <p>No pending stores.</p>
+        {% endfor %}
+    </div>
+
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
+        <h1>Pending Admin Requests</h1>
+        {% for admin in pending_admins %}
+            <div style="border-bottom: 1px solid #d1d5db; padding: 10px 0;">
+                <strong>{{ admin['username'] }}</strong>
+                <form method="POST" action="/admin/user/{{ admin['user_id'] }}/approve" style="display:inline;">
+                    <button type="submit">Approve</button>
+                </form>
+                <form method="POST" action="/admin/user/{{ admin['user_id'] }}/reject" style="display:inline;">
+                    <button type="submit">Reject</button>
+                </form>
+            </div>
+        {% else %}
+            <p>No pending admin requests.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
