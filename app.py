@@ -25,7 +25,34 @@ def init_db():
     with open('schema.sql') as f:
         conn.executescript(f.read())
     conn.commit()
+
+def create_admin():
+    conn = get_db_connection()
+
+    existing_admin = conn.execute(
+        'SELECT * FROM user WHERE username = ?',
+        ('admin',)
+    ).fetchone()
+
+    if not existing_admin:
+        conn.execute(
+            '''
+            INSERT INTO user (username, password, role)
+            VALUES (?, ?, ?)
+            ''',
+            ('admin', 'admin123', 'ADMIN')
+        )
+        conn.commit()
+        print("Admin account created.")
+
     conn.close()
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('login'))
+
+    return render_template('admin_dashboard.html')
 
 
 @app.route('/staff/dashboard/<int:store_id>')
@@ -151,7 +178,15 @@ def login():
             session['user_id'] = user['user_id']
             session['username'] = user['username']
             session['role'] = user['role']
-            return redirect(url_for('store_discovery'))
+
+            if user['role'] == 'ADMIN':
+                return redirect(url_for('admin_dashboard'))
+
+            elif user['role'] == 'STAFF':
+                return redirect(url_for('staff_dashboard', store_id=1))
+
+            else:
+                return redirect(url_for('store_discovery'))
         else:
             return "Incorrect password or username. Please try again!"
 
@@ -1421,4 +1456,8 @@ def get_staff_dashboard(store_id):
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    with app.app_context():
+        init_db()
+        create_admin()
+
+    socketio.run(app, debug=True, port=5000)
