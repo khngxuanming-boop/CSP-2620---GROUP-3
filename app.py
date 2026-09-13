@@ -25,7 +25,6 @@ def init_db():
     with open('schema.sql') as f:
         conn.executescript(f.read())
     conn.commit()
-    conn.close()
 
 def create_admin():
     conn = get_db_connection()
@@ -47,6 +46,14 @@ def create_admin():
         print("Admin account created.")
 
     conn.close()
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('login'))
+
+    return render_template('admin_dashboard.html')
+
 
 @app.route('/staff/dashboard/<int:store_id>')
 def staff_dashboard(store_id):
