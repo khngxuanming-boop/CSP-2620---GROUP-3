@@ -166,15 +166,7 @@ def login():
         ).fetchone()
 
         conn.close()
-        # Week 4: Added sys_admin
         if user:
-            if user['role'] == 'SYS_ADMIN' and user['account_status'] != 'APPROVED':
-                status_msg = {
-                    'PENDING': "Your admin request is still pending approval.",
-                    'REJECTED': "Your admin request was rejected."
-                }.get(user['account_status'], "Your account isn't active yet.")
-                return status_msg
-
             session['user_id'] = user['user_id']
             session['username'] = user['username']
             session['role'] = user['role']
@@ -259,9 +251,6 @@ def admin_dashboard():
     pending_stores = conn.execute(
         "SELECT * FROM store WHERE store_status = 'PENDING'"
     ).fetchall()
-    pending_admins = conn.execute(
-        "SELECT * FROM user WHERE role = 'SYS_ADMIN' AND account_status = 'PENDING'"
-    ).fetchall()
 
     store_counts = conn.execute(
         """
@@ -278,10 +267,27 @@ def admin_dashboard():
     return render_template(
         'admin_dashboard.html',
         pending_stores=pending_stores,
-        pending_admins=pending_admins,
         store_counts=store_counts,
         username=session.get('username')
     )
+
+# Admin Review 
+@app.route('/admin/store/<int:store_id>/<action>', methods=['POST'])
+def admin_review_store(store_id, action):
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    new_status = 'APPROVED' if action == 'approve' else 'REJECTED'
+    reason = request.form.get('reason', '').strip() if action == 'reject' else None
+
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE store SET store_status = ?, rejection_reason = ? WHERE store_id = ?',
+        (new_status, reason, store_id)
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin_dashboard'))
 
 # Owner Store Dashboard ----Week 4
 @app.route('/my-store')
