@@ -139,7 +139,7 @@ def login():
         ).fetchone()
 
         conn.close()
-
+        # Week 4: Added sys_admin
         if user:
             if user['role'] == 'SYS_ADMIN' and user['account_status'] != 'APPROVED':
                 status_msg = {
@@ -211,6 +211,42 @@ def logout():
         session.clear()
         # Redirect user back to login
         return redirect(url_for('login'))
+
+# Admin Dashboard
+@app.route('/admin/dashboard')
+def admin_required():
+    return session.get('role') == 'SYS_ADMIN' and session.get('user_id') is not None
+def admin_dashboard():
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    pending_stores = conn.execute(
+        "SELECT * FROM store WHERE store_status = 'PENDING'"
+    ).fetchall()
+    pending_admins = conn.execute(
+        "SELECT * FROM user WHERE role = 'SYS_ADMIN' AND account_status = 'PENDING'"
+    ).fetchall()
+
+    store_counts = conn.execute(
+        """
+        SELECT
+            SUM(CASE WHEN store_status = 'PENDING' THEN 1 ELSE 0 END) AS pending,
+            SUM(CASE WHEN store_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+            SUM(CASE WHEN store_status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected
+        FROM store
+        """
+    ).fetchone()
+
+    conn.close()
+
+    return render_template(
+        'admin_dashboard.html',
+        pending_stores=pending_stores,
+        pending_admins=pending_admins,
+        store_counts=store_counts,
+        username=session.get('username')
+    )
 
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
