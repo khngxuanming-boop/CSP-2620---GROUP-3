@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard | Queue Management System</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Main CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+
+        body {
+            background: #f0f2f5;
+            color: #2b2d42;
+        }
+
+        /* ================= NAVBAR ================= */
+
+        .admin-navbar {
+            background: #3a4750;
+            color: white;
+            padding: 16px 35px;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            opacity: 0.75;
+        }
+
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #5c6b73;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            border: 1px solid rgba(255,255,255,0.5);
+            color: white;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #3a4750;
+        }
+
+
+        /* ================= MAIN ================= */
+
+        .dashboard {
+            padding: 35px;
+            max-width: 1500px;
+            margin: auto;
+        }
+
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+
+        .welcome-section h2 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .welcome-section p {
+            color: #7b8895;
+            margin: 0;
+        }
+
+
+        /* ================= STAT CARDS ================= */
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 22px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            transition: 0.2s;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            color: #7b8895;
+            font-size: 14px;
+        }
+
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 700;
+            margin-top: 12px;
+        }
+
+
+        /* ================= CARD ================= */
+
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-description {
+            color: #7b8895;
+            font-size: 13px;
+        }
+
+
+        /* ================= PROPOSAL ================= */
+
+        .proposal-card {
+            border-top: 4px solid #d99a2b;
+        }
+
+        .proposal-badge {
+            background: #fff3cd;
+            color: #856404;
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .approve-btn {
+            background: #198754;
+            border: none;
+            color: white;
+        }
+
+        .approve-btn:hover {
+            background: #157347;
+            color: white;
+        }
+
+        .reject-btn {
+            background: #dc3545;
+            border: none;
+            color: white;
+        }
+
+        .reject-btn:hover {
+            background: #bb2d3b;
+            color: white;
+        }
+
+
+        /* ================= STATUS ================= */
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .status-open {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-closed {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+
+        /* ================= TABLE ================= */
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            color: #7b8895;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table td {
+            vertical-align: middle;
+            padding: 15px 10px;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+
+        /* ================= QUEUE ================= */
+
+        .queue-number {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .queue-waiting {
+            color: #d99a2b;
+        }
+
+        .queue-serving {
+            color: #198754;
+        }
+
+
+        /* ================= ACTIVITY ================= */
+
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .activity-text {
+            font-size: 14px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #7b8895;
+        }
+
+
+        /* ================= EMPTY ================= */
+
+        .empty-message {
+            text-align: center;
+            padding: 35px;
+            color: #7b8895;
+        }
+
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 768px) {
+
+            .dashboard {
+                padding: 20px;
+            }
+
+            .admin-navbar {
+                padding: 15px 20px;
+            }
+
+            .admin-user span {
+                display: none;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     NAVIGATION BAR
+===================================================== -->
+
+<nav class="admin-navbar">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <div>
+            <div class="brand-title">
+                Queue Management System
+            </div>
+
+            <div class="brand-subtitle">
+                Administrator Control Center
+            </div>
+        </div>
+
+
+        <div class="admin-user">
+
+            <div class="admin-avatar">
+                A
+            </div>
+
+            <span>
+                {{ session.get('username', 'Admin') }}
+            </span>
+
+            <a href="{{ url_for('logout') }}"
+               class="btn btn-sm logout-btn">
+                Logout
+            </a>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<main class="dashboard">
+
+
+    <!-- ================= WELCOME ================= -->
+
+    <section class="welcome-section">
+
+        <h2>Admin Dashboard</h2>
+
+        <p>
+            Manage store proposals and monitor the overall
+            queue management system.
+        </p>
+
+    </section>
+
+
+
+    <!-- =================================================
+         SUMMARY CARDS
+    ================================================= -->
+
+    <div class="row g-4">
+
+
+        <!-- Total Stores -->
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="stat-card">
+
+                <div class="stat-header">
+
+                    <div class="stat-label">
+                        Total Stores
+                    </div>
+
+                    <div class="stat-icon">
+                        🏪
+                    </div>
+
+                </div>
+
+                <div class="stat-value"
+                     id="totalStores">
+                    0
+                </div>
+
+                <small class="text-muted">
+                    Registered stores
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- Pending -->
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="stat-card">
+
+                <div class="stat-header">
+
+                    <div class="stat-label">
+                        Pending Proposals
+                    </div>
+
+                    <div class="stat-icon">
+                        📋
+                    </div>
+
+                </div>
+
+                <div class="stat-value"
+                     id="pendingProposals">
+                    0
+                </div>
+
+                <small class="text-muted">
+                    Awaiting approval
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- Waiting -->
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="stat-card">
+
+                <div class="stat-header">
+
+                    <div class="stat-label">
+                        Customers Waiting
+                    </div>
+
+                    <div class="stat-icon">
+                        👥
+                    </div>
+
+                </div>
+
+                <div class="stat-value"
+                     id="waitingCustomers">
+                    0
+                </div>
+
+                <small class="text-muted">
+                    Active waiting queues
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- Serving -->
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="stat-card">
+
+                <div class="stat-header">
+
+                    <div class="stat-label">
+                        Customers Serving
+                    </div>
+
+                    <div class="stat-icon">
+                        🎫
+                    </div>
+
+                </div>
+
+                <div class="stat-value"
+                     id="servingCustomers">
+                    0
+                </div>
+
+                <small class="text-muted">
+                    Currently being served
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         STORE PROPOSALS
+    ================================================= -->
+
+    <div class="dashboard-card proposal-card">
+
+        <div class="d-flex justify-content-between
+                    align-items-center mb-3">
+
+            <div>
+
+                <div class="card-title">
+                    Store Registration Proposals
+                </div>
+
+                <div class="card-description">
+                    Review store registration requests submitted
+                    by store owners.
+                </div>
+
+            </div>
+
+            <span class="proposal-badge">
+                Pending Review
+            </span>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+                        <th>Store ID</th>
+                        <th>Store Name</th>
+                        <th>Operating Hours</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="proposalTable">
+
+                    <tr>
+
+                        <td colspan="5"
+                            class="empty-message">
+
+                            Loading proposals...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         TWO COLUMN SECTION
+    ================================================= -->
+
+    <div class="row g-4">
+
+
+        <!-- ================= STORE OVERVIEW ================= -->
+
+        <div class="col-lg-7">
+
+            <div class="dashboard-card">
+
+                <div class="d-flex justify-content-between
+                            align-items-center mb-3">
+
+                    <div>
+
+                        <div class="card-title">
+                            Store Overview
+                        </div>
+
+                        <div class="card-description">
+                            Current status of registered stores.
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="btn btn-sm btn-outline-secondary"
+                        onclick="loadStores()">
+
+                        Refresh
+
+                    </button>
+
+                </div>
+
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover">
+
+                        <thead>
+
+                            <tr>
+                                <th>Store</th>
+                                <th>Status</th>
+                                <th>Operating Hours</th>
+                                <th>Wait Time</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="storeTable">
+
+                            <tr>
+
+                                <td colspan="4"
+                                    class="empty-message">
+
+                                    Loading stores...
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ================= RECENT ACTIVITY ================= -->
+
+        <div class="col-lg-5">
+
+            <div class="dashboard-card">
+
+                <div class="card-title">
+                    Recent Activity
+                </div>
+
+                <div class="card-description mb-3">
+                    Latest system activities.
+                </div>
+
+
+                <div id="activityList">
+
+                    <div class="activity-item">
+
+                        <div class="activity-icon">
+                            📋
+                        </div>
+
+                        <div>
+
+                            <div class="activity-text">
+                                Loading activities...
+                            </div>
+
+                            <div class="activity-time">
+                                Please wait
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         QUEUE MONITORING
+    ================================================= -->
+
+    <div class="dashboard-card">
+
+        <div class="d-flex justify-content-between
+                    align-items-center mb-3">
+
+            <div>
+
+                <div class="card-title">
+                    Live Queue Monitoring
+                </div>
+
+                <div class="card-description">
+                    Monitor active queues across all stores.
+                </div>
+
+            </div>
+
+            <button
+                class="btn btn-sm btn-outline-secondary"
+                onclick="loadQueueMonitor()">
+
+                Refresh
+
+            </button>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+                        <th>Store</th>
+                        <th>Counter</th>
+                        <th>Queue Number</th>
+                        <th>Status</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="queueTable">
+
+                    <tr>
+
+                        <td colspan="4"
+                            class="empty-message">
+
+                            Loading queue information...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         QUEUE HISTORY
+    ================================================= -->
+
+    <div class="dashboard-card">
+
+        <div class="d-flex justify-content-between
+                    align-items-center mb-3">
+
+            <div>
+
+                <div class="card-title">
+                    Recent Queue History
+                </div>
+
+                <div class="card-description">
+                    Recent queue activity recorded by the system.
+                </div>
+
+            </div>
+
+            <button
+                class="btn btn-sm btn-outline-secondary"
+                onclick="loadHistory()">
+
+                Refresh
+
+            </button>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+                        <th>Queue ID</th>
+                        <th>Counter</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="historyTable">
+
+                    <tr>
+
+                        <td colspan="4"
+                            class="empty-message">
+
+                            Loading history...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script>
+
+
+/* =====================================================
+   LOAD STORES
+===================================================== */
+
+async function loadStores() {
+
+    try {
+
+        const response =
+            await fetch('/api/stores');
+
+        const stores =
+            await response.json();
+
+
+        const storeTable =
+            document.getElementById('storeTable');
+
+        const proposalTable =
+            document.getElementById('proposalTable');
+
+
+        storeTable.innerHTML = '';
+        proposalTable.innerHTML = '';
+
+
+        let pending = 0;
+
+
+        if (!stores || stores.length === 0) {
+
+            storeTable.innerHTML = `
+                <tr>
+                    <td colspan="4"
+                        class="empty-message">
+                        No stores found.
+                    </td>
+                </tr>
+            `;
+
+            proposalTable.innerHTML = `
+                <tr>
+                    <td colspan="5"
+                        class="empty-message">
+                        No store proposals.
+                    </td>
+                </tr>
+            `;
+
+            document.getElementById(
+                'totalStores'
+            ).textContent = 0;
+
+            document.getElementById(
+                'pendingProposals'
+            ).textContent = 0;
+
+            return;
+        }
+
+
+        stores.forEach(store => {
+
+
+            /* =========================
+               STORE TABLE
+            ========================= */
+
+            const row =
+                document.createElement('tr');
+
+
+            row.innerHTML = `
+
+                <td>
+                    <strong>
+                        ${store.store_name}
+                    </strong>
+
+                    <br>
+
+                    <small class="text-muted">
+                        ID: ${store.store_id}
+                    </small>
+                </td>
+
+                <td>
+                    ${getStatusBadge(
+                        store.store_status
+                    )}
+                </td>
+
+                <td>
+                    ${store.operating_hours || '-'}
+                </td>
+
+                <td>
+                    ${store.estimated_wait_time || 0}
+                    min
+                </td>
+
+            `;
+
+
+            storeTable.appendChild(row);
+
+
+
+            /* =========================
+               PROPOSALS
+            ========================= */
+
+            if (
+                store.store_status &&
+                store.store_status.toUpperCase()
+                === 'PENDING'
+            ) {
+
+                pending++;
+
+
+                const proposalRow =
+                    document.createElement('tr');
+
+
+                proposalRow.innerHTML = `
+
+                    <td>
+                        ${store.store_id}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${store.store_name}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${store.operating_hours || '-'}
+                    </td>
+
+                    <td>
+                        <span class="status status-pending">
+                            PENDING
+                        </span>
+                    </td>
+
+                    <td>
+
+                        <button
+                            class="btn btn-sm approve-btn"
+                            onclick="approveStore(
+                                ${store.store_id}
+                            )">
+
+                            Approve
+
+                        </button>
+
+
+                        <button
+                            class="btn btn-sm reject-btn"
+                            onclick="rejectStore(
+                                ${store.store_id}
+                            )">
+
+                            Reject
+
+                        </button>
+
+                    </td>
+
+                `;
+
+
+                proposalTable.appendChild(
+                    proposalRow
+                );
+
+            }
+
+        });
+
+
+        document.getElementById(
+            'totalStores'
+        ).textContent = stores.length;
+
+
+        document.getElementById(
+            'pendingProposals'
+        ).textContent = pending;
+
+
+        if (pending === 0) {
+
+            proposalTable.innerHTML = `
+                <tr>
+                    <td colspan="5"
+                        class="empty-message">
+                        No pending store proposals.
+                    </td>
+                </tr>
+            `;
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            'Error loading stores:',
+            error
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   APPROVE STORE
+===================================================== */
+
+async function approveStore(storeId) {
+
+    if (!confirm(
+        'Are you sure you want to approve this store?'
+    )) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/stores/${storeId}`,
+                {
+                    method: 'PUT',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        store_status: 'APPROVED'
+                    })
+                }
+            );
+
+
+        if (response.ok) {
+
+            alert(
+                'Store approved successfully.'
+            );
+
+            loadStores();
+
+        }
+
+        else {
+
+            alert(
+                'Unable to approve store.'
+            );
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            'An error occurred.'
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   REJECT STORE
+===================================================== */
+
+async function rejectStore(storeId) {
+
+    if (!confirm(
+        'Are you sure you want to reject this store?'
+    )) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/stores/${storeId}`,
+                {
+                    method: 'PUT',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        store_status: 'REJECTED'
+                    })
+                }
+            );
+
+
+        if (response.ok) {
+
+            alert(
+                'Store proposal rejected.'
+            );
+
+            loadStores();
+
+        }
+
+        else {
+
+            alert(
+                'Unable to reject store.'
+            );
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            'An error occurred.'
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   STATUS BADGE
+===================================================== */
+
+function getStatusBadge(status) {
+
+    if (!status) {
+
+        return '-';
+
+    }
+
+
+    const value =
+        status.toUpperCase();
+
+
+    if (value === 'PENDING') {
+
+        return `
+            <span class="status status-pending">
+                PENDING
+            </span>
+        `;
+
+    }
+
+
+    if (
+        value === 'APPROVED' ||
+        value === 'OPEN'
+    ) {
+
+        return `
+            <span class="status status-approved">
+                ${value}
+            </span>
+        `;
+
+    }
+
+
+    if (
+        value === 'REJECTED' ||
+        value === 'CLOSED'
+    ) {
+
+        return `
+            <span class="status status-rejected">
+                ${value}
+            </span>
+        `;
+
+    }
+
+
+    return value;
+
+}
+
+
+
+/* =====================================================
+   QUEUE MONITOR
+===================================================== */
+
+async function loadQueueMonitor() {
+
+    try {
+
+        const storesResponse =
+            await fetch('/api/stores');
+
+        const stores =
+            await storesResponse.json();
+
+
+        const queueTable =
+            document.getElementById('queueTable');
+
+
+        queueTable.innerHTML = '';
+
+
+        let waiting = 0;
+        let serving = 0;
+        let foundQueue = false;
+
+
+        for (const store of stores) {
+
+
+            const counterResponse =
+                await fetch(
+                    `/api/counters/${store.store_id}`
+                );
+
+
+            const counters =
+                await counterResponse.json();
+
+
+            for (const counter of counters) {
+
+
+                const queueResponse =
+                    await fetch(
+                        `/api/counters/${counter.counter_id}/queue`
+                    );
+
+
+                const queues =
+                    await queueResponse.json();
+
+
+                if (
+                    !queues ||
+                    queues.length === 0
+                ) {
+
+                    continue;
+
+                }
+
+
+                foundQueue = true;
+
+
+                queues.forEach(queue => {
+
+                    const status =
+                        queue.queue_status ||
+                        queue.status ||
+                        'UNKNOWN';
+
+
+                    if (status === 'WAITING') {
+                        waiting++;
+                    }
+
+
+                    if (status === 'SERVING') {
+                        serving++;
+                    }
+
+
+                    const row =
+                        document.createElement('tr');
+
+
+                    row.innerHTML = `
+
+                        <td>
+                            <strong>
+                                ${store.store_name}
+                            </strong>
+                        </td>
+
+                        <td>
+                            ${counter.counter_name}
+                        </td>
+
+                        <td>
+                            <span class="queue-number">
+                                ${queue.queue_number}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${getStatusBadge(status)}
+                        </td>
+
+                    `;
+
+
+                    queueTable.appendChild(row);
+
+                }
+
+            }
+
+        }
+
+
+        document.getElementById(
+            'waitingCustomers'
+        ).textContent = waiting;
+
+
+        document.getElementById(
+            'servingCustomers'
+        ).textContent = serving;
+
+
+        if (!foundQueue) {
+
+            queueTable.innerHTML = `
+                <tr>
+                    <td colspan="4"
+                        class="empty-message">
+                        No active queues.
+                    </td>
+                </tr>
+            `;
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            'Queue monitor error:',
+            error
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   QUEUE HISTORY
+===================================================== */
+
+async function loadHistory() {
+
+    try {
+
+        const response =
+            await fetch(
+                '/api/queues/history'
+            );
+
+
+        const history =
+            await response.json();
+
+
+        const table =
+            document.getElementById(
+                'historyTable'
+            );
+
+
+        table.innerHTML = '';
+
+
+        if (
+            !history ||
+            history.length === 0
+        ) {
+
+            table.innerHTML = `
+                <tr>
+                    <td colspan="4"
+                        class="empty-message">
+                        No queue history found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+
+        history
+            .slice(0, 10)
+            .forEach(item => {
+
+
+                const row =
+                    document.createElement('tr');
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${item.queue_id || '-'}
+                    </td>
+
+                    <td>
+                        ${item.counter_id || '-'}
+                    </td>
+
+                    <td>
+                        ${getStatusBadge(
+                            item.queue_status ||
+                            item.status
+                        )}
+                    </td>
+
+                    <td>
+                        ${item.updated_at ||
+                          item.created_at ||
+                          '-'}
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            'History error:',
+            error
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   RECENT ACTIVITY
+===================================================== */
+
+function loadActivity() {
+
+    const activity =
+        document.getElementById(
+            'activityList'
+        );
+
+
+    activity.innerHTML = `
+
+        <div class="activity-item">
+
+            <div class="activity-icon">
+                🏪
+            </div>
+
+            <div>
+
+                <div class="activity-text">
+                    Store information updated
+                </div>
+
+                <div class="activity-time">
+                    System monitoring
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="activity-item">
+
+            <div class="activity-icon">
+                🎫
+            </div>
+
+            <div>
+
+                <div class="activity-text">
+                    Queue system is active
+                </div>
+
+                <div class="activity-time">
+                    Live monitoring
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+
+/* =====================================================
+   INITIAL LOAD
+===================================================== */
+
+loadStores();
+
+loadQueueMonitor();
+
+loadHistory();
+
+loadActivity();
+
+
+/* =====================================================
+   AUTO REFRESH
+===================================================== */
+
+setInterval(() => {
+
+    loadStores();
+
+    loadQueueMonitor();
+
+    loadHistory();
+
+}, 5000);
+
+
+</script>
+
+
+</body>
+</html>
