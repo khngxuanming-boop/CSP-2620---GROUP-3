@@ -1,0 +1,60 @@
+<!-- WEEK 4 ADDITION OF STORE OWNER DASHBOARD -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My Store Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div style="text-align: right; padding: 20px; max-width: 1000px; margin: 0 auto;">
+        <span>Welcome, <strong style="color: #2563eb;">{{ username }}</strong>!</span> |
+        <a href="/stores" style="color: #10b981; font-weight: bold; margin-right: 15px; text-decoration: none;">Back to Directory</a> |
+        <a href="/logout" style="color: #ef4444; text-decoration: none; font-weight: bold;">Logout</a>
+    </div>
+
+    <div style="max-width: 800px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>My Stores</h1>
+            <a href="/register_store"><button>+ Register New Store</button></a>
+        </div>
+
+        {% for store in stores %}
+            <div class="card" style="margin-bottom: 20px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0;">{{ store['store_name'] }}</h2>
+
+                    {% if store['store_status'] == 'PENDING' %}
+                        <span style="background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 20px; font-weight: bold;">Pending Review</span>
+                    {% elif store['store_status'] == 'APPROVED' %}
+                        <span style="background: #d1fae5; color: #065f46; padding: 5px 12px; border-radius: 20px; font-weight: bold;">Approved</span>
+                    {% elif store['store_status'] == 'REJECTED' %}
+                        <span style="background: #fee2e2; color: #991b1b; padding: 5px 12px; border-radius: 20px; font-weight: bold;">Rejected</span>
+                    {% endif %}
+                </div>
+
+                <p><strong>Operating Hours:</strong> {{ store['operating_hours'] }}</p>
+
+                {% if store['store_status'] == 'REJECTED' and store['rejection_reason'] %}
+                    <p style="color: #991b1b;"><strong>Reason:</strong> {{ store['rejection_reason'] }}</p>
+                {% endif %}
+
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    {% if store['store_status'] != 'APPROVED' %}
+                        <a href="/my-store/{{ store['store_id'] }}/edit"><button>Edit</button></a>
+                        <form method="POST" action="/my-store/{{ store['store_id'] }}/revoke" style="display:inline;">
+                            <button type="submit" style="background: #ef4444;">Withdraw Application</button>
+                        </form>
+                    {% else %}
+                        <a href="/store/{{ store['store_id'] }}"><button>View Store Page</button></a>
+                        <a href="/my-store/{{ store['store_id'] }}/edit"><button>Edit Details</button></a>
+                        <!-- Reviews section placeholder — needs a shared 'review' table, not yet in schema -->
+                        <p style="color: #9ca3af; font-style: italic; margin-left: 10px;">Reviews coming soon</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <p style="text-align: center;">You haven't registered a store yet.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

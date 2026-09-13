@@ -4,6 +4,12 @@ CREATE TABLE IF NOT EXISTS user (
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     role TEXT DEFAULT 'CUSTOMER'
+    account_status TEXT DEFAULT 'APPROVED',   -- Week 4: PENDING/APPROVED/REJECTED (only matters for SYS_ADMIN)
+    email TEXT, -- Week 4: Verification + forget password
+    is_verified BOOLEAN DEFAULT 0, --  Email verification flag
+    verification_code TEXT, -- Holds the OTP/code sent to email
+    reset_token TEXT, -- For forgot-password flow
+    reset_token_expire DATETIME -- So reset links expire
 );
 
 -- Member 1(Syahmi): store table
@@ -13,6 +19,9 @@ CREATE TABLE IF NOT EXISTS store (
     store_status TEXT DEFAULT 'PENDING',
     operating_hours TEXT,
     estimated_wait_time INTEGER DEFAULT 0
+    owner_id INTEGER,
+    rejection_reason TEXT,
+    FOREIGN KEY (owner_id) REFERENCES user(user_id)
 );
 
 -- (Member 3 will write the CREATE TABLE service here...)
