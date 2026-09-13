@@ -145,22 +145,27 @@ def login():
 
     return render_template('login.html')
 
-# Store registration
+# Store registration ----> Week 4: Adding
 @app.route('/register_store', methods=['GET', 'POST'])
 def register_store():
-    # If the business owner clicks "Submit"
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
         store_name = request.form['name']
         hours = request.form['hours']
-        
+
         conn = get_db_connection()
         # Insert the new store, automatically setting its status to 'Pending'
-        conn.execute('INSERT INTO store (store_name, operating_hours, store_status) VALUES (?, ?, ?)', (store_name, hours, 'PENDING'))
+        conn.execute(
+            'INSERT INTO store (store_name, operating_hours, store_status, owner_id) VALUES (?, ?, ?, ?)',
+            (store_name, hours, 'PENDING', session['user_id'])
+        )
         conn.commit()
         conn.close()
-        
-        return redirect(url_for('store_discovery'))
-    # Show the blank store registration form    
+
+        return redirect(url_for('my_store'))
+
     return render_template('register_store.html')
 
 # Store Details Page ---> Week 3
@@ -177,6 +182,7 @@ def store_details(store_id):
 
     # Grab all active services linked to this store from Member 3's service table
     services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
+
     conn.close()
 
     # Fall back error response if someone manually type a fake store ID in the URL
