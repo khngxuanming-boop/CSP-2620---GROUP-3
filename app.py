@@ -177,7 +177,6 @@ def store_details(store_id):
 
     # Grab all active services linked to this store from Member 3's service table
     services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
-
     conn.close()
 
     # Fall back error response if someone manually type a fake store ID in the URL
