@@ -212,7 +212,7 @@ def logout():
         # Redirect user back to login
         return redirect(url_for('login'))
 
-# Admin Dashboard
+# Admin Dashboard --- Week 4
 @app.route('/admin/dashboard')
 def admin_required():
     return session.get('role') == 'SYS_ADMIN' and session.get('user_id') is not None
@@ -247,6 +247,20 @@ def admin_dashboard():
         store_counts=store_counts,
         username=session.get('username')
     )
+
+# Owner Store Dashboard ----Week 4
+@app.route('/my-store')
+def my_store():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    stores = conn.execute(
+        'SELECT * FROM store WHERE owner_id = ?', (session['user_id'],)
+    ).fetchall()
+    conn.close()
+
+    return render_template('my_store.html', stores=stores, username=session.get('username'))
 
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
