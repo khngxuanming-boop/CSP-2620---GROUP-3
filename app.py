@@ -129,12 +129,10 @@ def register():
             error = "That username is already taken! Choose another one."
             conn.close() # Close since failed.
         else:
-        # Admins start PENDING until an existing admin approves them; everyone else is auto-approved
-            account_status = 'PENDING' if role == 'SYS_ADMIN' else 'APPROVED'
 
             conn.execute(
-                'INSERT INTO user (username, password, role, account_status) VALUES (?, ?, ?, ?)',
-                (username, password, role, account_status)
+                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)',
+                (username, password, role)
             )
             conn.commit()
             conn.close()
@@ -1464,7 +1462,6 @@ def get_staff_dashboard(store_id):
 
 if __name__ == '__main__':
     with app.app_context():
-        init_db()
         create_admin()
 
     socketio.run(app, debug=True, port=5000)
