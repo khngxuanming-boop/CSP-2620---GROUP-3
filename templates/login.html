@@ -13,11 +13,8 @@
 <body>
 
     <div class="card" style="max-width: 400px; margin: 50px auto;">
-
-        <h1>Welcome Back!</h1>
-
-       
-
+        <h1>Welcome!</h1>
+        
         {% if error %}
 
             <p style="color: #ef4444; font-weight: bold; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 5px;">{{ error }}</p>
@@ -32,11 +29,11 @@
 
             <input type="text" name="username" required>
 
-           
-
             <label>Password</label>
-
-            <input type="password" name="password" required>
+            <div style="position: relative;">
+                <input type="password" name="password" id="password" required style="width: 100%; padding-right: 40px;">
+                <span onclick="togglePassword('password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none;">👁️</span>
+            </div>
 
            
 
@@ -51,7 +48,18 @@
         </p>
 
     </div>
-
+    <script>
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+    </script>
 </body>
 
 </html>

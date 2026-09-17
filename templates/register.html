@@ -17,7 +17,10 @@
             <input type="text" name="username" required>
             
             <label>Password</label>
-            <input type="password" name="password" required>
+            <div style="position: relative;">
+                <input type="password" name="password" id="password" required style="width: 100%; padding-right: 40px;">
+                <span onclick="togglePassword('password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none;">👁️</span>
+            </div>
 
             <label>Account Type</label>
             <select name="role" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #d1d5db;">
@@ -31,5 +34,17 @@
             Already have an account? <a href="/" style="color: #2563eb;">Login here</a>
         </p>
     </div>
+    <script>
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+    </script>    
 </body>
 </html>
