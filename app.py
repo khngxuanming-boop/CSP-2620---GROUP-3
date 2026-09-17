@@ -239,7 +239,7 @@ def logout():
 # Admin Dashboard --- Week 4
 @app.route('/admin/dashboard')
 def admin_required():
-    return session.get('role') == 'SYS_ADMIN' and session.get('user_id') is not None
+    return session.get('role') == 'ADMIN' and session.get('user_id') is not None
 
 def admin_dashboard():
     if not admin_required():
