@@ -981,14 +981,15 @@ def call_next_customer(counter_id):
     # Find the next waiting customer assigned to this counter
     queue = conn.execute(
         """
-        SELECT *
-        FROM queue
-        WHERE counter_id = ?
-        AND queue_status = 'WAITING'
-        ORDER BY queue_id ASC
+        SELECT q.*
+        FROM queue q
+        JOIN services s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        ORDER BY q.queue_id ASC
         LIMIT 1
         """,
-        (counter_id,)
+        (counter['store_id'],)
     ).fetchone()
 
     if not queue:
@@ -1001,10 +1002,11 @@ def call_next_customer(counter_id):
     conn.execute(
         """
         UPDATE queue
-        SET queue_status = 'SERVING'
+        SET counter_id = ?
+            queue_status = 'SERVING'
         WHERE queue_id = ?
         """,
-        (queue['queue_id'],)
+        (counter_id, queue['queue_id'])
     )
 
     conn.commit()
