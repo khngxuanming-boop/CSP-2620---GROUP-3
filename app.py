@@ -1301,7 +1301,7 @@ def get_queue_status(counter_id):
         SELECT *
         FROM queue
         WHERE counter_id = ?
-        AND status = 'SERVING'
+        AND queue_status = 'SERVING'
         ORDER BY queue_id ASC
         LIMIT 1
         """,
@@ -1314,7 +1314,7 @@ def get_queue_status(counter_id):
         SELECT COUNT(*) AS waiting_count
         FROM queue
         WHERE counter_id = ?
-        AND status = 'WAITING'
+        AND queue_status = 'WAITING'
         """,
         (counter_id,)
     ).fetchone()
@@ -1391,7 +1391,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'WAITING'
+        AND q.queue_status = 'WAITING'
         """,
         (store_id,)
     ).fetchone()
@@ -1403,7 +1403,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'SERVING'
+        AND q.queue_status = 'SERVING'
         """,
         (store_id,)
     ).fetchone()
@@ -1415,7 +1415,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'COMPLETED'
+        AND q.queue_status = 'COMPLETED'
         """,
         (store_id,)
     ).fetchone()
@@ -1427,7 +1427,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'SKIPPED'
+        AND q.queue_status = 'SKIPPED'
         """,
         (store_id,)
     ).fetchone()
@@ -1439,7 +1439,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'CANCELLED'
+        AND q.queue_status = 'CANCELLED'
         """,
         (store_id,)
     ).fetchone()
