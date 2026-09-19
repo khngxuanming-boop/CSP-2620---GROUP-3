@@ -1,22 +1,32 @@
 document.addEventListener("DOMContentLoaded", function () {
   const walkInBtn = document.getElementById("walkInBtn");
   const checkInBtn = document.getElementById("checkInBtn");
+  const urlParams = new URLSearchParams(window.location.search);
+  const serviceIdParam = urlParams.get("service_id");
+  const apptIdParam = urlParams.get("appt_id");
+  if (serviceIdParam && selectedServiceIdInput) {
+    selectedServiceIdInput.value = serviceIdParam;
+  }
+  if (apptIdParam && currentApptIdInput) {
+    currentApptIdInput.value = apptIdParam;
+  }
 
   // 1. On-site numbering logic (Walk-in)
   if (walkInBtn) {
     walkInBtn.addEventListener("click", function () {
       const requestUserId = document.getElementById("currentUserId").value;
 
-      if (!requestUserIdv || requestUserId === "None") {
+      if (!requestUserId || requestUserId === "None") {
         alert("User ID not found. Please log in first.");
         window.location.href = "/login"; // Redirect to login page
         return;
       }
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const serviceIdFromUrl = urlParams.get("service_id");
+      const finalServiceId = selectedServiceIdInput
+        ? selectedServiceIdInput.value
+        : null;
 
-      if (!serviceIdFromUrl) {
+      if (!finalServiceId) {
         alert("Service ID not found. Please select a service first.");
         return;
       }
@@ -55,13 +65,15 @@ document.addEventListener("DOMContentLoaded", function () {
   // 2. Appointment check-in logic (Check-in)
   if (checkInBtn) {
     checkInBtn.addEventListener("click", function () {
-      const urlParams = new URLSearchParams(window.location.search);
-      let apptId = urlParams.get("appt_id");
+      let apptId = currentApptIdInput ? currentApptIdInput.value : null;
 
       if (!apptId) {
         apptId = prompt(
-          "Welcome to check-in! Please enter your Appoinment ID:",
+          "Welcome to check-in! Please enter your Appointment ID:",
         );
+        if (apptId && currentApptIdInput) {
+          currentApptIdInput.value = apptId;
+        }
       }
 
       if (!apptId) {
