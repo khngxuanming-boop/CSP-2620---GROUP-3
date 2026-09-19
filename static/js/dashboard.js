@@ -39,6 +39,35 @@ document.addEventListener("DOMContentLoaded", function () {
   // Flag to track if the approaching notification has been shown
   let hasNotifiedApproaching = false;
   const socket = io();
+  let waitEndTime = null;
+  let waitTimer = null;
+  let lastPeopleAhead = null;
+  let lastQueueStatus = null;
+
+  function startWaitCountdown(minutes) {
+    if (waitTimer) {
+      clearInterval(waitTimer);
+    }
+
+    waitEndTime = Date.now() + Number(minutes || 0) * 60 * 1000;
+
+    function updateWaitTime() {
+      const remainingMs = waitEndTime - Date.now();
+      const remainingMinutes = Math.max(0, Math.ceil(remainingMs / 60000));
+
+      if (waitTimeEl) {
+        waitTimeEl.innerText = remainingMinutes;
+      }
+
+      if (remainingMs <= 0) {
+        clearInterval(waitTimer);
+        waitTimer = null;
+      }
+    }
+
+    updateWaitTime();
+    waitTimer = setInterval(updateWaitTime, 1000);
+  }
 
   // Request the actual queue data from the backend API
   function fetchQueueStatus() {
@@ -75,10 +104,32 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         // Update the people ahead and wait time
         if (peopleAheadEl) peopleAheadEl.innerText = data.people_ahead ?? 0;
-        if (waitTimeEl) waitTimeEl.innerText = data.wait_time ?? 0;
+        if (data.status === "WAITING") {
+          if (
+            waitEndTime === null ||
+            lastPeopleAhead !== data.people_ahead ||
+            lastQueueStatus !== data.status
+          ) {
+            startWaitCountdown(data.wait_time ?? 0);
+          }
+        } else {
+          if (waitTimer) {
+            clearInterval(waitTimer);
+            waitTimer = null;
+          }
+
+          waitEndTime = null;
+
+          if (waitTimeEl) {
+            waitTimeEl.innerText = 0;
+          }
+        }
         if (counterNameEl) {
           counterNameEl.innerText = data.counter_name ?? "-";
         }
+
+        lastPeopleAhead = data.people_ahead;
+        lastQueueStatus = data.status;
 
         // Trigger notification: Alert when only 2 people are left
         if (
