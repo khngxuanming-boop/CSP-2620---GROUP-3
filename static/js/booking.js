@@ -57,6 +57,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   // Generate time slots from open time to close time
   generateTimeSlots(openTime, closeTime);
+  if (dateInput) {
+    dateInput.addEventListener("change", function () {
+      generateTimeSlots(openTime, closeTime);
+    });
+  }
 
   // Handle form submission
   if (bookingForm) {
