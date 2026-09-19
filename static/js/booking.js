@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const timeInput = document.getElementById("apptTime");
   const bookingForm = document.getElementById("bookingForm");
   const storeServiceInput = document.getElementById("storeService");
-  const selectedServiceIdInput = document.getElementyById("selectedServiceId");
+  const selectedServiceIdInput = document.getElementById("selectedServiceId");
 
   // Cannot select past dates for the appointment
   const today = new Date();
