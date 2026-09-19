@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const dateInput = document.getElementById("apptDate");
   const timeInput = document.getElementById("apptTime");
   const bookingForm = document.getElementById("bookingForm");
+  const storeServiceInput = document.getElementById("storeService");
+  const selectedServiceIdInput = document.getElementyById("selectedServiceId");
 
   // Cannot select past dates for the appointment
   const today = new Date();
@@ -19,6 +21,17 @@ document.addEventListener("DOMContentLoaded", function () {
   const urlParams = new URLSearchParams(window.location.search);
   const openParam = urlParams.get("open");
   const closeParam = urlParams.get("close");
+  const serviceIdParam = urlParams.get("service_id") || "1";
+  const serviceNameParam =
+    urlParams.get("service_name") || "Card Authentication";
+  if (serviceIdParam && selectedServiceIdInput) {
+    selectedServiceIdInput.value = serviceIdParam;
+  }
+  if (serviceNameParam && storeServiceInput) {
+    storeServiceInput.value = decodeURIComponent(
+      serviceNameParam.replace(/\+/g, " "),
+    );
+  }
   const openTime =
     openParam && !isNaN(parseInt(openParam)) ? parseInt(openParam) : 8;
   const closeTime =
@@ -84,14 +97,13 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const serviceIdFromUrl = urlParams.get("service_id");
-      if (!serviceIdFromUrl) {
+      const finalServiceId = document.getElementById("selectedServiceId").value;
+      if (!finalServiceId) {
         alert("Service ID not found. Please select a service first.");
         return;
       }
 
-      const combinedDateTime = `${dateInput.value} ${timeInput.value}`;
+      const combinedDateTime = `${dateInput.value} ${timeInput.value}:00`;
 
       const payload = {
         user_id: parseInt(requestUserId),
