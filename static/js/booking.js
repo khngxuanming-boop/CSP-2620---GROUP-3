@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const urlParams = new URLSearchParams(window.location.search);
   const openParam = urlParams.get("open");
   const closeParam = urlParams.get("close");
-  const serviceIdParam = urlParams.get("service_id") || "1";
+  const serviceIdParam = urlParams.get("service_id");
   const serviceNameParam =
     urlParams.get("service_name") || "Card Authentication";
   if (serviceIdParam && selectedServiceIdInput) {
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if (addedSlotsCount === 0 && selectedDate === localDate) {
       timeInput.innerHTML =
-        '<option value="">Today is fully booked or closed.</option>';
+        '<option value="">No available time slots today.</option>';
     }
   }
   // Generate time slots from open time to close time
