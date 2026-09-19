@@ -14,6 +14,17 @@ def get_db_connection():
         g.db.row_factory = sqlite3.Row
     return g.db
 
+def create_notification(user_id, message):
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "INSERT INTO notification (user_id, message) VALUES (?, ?)",
+            (user_id, message)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
 @app.teardown_appcontext
 def close_db(exception):
     db = g.pop('db', None)
@@ -334,6 +345,11 @@ def create_appointment():
             )
             appt_id = cursor.lastrowid
 
+        create_notification(
+            data['user_id'],
+            "Your appoinment has been booked successfully."
+        )
+
         return jsonify({'message': 'Appointment created successfully!', 'appointment_id': appt_id}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -371,6 +387,11 @@ def walk_in_queue():
                 (data['user_id'], data['service_id'], queue_number)
             )
             queue_id = cursor.lastrowid
+
+            create_notification(
+                data['user_id'],
+                f"You have successfully joined the queue. Your queue number is {queue_number}."
+            )
 
         socketio.emit('queue_updated')
 
@@ -447,6 +468,38 @@ def get_my_queue_status():
         wait_time = (people_ahead + 1) * 5  # Assuming each customer takes 5 minutes
 
         return jsonify({'queue_number': queue_number, 'status': status, 'people_ahead': people_ahead, 'wait_time': wait_time}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# GET /api/notifications
+@app.route('/api/notificstions', methods=['GET'])
+def get_notification():
+    user_id = request.args.get('user_id', type=int)
+    if not user_id:
+        return jsonify({'error': 'Missing user_id parameter'}), 400
+
+    conn = get_db_connection()
+    try:
+        notifications = conn.execute(
+            """
+            SELECT notification_id, message, is_read
+            FROM notification
+            WHERE user_id = ?
+            ORDER BY notification_id DESC
+            """,
+            (user_id,)
+        ).fetchall()
+
+        return jsonify([
+            {
+                'notification_id': notification['notification_id'],
+                'message': notification['message'],
+                'is_read': notification['is_read']
+            }
+            for notification in notifications
+        ]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
