@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
   const walkInBtn = document.getElementById("walkInBtn");
   const checkInBtn = document.getElementById("checkInBtn");
+  const selectedServiceIdInput = document.getElementById(
+    "selectedServiceIdInput",
+  );
+  const currentApptIdInput = document.getElementById("currentApptIdInput");
   const urlParams = new URLSearchParams(window.location.search);
   const serviceIdParam = urlParams.get("service_id");
   const apptIdParam = urlParams.get("appt_id");
@@ -33,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const payload = {
         user_id: parseInt(requestUserId),
-        service_id: parseInt(serviceIdFromUrl),
+        service_id: parseInt(finalServiceId),
       };
 
       fetch("/api/queues/walk-in", {
