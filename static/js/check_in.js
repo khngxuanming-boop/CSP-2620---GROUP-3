@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     walkInBtn.addEventListener("click", function () {
       const requestUserId = document.getElementById("currentUserId").value;
 
-      if (!requestUserId) {
+      if (!requestUserIdv || requestUserId === "None") {
         alert("User ID not found. Please log in first.");
         window.location.href = "/login"; // Redirect to login page
         return;
@@ -60,11 +60,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!apptId) {
         apptId = prompt(
-          "Welcome to check-in! Please enter your appointment number or ID to check in:",
+          "Welcome to check-in! Please enter your Appoinment ID:",
         );
       }
 
-      if (!apptId) return;
+      if (!apptId) {
+        return;
+      }
 
       fetch(`/api/appointments/${apptId}/check-in`, {
         method: "PUT",
