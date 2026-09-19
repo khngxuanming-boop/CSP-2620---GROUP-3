@@ -1,6 +1,6 @@
 import sqlite3
 from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 
 app = Flask(__name__)
 app.secret_key = 'sphinx of black quartz judge my vow'
@@ -13,6 +13,14 @@ def get_db_connection():
         g.db = sqlite3.connect(DB_NAME, timeout=20)
         g.db.row_factory = sqlite3.Row
     return g.db
+
+def create_notification(user_id, message):
+    conn = get_db_connection()
+    conn.execute(
+        "INSERT INTO notification (user_id, message) VALUES (?, ?)",
+        (user_id, message)
+    )
+    conn.commit()
 
 @app.teardown_appcontext
 def close_db(exception):
@@ -307,6 +315,14 @@ def my_store():
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
+@socketio.on('join_store_room')
+def on_join_store_room(data):
+    store_id = data.get('store_id')
+    if store_id:
+        room = f"store_{store_id}"
+        join_room(room)
+        print(f"User joined {room}")
+
 # POST /api/appointments
 @app.route('/api/appointments', methods=['POST'])
 def create_appointment():
@@ -334,6 +350,11 @@ def create_appointment():
             )
             appt_id = cursor.lastrowid
 
+        create_notification(
+            data['user_id'],
+            "Your appoinment has been booked successfully."
+        )
+
         return jsonify({'message': 'Appointment created successfully!', 'appointment_id': appt_id}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -343,7 +364,7 @@ def create_appointment():
 # POST /api/queues/walk-in
 @app.route('/api/queues/walk-in', methods=['POST'])
 def walk_in_queue():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     if not data.get('user_id') or not data.get('service_id'):
         return jsonify({'error': 'Missing required fields'}), 400
 
@@ -353,9 +374,10 @@ def walk_in_queue():
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
-        service = conn.execute('SELECT 1 FROM service WHERE service_id = ?', (data['service_id'],)).fetchone()
+        service = conn.execute('SELECT store_id FROM service WHERE service_id = ?', (data['service_id'],)).fetchone()
         if not service:
             return jsonify({'error': 'Service not found'}), 404
+        store_id = service['store_id']
 
         conn.execute("BEGIN IMMEDIATE")
         with conn:
@@ -372,7 +394,12 @@ def walk_in_queue():
             )
             queue_id = cursor.lastrowid
 
-        socketio.emit('queue_updated')
+            create_notification(
+                data['user_id'],
+                f"You have successfully joined the queue. Your queue number is {queue_number}."
+            )
+
+        socketio.emit('queue_status_updated', {'queue_id': queue_id}, to=f"store_{store_id}")
 
         return jsonify({'message': 'Successfully joined the walk-in queue!', 'queue_id': queue_id, 'queue_number': queue_number}),201
     except Exception as e:
@@ -397,6 +424,9 @@ def check_in_appointment(appt_id):
             if appt['appt_status'] != 'BOOKED':
                 return jsonify({'error': 'Appointment cannot be checked in'}), 400
 
+            service = cursor.execute("SELECT store_id FROM service WHERE service_id = ?", (appt['service_id'],)).fetchone()
+            store_id = service['store_id']
+
             cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'A-%' ORDER BY queue_id DESC LIMIT 1")
             last_record = cursor.fetchone()
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
@@ -409,7 +439,7 @@ def check_in_appointment(appt_id):
             )
             queue_id = cursor.lastrowid
 
-        socketio.emit('queue_updated')
+        socketio.emit('queue_status_updated', {'queue_id': queue_id}, to=f"store_{store_id}")
 
         return jsonify({'message': 'Appointment checked in successfully!', 'queue_id': queue_id, 'queue_number': queue_number}), 200
     except Exception as e:
@@ -427,7 +457,13 @@ def get_my_queue_status():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT queue_status, queue_number, service_id FROM queue WHERE queue_id = ?", (queue_id,))
+        cursor.execute("""
+            SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name, s.store_id
+            FROM queue q
+            LEFT JOIN counter c ON q.counter_id = c.counter_id
+            JOIN service s ON q.service_id = s.service_id
+            WHERE q.queue_id = ?
+        """, (queue_id,))
         my_queue = cursor.fetchone()
 
         if not my_queue:
@@ -436,17 +472,52 @@ def get_my_queue_status():
         status = my_queue['queue_status']
         queue_number = my_queue['queue_number']
 
+        # If no counter has been assigned yet
+        counter_name = my_queue['counter_name'] or '-'
+
         if status != 'WAITING':
-            return jsonify({'queue_number': queue_number, 'status': status, 'people_ahead': 0, 'wait_time': 0}), 200
+            return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': 0, 'wait_time': 0, 'store_id': my_queue['store_id']}), 200
 
         cursor.execute(
-            "SELECT COUNT(*) as people_ahead FROM queue WHERE service_id = ? AND queue_status = 'WAITING' AND queue_id < ?",
+            "SELECT COUNT(*) AS people_ahead FROM queue WHERE service_id = ? AND queue_status = 'WAITING' AND queue_id < ?",
             (my_queue['service_id'], queue_id)
         )
         people_ahead = cursor.fetchone()['people_ahead']
         wait_time = (people_ahead + 1) * 5  # Assuming each customer takes 5 minutes
 
-        return jsonify({'queue_number': queue_number, 'status': status, 'people_ahead': people_ahead, 'wait_time': wait_time}), 200
+        return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': people_ahead, 'wait_time': wait_time, 'store_id': my_queue['store_id']}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# GET /api/notifications
+@app.route('/api/notifications', methods=['GET'])
+def get_notification():
+    user_id = request.args.get('user_id', type=int)
+    if not user_id:
+        return jsonify({'error': 'Missing user_id parameter'}), 400
+
+    conn = get_db_connection()
+    try:
+        notifications = conn.execute(
+            """
+            SELECT notification_id, message, is_read
+            FROM notification
+            WHERE user_id = ?
+            ORDER BY notification_id DESC
+            """,
+            (user_id,)
+        ).fetchall()
+
+        return jsonify([
+            {
+                'notification_id': notification['notification_id'],
+                'message': notification['message'],
+                'is_read': notification['is_read']
+            }
+            for notification in notifications
+        ]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
@@ -981,14 +1052,15 @@ def call_next_customer(counter_id):
     # Find the next waiting customer assigned to this counter
     queue = conn.execute(
         """
-        SELECT *
-        FROM queue
-        WHERE counter_id = ?
-        AND queue_status = 'WAITING'
-        ORDER BY queue_id ASC
+        SELECT q.*
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        ORDER BY q.queue_id ASC
         LIMIT 1
         """,
-        (counter_id,)
+        (counter['store_id'],)
     ).fetchone()
 
     if not queue:
@@ -1001,10 +1073,11 @@ def call_next_customer(counter_id):
     conn.execute(
         """
         UPDATE queue
-        SET queue_status = 'SERVING'
+        SET counter_id = ?,
+            queue_status = 'SERVING'
         WHERE queue_id = ?
         """,
-        (queue['queue_id'],)
+        (counter_id, queue['queue_id'])
     )
 
     conn.commit()
@@ -1299,7 +1372,7 @@ def get_queue_status(counter_id):
         SELECT *
         FROM queue
         WHERE counter_id = ?
-        AND status = 'SERVING'
+        AND queue_status = 'SERVING'
         ORDER BY queue_id ASC
         LIMIT 1
         """,
@@ -1312,7 +1385,7 @@ def get_queue_status(counter_id):
         SELECT COUNT(*) AS waiting_count
         FROM queue
         WHERE counter_id = ?
-        AND status = 'WAITING'
+        AND queue_status = 'WAITING'
         """,
         (counter_id,)
     ).fetchone()
@@ -1389,7 +1462,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'WAITING'
+        AND q.queue_status = 'WAITING'
         """,
         (store_id,)
     ).fetchone()
@@ -1401,7 +1474,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'SERVING'
+        AND q.queue_status = 'SERVING'
         """,
         (store_id,)
     ).fetchone()
@@ -1413,7 +1486,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'COMPLETED'
+        AND q.queue_status = 'COMPLETED'
         """,
         (store_id,)
     ).fetchone()
@@ -1425,7 +1498,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'SKIPPED'
+        AND q.queue_status = 'SKIPPED'
         """,
         (store_id,)
     ).fetchone()
@@ -1437,7 +1510,7 @@ def get_staff_dashboard(store_id):
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
-        AND q.status = 'CANCELLED'
+        AND q.queue_status = 'CANCELLED'
         """,
         (store_id,)
     ).fetchone()
