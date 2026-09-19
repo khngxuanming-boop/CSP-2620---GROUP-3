@@ -23,12 +23,35 @@ document.addEventListener("DOMContentLoaded", function () {
   function generateTimeSlots(startHour, endHour) {
     if (!timeInput) return;
     timeInput.innerHTML = '<option value="">Please select a time...</option>';
-    for (let i = startHour; i < endHour; i++) {
-      let currentHour = i.toString().padStart(2, "0") + ":00";
-      let nextHour = (i + 1).toString().padStart(2, "0") + ":00";
-      let option = document.createElement("option");
-      option.value = currentHour;
-      option.text = `${currentHour} - ${nextHour}`;
+    const now = new Date();
+    const selectedDate = dateInput ? dateInput.value : "";
+    for (let minutes = startHour * 60; minutes < endHour * 60; minutes += 30) {
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
+      const nextMinutes = minutes + 30;
+      const nextHour = Math.floor(nextMinutes / 60);
+      const nextMinute = nextMinutes % 60;
+      const currentTime =
+        hour.toString().padStart(2, "0") +
+        ":" +
+        minute.toString().padStart(2, "0");
+      const nextTime =
+        nextHour.toString().padStart(2, "0") +
+        ":" +
+        nextMinute.toString().padStart(2, "0");
+      // If today is selected, hide time slots that have already passed
+      if (selectedDate === localDate) {
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const slotTimeInMinutes = hour * 60 + minute;
+        const currentTimeInMinutes = currentHour * 60 + currentMinute;
+        if (slotTimeInMinutes <= currentTimeInMinutes) {
+          continue;
+        }
+      }
+      const option = document.createElement("option");
+      option.value = currentTime;
+      option.text = `${currentTime} - ${nextTime}`;
       timeInput.appendChild(option);
     }
   }
