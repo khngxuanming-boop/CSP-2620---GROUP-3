@@ -1,6 +1,6 @@
 import sqlite3
 from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 
 app = Flask(__name__)
 app.secret_key = 'sphinx of black quartz judge my vow'
@@ -318,6 +318,14 @@ def my_store():
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
+@socketio.on('join_store_room')
+def on_join_store_room(data):
+    store_id = data.get('store_id')
+    if store_id:
+        room = f"store_{store_id}"
+        join_room(room)
+        print(f"User joined {room}")
+
 # POST /api/appointments
 @app.route('/api/appointments', methods=['POST'])
 def create_appointment():
@@ -369,9 +377,10 @@ def walk_in_queue():
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
-        service = conn.execute('SELECT 1 FROM service WHERE service_id = ?', (data['service_id'],)).fetchone()
+        service = conn.execute('SELECT store_id FROM service WHERE service_id = ?', (data['service_id'],)).fetchone()
         if not service:
             return jsonify({'error': 'Service not found'}), 404
+        store_id = service['store_id']
 
         conn.execute("BEGIN IMMEDIATE")
         with conn:
@@ -393,7 +402,7 @@ def walk_in_queue():
                 f"You have successfully joined the queue. Your queue number is {queue_number}."
             )
 
-        socketio.emit('queue_updated')
+        socketio.emit('queue_status_updated', {'queue_id': queue_id}, to=f"store_{store_id}")
 
         return jsonify({'message': 'Successfully joined the walk-in queue!', 'queue_id': queue_id, 'queue_number': queue_number}),201
     except Exception as e:
@@ -418,6 +427,9 @@ def check_in_appointment(appt_id):
             if appt['appt_status'] != 'BOOKED':
                 return jsonify({'error': 'Appointment cannot be checked in'}), 400
 
+            service = cursor.execute("SELECT store_id FROM service WHERE service_id = ?", (appt['service_id'],)).fetchone()
+            store_id = service['store_id']
+
             cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'A-%' ORDER BY queue_id DESC LIMIT 1")
             last_record = cursor.fetchone()
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
@@ -430,7 +442,7 @@ def check_in_appointment(appt_id):
             )
             queue_id = cursor.lastrowid
 
-        socketio.emit('queue_updated')
+        socketio.emit('queue_status_updated', {'queue_id': queue_id}, to=f"store_{store_id}")
 
         return jsonify({'message': 'Appointment checked in successfully!', 'queue_id': queue_id, 'queue_number': queue_number}), 200
     except Exception as e:
@@ -477,7 +489,7 @@ def get_my_queue_status():
         conn.close()
 
 # GET /api/notifications
-@app.route('/api/notificstions', methods=['GET'])
+@app.route('/api/notifications', methods=['GET'])
 def get_notification():
     user_id = request.args.get('user_id', type=int)
     if not user_id:
