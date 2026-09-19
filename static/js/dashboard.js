@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const waitTimeEl = document.getElementById("waitTime");
   const queueStatusEl = document.getElementById("queueStatus");
   const cancelBtn = document.getElementById("cancelQueueBtn");
+  const counterNameEl = document.getElementById("counterName");
 
   // Initialize Bootstrap's toast component
   const toastElement = document.getElementById("alertToast");
@@ -54,9 +55,6 @@ document.addEventListener("DOMContentLoaded", function () {
           if (data.status === "WAITING") {
             queueStatusEl.className =
               "badge bg-warning text-dark fs-5 mt-3 mb-4";
-          } else if (data.status === "CALLED") {
-            queueStatusEl.className =
-              "badge bg-success text-white fs-5 mt-3 mb-4";
           } else if (data.status === "SERVING") {
             queueStatusEl.className =
               "badge bg-primary text-white fs-5 mt-3 mb-4";
@@ -68,6 +66,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update the people ahead and wait time
         if (peopleAheadEl) peopleAheadEl.innerText = data.people_ahead ?? 0;
         if (waitTimeEl) waitTimeEl.innerText = data.wait_time ?? 0;
+        if (counterNameEl) {
+          counterNameEl.innerText = data.counter_name ?? "-";
+        }
 
         // Trigger notification: Alert when only 2 people are left
         if (
