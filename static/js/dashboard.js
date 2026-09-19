@@ -10,12 +10,15 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Get references to the DOM elements
+  const hiddenQueueIdEl = document.getElementById("currentQueueId");
+  if (hiddenQueueIdEl) hiddenQueueIdEl.value = currentQueueId;
   const queueNumberEl = document.getElementById("queueNumberDisplay");
   const peopleAheadEl = document.getElementById("peopleAhead");
   const waitTimeEl = document.getElementById("waitTime");
   const queueStatusEl = document.getElementById("queueStatus");
   const cancelBtn = document.getElementById("cancelQueueBtn");
   const counterNameEl = document.getElementById("counterName");
+  const hiddenStoreIdEl = document.getElementById("currentStoreId");
 
   // Initialize Bootstrap's toast component
   const toastElement = document.getElementById("alertToast");
@@ -35,6 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Flag to track if the approaching notification has been shown
   let hasNotifiedApproaching = false;
+  const socket = io();
 
   // Request the actual queue data from the backend API
   function fetchQueueStatus() {
@@ -47,6 +51,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Update the queue number and status on the page
+        if (data.store_id && hiddenStoreIdEl) {
+          hiddenStoreIdEl.value = data.store_id;
+          if (socket.connected) {
+            socket.emit("join_store_room", { store_id: data.store_id });
+          }
+        }
         if (queueNumberEl) queueNumberEl.innerText = data.queue_number;
 
         // Status UI change color logic
@@ -89,11 +99,13 @@ document.addEventListener("DOMContentLoaded", function () {
   fetchQueueStatus();
 
   // Socket.IO: Real time queue update
-  const socket = io();
   socket.on("connect", function () {
     console.log("WebSocket connected successfully!");
+    if (hiddenStoreIdEl && hiddenStoreIdEl.value) {
+      socket.emit("join_store_room", { store_id: hiddenStoreIdEl.value });
+    }
   });
-  socket.on("queue_updated", function (data) {
+  socket.on("queue_status_updated", function (data) {
     console.log("Queue data changed! Fetching new status instantly...");
     fetchQueueStatus();
   });
