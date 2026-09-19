@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const payload = {
         user_id: parseInt(requestUserId),
-        service_id: parseInt(serviceIdFromUrl),
+        service_id: parseInt(finalServiceId),
         appt_datetime: combinedDateTime,
       };
 
