@@ -4,13 +4,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const bookingForm = document.getElementById("bookingForm");
 
   // Cannot select past dates for the appointment
+  const today = new Date();
+  const localDate = new Date(
+    today.getTime() - today.getTimezoneOffset() * 60000,
+  )
+    .toISOString()
+    .split("T")[0];
+
   if (dateInput) {
-    const today = new Date();
-    const localDate = new Date(
-      today.getTime() - today.getTimezoneOffset() * 60000,
-    )
-      .toISOString()
-      .split("T")[0];
     dateInput.min = localDate;
   }
 
@@ -18,13 +19,16 @@ document.addEventListener("DOMContentLoaded", function () {
   const urlParams = new URLSearchParams(window.location.search);
   const openParam = urlParams.get("open");
   const closeParam = urlParams.get("close");
-  const openTime = openParam !== null ? parseInt(openParam) : 8;
-  const closeTime = closeParam !== null ? parseInt(closeParam) : 18;
+  const openTime =
+    openParam && !isNaN(parseInt(openParam)) ? parseInt(openParam) : 8;
+  const closeTime =
+    closeParam && !isNaN(parseInt(closeParam)) ? parseInt(closeParam) : 18;
   function generateTimeSlots(startHour, endHour) {
     if (!timeInput) return;
     timeInput.innerHTML = '<option value="">Please select a time...</option>';
     const now = new Date();
     const selectedDate = dateInput ? dateInput.value : "";
+    let addedSlotsCount = 0;
     for (let minutes = startHour * 60; minutes < endHour * 60; minutes += 30) {
       const hour = Math.floor(minutes / 60);
       const minute = minutes % 60;
@@ -53,6 +57,11 @@ document.addEventListener("DOMContentLoaded", function () {
       option.value = currentTime;
       option.text = `${currentTime} - ${nextTime}`;
       timeInput.appendChild(option);
+      addedSlotsCount++;
+    }
+    if (addedSlotsCount === 0 && selectedDate === localDate) {
+      timeInput.innerHTML =
+        '<option value="">Today is fully booked or closed.</option>';
     }
   }
   // Generate time slots from open time to close time
