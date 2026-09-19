@@ -448,7 +448,7 @@ def get_my_queue_status():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT queue_status, queue_number, service_id FROM queue WHERE queue_id = ?", (queue_id,))
+        cursor.execute("SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name FROM queue q LEFT JOIN counter c ON q.counter_id = c.counter_id WHERE q.queue_id = ?", (queue_id,))
         my_queue = cursor.fetchone()
 
         if not my_queue:
@@ -457,17 +457,20 @@ def get_my_queue_status():
         status = my_queue['queue_status']
         queue_number = my_queue['queue_number']
 
+        # If no counter has been assigned yet
+        counter_name = my_queue['counter_name'] or '-'
+
         if status != 'WAITING':
-            return jsonify({'queue_number': queue_number, 'status': status, 'people_ahead': 0, 'wait_time': 0}), 200
+            return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': 0, 'wait_time': 0}), 200
 
         cursor.execute(
-            "SELECT COUNT(*) as people_ahead FROM queue WHERE service_id = ? AND queue_status = 'WAITING' AND queue_id < ?",
+            "SELECT COUNT(*) AS people_ahead FROM queue WHERE service_id = ? AND queue_status = 'WAITING' AND queue_id < ?",
             (my_queue['service_id'], queue_id)
         )
         people_ahead = cursor.fetchone()['people_ahead']
         wait_time = (people_ahead + 1) * 5  # Assuming each customer takes 5 minutes
 
-        return jsonify({'queue_number': queue_number, 'status': status, 'people_ahead': people_ahead, 'wait_time': wait_time}), 200
+        return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': people_ahead, 'wait_time': wait_time}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
