@@ -16,14 +16,11 @@ def get_db_connection():
 
 def create_notification(user_id, message):
     conn = get_db_connection()
-    try:
-        conn.execute(
-            "INSERT INTO notification (user_id, message) VALUES (?, ?)",
-            (user_id, message)
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        "INSERT INTO notification (user_id, message) VALUES (?, ?)",
+        (user_id, message)
+    )
+    conn.commit()
 
 @app.teardown_appcontext
 def close_db(exception):
@@ -460,7 +457,13 @@ def get_my_queue_status():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name FROM queue q LEFT JOIN counter c ON q.counter_id = c.counter_id WHERE q.queue_id = ?", (queue_id,))
+        cursor.execute("""
+            SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name, s.store_id
+            FROM queue q
+            LEFT JOIN counter c ON q.counter_id = c.counter_id
+            JOIN service s ON q.service_id = s.service_id
+            WHERE q.queue_id = ?
+        """, (queue_id,))
         my_queue = cursor.fetchone()
 
         if not my_queue:
@@ -473,7 +476,7 @@ def get_my_queue_status():
         counter_name = my_queue['counter_name'] or '-'
 
         if status != 'WAITING':
-            return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': 0, 'wait_time': 0}), 200
+            return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': 0, 'wait_time': 0, 'store_id': my_queue['store_id']}), 200
 
         cursor.execute(
             "SELECT COUNT(*) AS people_ahead FROM queue WHERE service_id = ? AND queue_status = 'WAITING' AND queue_id < ?",
@@ -482,7 +485,7 @@ def get_my_queue_status():
         people_ahead = cursor.fetchone()['people_ahead']
         wait_time = (people_ahead + 1) * 5  # Assuming each customer takes 5 minutes
 
-        return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': people_ahead, 'wait_time': wait_time}), 200
+        return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': people_ahead, 'wait_time': wait_time, 'store_id': my_queue['store_id']}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
