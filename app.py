@@ -1054,7 +1054,7 @@ def call_next_customer(counter_id):
         """
         SELECT q.*
         FROM queue q
-        JOIN services s ON q.service_id = s.service_id
+        JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
         AND q.queue_status = 'WAITING'
         ORDER BY q.queue_id ASC
@@ -1073,7 +1073,7 @@ def call_next_customer(counter_id):
     conn.execute(
         """
         UPDATE queue
-        SET counter_id = ?
+        SET counter_id = ?,
             queue_status = 'SERVING'
         WHERE queue_id = ?
         """,
