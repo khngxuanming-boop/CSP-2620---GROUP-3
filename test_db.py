@@ -12,7 +12,7 @@ cur.execute("INSERT INTO user (username, password, role) VALUES ('testuser', 'pa
 
 # For Testing (Member 2)
 cur.execute("INSERT INTO service (store_id, service_name) VALUES (1, 'Card Authentication')")
-cur.execute("INSERT INTO counter (store_id, counter_name, counter_status) VALUES (1, 'Counter 1', 'open')")
+cur.execute("INSERT INTO counter (store_id, counter_name, counter_status) VALUES (1, 'Counter 1', 'Open')")
 
 connection.commit()
 connection.close()
