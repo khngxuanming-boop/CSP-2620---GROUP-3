@@ -343,7 +343,7 @@ def create_appointment():
 # POST /api/queues/walk-in
 @app.route('/api/queues/walk-in', methods=['POST'])
 def walk_in_queue():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     if not data.get('user_id') or not data.get('service_id'):
         return jsonify({'error': 'Missing required fields'}), 400
 
