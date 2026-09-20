@@ -20,7 +20,7 @@ app.config['MAIL_PASSWORD'] = 'yourapppassword'
 app.config['MAIL_DEFAULT_SENDER'] = 'youremail@gmail.com'
 mail = Mail(app)
 
-@app.route('/forgot_password', methods=['GET', 'POST'])
+@app.route('/forgot_password', methods=['GET', 'POST']) #---> week 5
 def forgot_password():
     message = None
     if request.method == 'POST':
@@ -55,7 +55,7 @@ def forgot_password():
     return render_template('forgot_password.html', message=message)
 
 
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+@app.route('/reset_password/<token>', methods=['GET', 'POST']) #---> week 5
 def reset_password(token):
     conn = get_db_connection()
     user = conn.execute('SELECT * FROM user WHERE reset_token = ?', (token,)).fetchone()
@@ -122,10 +122,10 @@ def create_admin():
     if not existing_admin:
         conn.execute(
             '''
-            INSERT INTO user (username, password, role)
-            VALUES (?, ?, ?)
+            INSERT INTO user (username, password, role, is_verified)
+            VALUES (?, ?, ?, ?)
             ''',
-            ('admin', 'admin123', 'ADMIN')
+            ('admin', 'admin123', 'ADMIN', 1)
         )
         conn.commit()
         print("Admin account created.")
