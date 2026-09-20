@@ -7,7 +7,7 @@
     <title>Discover Stores</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        /* =====================================================
+/* =====================================================
    DISCOVER STORES DIRECTORY STYLES
 ===================================================== */
 
@@ -281,11 +281,15 @@
 <body>
 
     <!-- Top Navigation Header -->
-    <header class="top-nav">
+   <header class="top-nav">
         <div class="nav-container">
-            <a href="/" class="brand-title">Queues</a>
+            <a href="/" class="brand-title">
+                <span class="brand-icon">⚡</span>
+                <span class="brand-text">Queues</span>
+            </a>
+            
             <div class="user-meta">
-                <span>Welcome, <strong>{{ username }}</strong></span>
+                <span class="welcome-text">Welcome, <strong>{{ username }}</strong></span>
                 <a href="/logout" class="btn-logout">Logout</a>
             </div>
         </div>
