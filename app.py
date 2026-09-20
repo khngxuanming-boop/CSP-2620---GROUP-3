@@ -20,6 +20,41 @@ app.config['MAIL_PASSWORD'] = 'yourapppassword'
 app.config['MAIL_DEFAULT_SENDER'] = 'youremail@gmail.com'
 mail = Mail(app)
 
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    message = None
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM user WHERE email = ?', (email,)).fetchone()
+
+        if user:
+            token = secrets.token_urlsafe(32)
+            expiry = datetime.now() + timedelta(minutes=30)
+
+            conn.execute(
+                'UPDATE user SET reset_token = ?, reset_token_expire = ? WHERE user_id = ?',
+                (token, expiry, user['user_id'])
+            )
+            conn.commit()
+
+            reset_link = url_for('reset_password', token=token, _external=True)
+
+            try:
+                msg = Message('Reset your Queues password', recipients=[email])
+                msg.body = f'Click here to reset your password: {reset_link}\nThis link expires in 30 minutes.'
+                mail.send(msg)
+            except Exception as e:
+                print(f"Failed to send reset email: {e}")
+
+        conn.close()
+        # Always show the same message, whether or not the email exists (avoids leaking which emails are registered)
+        message = "If that email is registered, a reset link has been sent."
+
+    return render_template('forgot_password.html', message=message)
+
+
 def get_db_connection():
     if 'db' not in g:
         # Adding timeout=20 gives SQLite 20 seconds to wait for open locks before raising an error
