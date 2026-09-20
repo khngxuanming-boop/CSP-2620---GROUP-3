@@ -1,11 +1,22 @@
 import sqlite3
+import random
 from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
 from flask_socketio import SocketIO, emit, join_room
+from flask_mail import Mail, Message
+email = request.form.get('email')
 
 app = Flask(__name__)
 app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'youremail@gmail.com'
+app.config['MAIL_PASSWORD'] = 'yourapppassword'
+app.config['MAIL_DEFAULT_SENDER'] = 'youremail@gmail.com'
+mail = Mail(app)
 
 def get_db_connection():
     if 'db' not in g:
@@ -54,13 +65,7 @@ def create_admin():
         print("Admin account created.")
 
     conn.close()
-
-@app.route('/admin/dashboard')
-def admin_dashboard():
-    if session.get('role') != 'ADMIN':
-        return redirect(url_for('login'))
-
-    return render_template('admin_dashboard.html')
+\
 
 
 @app.route('/staff/dashboard/<int:store_id>')
@@ -136,19 +141,30 @@ def register():
         if existing_user:
             error = "That username is already taken! Choose another one."
             conn.close() # Close since failed.
-        else:
+            return render_template('register.html', error=error)
 
-            conn.execute(
-                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)',
-                (username, password, role)
-            )
-            conn.commit()
-            conn.close()
+        # Generate a 6-digit verification code
+        code = str(random.randint(100000, 999999))
 
-        # ONLY send them to login page if success
-        return redirect(url_for('login'))
+        conn.execute(
+            'INSERT INTO user (username, password, role, email, verification_code) VALUES (?, ?, ?, ?, ?)',
+            (username, password, role, email, code)
+        )
+        conn.commit()
+        conn.close()
 
-    # If it's a GET request or if there was an error, show the page with the error message
+        # Try sending the verification email
+        try:
+            msg = Message('Verify your Queues account', recipients=[email])
+            msg.body = f'Your verification code is: {code}'
+            mail.send(msg)
+        except Exception as e:
+            print(f"Failed to send verification email: {e}")
+
+        session['pending_verify'] = username
+        return redirect(url_for('verify_email'))
+
+    # If it's a GET request, show the blank form
     return render_template('register.html', error=error)
 
 # User Login
@@ -192,6 +208,30 @@ def login():
             )
 
     return render_template('login.html')
+
+# Verification ---> Week 5
+@app.route('/verify_email', methods=['GET', 'POST'])
+def verify_email():
+    username = session.get('pending_verify')
+    if not username:
+        return redirect(url_for('login'))
+
+    error = None
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip()
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
+
+        if user and user['verification_code'] == code:
+            conn.execute('UPDATE user SET is_verified = 1, verification_code = NULL WHERE username = ?', (username,))
+            conn.commit()
+            conn.close()
+            session.pop('pending_verify', None)
+            return redirect(url_for('login'))
+        error = "Incorrect code."
+        conn.close()
+
+    return render_template('verify_email.html', error=error, username=username)
 
 # Store registration ----> Week 4: Adding form
 @app.route('/register_store', methods=['GET', 'POST'])
@@ -251,8 +291,9 @@ def logout():
 # Admin Dashboard --- Week 4
 @app.route('/admin/dashboard')
 def admin_required():
-    return session.get('role') == 'SYS_ADMIN' and session.get('user_id') is not None
+    return session.get('role') == 'ADMIN' and session.get('user_id') is not None
 
+@app.route('/admin/dashboard')
 def admin_dashboard():
     if not admin_required():
         return redirect(url_for('login'))
