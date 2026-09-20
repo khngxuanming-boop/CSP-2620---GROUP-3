@@ -62,6 +62,8 @@ def admin_dashboard():
 
     return render_template('admin_dashboard.html')
 
+def admin_required():
+    return session.get('role') == 'ADMIN' and session.get('user_id') is not None
 
 @app.route('/staff/dashboard/<int:store_id>')
 def staff_dashboard(store_id):
@@ -139,7 +141,7 @@ def register():
         else:
 
             conn.execute(
-                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)'
+                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)',
                 (username, password, role)
             )
             conn.commit()
@@ -248,70 +250,6 @@ def logout():
         # Redirect user back to login
         return redirect(url_for('login'))
 
-# Admin Dashboard --- Week 4
-@app.route('/admin/dashboard')
-def admin_required():
-    return session.get('role') == 'SYS_ADMIN' and session.get('user_id') is not None
-
-def admin_dashboard():
-    if not admin_required():
-        return redirect(url_for('login'))
-
-    conn = get_db_connection()
-    pending_stores = conn.execute(
-        "SELECT * FROM store WHERE store_status = 'PENDING'"
-    ).fetchall()
-
-    store_counts = conn.execute(
-        """
-        SELECT
-            SUM(CASE WHEN store_status = 'PENDING' THEN 1 ELSE 0 END) AS pending,
-            SUM(CASE WHEN store_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
-            SUM(CASE WHEN store_status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected
-        FROM store
-        """
-    ).fetchone()
-
-    conn.close()
-
-    return render_template(
-        'admin_dashboard.html',
-        pending_stores=pending_stores,
-        store_counts=store_counts,
-        username=session.get('username')
-    )
-
-# Admin Review 
-@app.route('/admin/store/<int:store_id>/<action>', methods=['POST'])
-def admin_review_store(store_id, action):
-    if not admin_required():
-        return redirect(url_for('login'))
-
-    new_status = 'APPROVED' if action == 'approve' else 'REJECTED'
-    reason = request.form.get('reason', '').strip() if action == 'reject' else None
-
-    conn = get_db_connection()
-    conn.execute(
-        'UPDATE store SET store_status = ?, rejection_reason = ? WHERE store_id = ?',
-        (new_status, reason, store_id)
-    )
-    conn.commit()
-    conn.close()
-    return redirect(url_for('admin_dashboard'))
-
-# Owner Store Dashboard ----Week 4
-@app.route('/my-store')
-def my_store():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    conn = get_db_connection()
-    stores = conn.execute(
-        'SELECT * FROM store WHERE owner_id = ?', (session['user_id'],)
-    ).fetchall()
-    conn.close()
-
-    return render_template('my_store.html', stores=stores, username=session.get('username'))
 
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api

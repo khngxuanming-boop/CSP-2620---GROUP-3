@@ -308,3 +308,54 @@ hr {
     background: #3a4750;
     color: white;
 }
+
+/* =====================================================
+   PASSWORD TOGGLE EYE FIX
+===================================================== */
+.password-container {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.password-container input[type="password"],
+.password-container input[type="text"] {
+    width: 100% !important;
+    padding-right: 45px !important; /* Prevents hidden text from writing over the icon */
+    box-sizing: border-box !important;
+    margin-bottom: 0 !important;
+}
+
+/* Forces the toggle to be an inline floating element, undoing generic button styling */
+.toggle-password {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    
+    /* Layout Reset */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: unset !important;
+    min-height: unset !important;
+    
+    /* Styling Reset */
+    background: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    
+    /* Font & Interactivity */
+    font-size: 18px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    z-index: 10 !important;
+}

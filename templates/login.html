@@ -1,62 +1,62 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
-
     <title>Login to Queues</title>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
 </head>
 
 <body>
 
     <div class="card" style="max-width: 400px; margin: 50px auto;">
-
         <h1>Welcome Back!</h1>
 
-
-
         {% if error %}
-
-        <p
-            style="color: #ef4444; font-weight: bold; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 5px;">
-            {{ error }}</p>
-
+        <p style="color: #ef4444; font-weight: bold; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 5px;">
+            {{ error }}
+        </p>
         {% endif %}
 
-
-
         <form method="POST">
-
-            <label>Username</label>
-
-            <input type="text" name="username" required>
-
-
-
-            <label>Password</label>
-
-            <div class="password-container">
-                <input type="password" id="password" name="password" required>
-                <button type="button" class="toggle-password" onclick="togglePassword()">👁</button>
+            <div style="margin-bottom: 15px;">
+                <label>Username</label>
+                <input type="text" name="username" required>
             </div>
 
-
+            <div style="margin-bottom: 15px;">
+                <label>Password</label>
+                
+                <!-- CONTAINER WITH INLINE STYLES -->
+                <div style="position: relative; width: 100%; display: flex; align-items: center;">
+                    <input type="password" id="password" name="password" style="width: 100%; padding-right: 45px; box-sizing: border-box; margin: 0;" required>
+                    
+                    <!-- TOGGLE SPAN WITH INLINE STYLES -->
+                    <span id="toggleBtn" onclick="togglePassword()" style="position: absolute; right: 12px; cursor: pointer; font-size: 18px; user-select: none; z-index: 100; line-height: 1; display: inline-block; background: none; border: none; padding: 0; margin: 0; width: auto; height: auto; min-width: auto;">👁</span>
+                </div>
+            </div>
 
             <button type="submit" style="width: 100%; margin-top: 15px;">Sign In</button>
-
         </form>
 
         <p style="text-align: center; margin-top: 15px;">
-
             Don't have an account? <a href="/register" style="color: #2563eb;">Register here</a>
-
         </p>
-
     </div>
 
+    <script>
+        function togglePassword() {
+            const password = document.getElementById("password");
+            const toggleBtn = document.getElementById("toggleBtn");
+
+            if (password.type === "password") {
+                password.type = "text";
+                toggleBtn.textContent = "🙈";
+            } else {
+                password.type = "password";
+                toggleBtn.textContent = "👁";
+            }
+        }
+    </script>
 </body>
 
 </html>
