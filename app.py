@@ -129,8 +129,11 @@ def register():
             error = "That username is already taken! Choose another one."
             conn.close() # Close since failed.
         else:
-        # Save into the database as 'CUSTOMER'
-            conn.execute('INSERT INTO user (username, password, role) VALUES (?, ?, ?)' , (username, password, 'CUSTOMER'))
+
+            conn.execute(
+                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)'
+                (username, password, role)
+            )
             conn.commit()
             conn.close()
 
@@ -161,41 +164,48 @@ def login():
         ).fetchone()
 
         conn.close()
-
         if user:
-               session['user_id'] = user['user_id']
-               session['username'] = user['username']
-               session['role'] = user['role']
+            session['user_id'] = user['user_id']
+            session['username'] = user['username']
+            session['role'] = user['role']
 
-               if user['role'] == 'ADMIN':
-                    return redirect(url_for('admin_dashboard'))
+            if user['role'] == 'ADMIN':
+                return redirect(url_for('admin_dashboard'))
 
-               elif user['role'] == 'STAFF':
-                    return redirect(url_for('staff_dashboard', store_id=1))
+            elif user['role'] == 'STAFF':
+                return redirect(url_for('staff_dashboard', store_id=1))
 
-               else:
-                    return redirect(url_for('store_discovery'))
+            else:
+                return redirect(url_for('store_discovery'))
         else:
-            return "Incorrect password or username. Please try again!"
+            return render_template(
+                'login.html',
+                error='Incorrect username or password. Please try again!'
+            )
 
     return render_template('login.html')
 
-# Store registration
+# Store registration ----> Week 4: Adding form
 @app.route('/register_store', methods=['GET', 'POST'])
 def register_store():
-    # If the business owner clicks "Submit"
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
         store_name = request.form['name']
         hours = request.form['hours']
-        
+
         conn = get_db_connection()
         # Insert the new store, automatically setting its status to 'Pending'
-        conn.execute('INSERT INTO store (store_name, operating_hours, store_status) VALUES (?, ?, ?)', (store_name, hours, 'PENDING'))
+        conn.execute(
+            'INSERT INTO store (store_name, operating_hours, store_status, owner_id) VALUES (?, ?, ?, ?)',
+            (store_name, hours, 'PENDING', session['user_id'])
+        )
         conn.commit()
         conn.close()
-        
-        return redirect(url_for('store_discovery'))
-    # Show the blank store registration form    
+
+        return redirect(url_for('my_store'))
+
     return render_template('register_store.html')
 
 # Store Details Page ---> Week 3
@@ -229,6 +239,71 @@ def logout():
         session.clear()
         # Redirect user back to login
         return redirect(url_for('login'))
+
+# Admin Dashboard --- Week 4
+@app.route('/admin/dashboard')
+def admin_required():
+    return session.get('role') == 'SYS_ADMIN' and session.get('user_id') is not None
+
+def admin_dashboard():
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    pending_stores = conn.execute(
+        "SELECT * FROM store WHERE store_status = 'PENDING'"
+    ).fetchall()
+
+    store_counts = conn.execute(
+        """
+        SELECT
+            SUM(CASE WHEN store_status = 'PENDING' THEN 1 ELSE 0 END) AS pending,
+            SUM(CASE WHEN store_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+            SUM(CASE WHEN store_status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected
+        FROM store
+        """
+    ).fetchone()
+
+    conn.close()
+
+    return render_template(
+        'admin_dashboard.html',
+        pending_stores=pending_stores,
+        store_counts=store_counts,
+        username=session.get('username')
+    )
+
+# Admin Review 
+@app.route('/admin/store/<int:store_id>/<action>', methods=['POST'])
+def admin_review_store(store_id, action):
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    new_status = 'APPROVED' if action == 'approve' else 'REJECTED'
+    reason = request.form.get('reason', '').strip() if action == 'reject' else None
+
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE store SET store_status = ?, rejection_reason = ? WHERE store_id = ?',
+        (new_status, reason, store_id)
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+# Owner Store Dashboard ----Week 4
+@app.route('/my-store')
+def my_store():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    stores = conn.execute(
+        'SELECT * FROM store WHERE owner_id = ?', (session['user_id'],)
+    ).fetchall()
+    conn.close()
+
+    return render_template('my_store.html', stores=stores, username=session.get('username'))
 
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
@@ -1390,7 +1465,6 @@ def get_staff_dashboard(store_id):
 
 if __name__ == '__main__':
     with app.app_context():
-        init_db()
         create_admin()
 
     socketio.run(app, debug=True, port=5000)
