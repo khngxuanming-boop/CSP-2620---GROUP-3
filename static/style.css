@@ -1,9 +1,9 @@
 :root {
   --primary: #939cff;
-  --primary-dark: #887af5;
+  --primary-dark: #7a91f5;
   --text: #3a3a45;
   --muted: #8b8b96;
-  --background: #52589a;
+  --background: #3e4978;
   --card: #e8e4f5;
   --border: rgba(0, 0, 0, 0.06);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
@@ -75,7 +75,7 @@ button {
 
 button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(147, 184, 255, 0.35);
+  box-shadow: 0 6px 16px rgba(169, 147, 255, 0.35);
 }
 
 a {
