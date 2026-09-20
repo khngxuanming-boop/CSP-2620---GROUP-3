@@ -5,8 +5,7 @@ from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
 from flask_socketio import SocketIO, emit, join_room
 from flask_mail import Mail, Message
-email = request.form.get('email')
-
+ 
 app = Flask(__name__)
 app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
@@ -196,7 +195,7 @@ def register():
         # Receive what they typed in the boxes
         username = request.form['username']
         password = request.form['password']
-
+        email = request.form.get('email')
         # Grab the role they picked from the dropdown menu/
         role = request.form.get('role', 'CUSTOMER')
 
