@@ -2,15 +2,18 @@ document.addEventListener("DOMContentLoaded", function () {
   const dateInput = document.getElementById("apptDate");
   const timeInput = document.getElementById("apptTime");
   const bookingForm = document.getElementById("bookingForm");
+  const storeServiceInput = document.getElementById("storeService");
+  const selectedServiceIdInput = document.getElementById("selectedServiceId");
 
   // Cannot select past dates for the appointment
+  const today = new Date();
+  const localDate = new Date(
+    today.getTime() - today.getTimezoneOffset() * 60000,
+  )
+    .toISOString()
+    .split("T")[0];
+
   if (dateInput) {
-    const today = new Date();
-    const localDate = new Date(
-      today.getTime() - today.getTimezoneOffset() * 60000,
-    )
-      .toISOString()
-      .split("T")[0];
     dateInput.min = localDate;
   }
 
@@ -18,22 +21,69 @@ document.addEventListener("DOMContentLoaded", function () {
   const urlParams = new URLSearchParams(window.location.search);
   const openParam = urlParams.get("open");
   const closeParam = urlParams.get("close");
-  const openTime = openParam !== null ? parseInt(openParam) : 8;
-  const closeTime = closeParam !== null ? parseInt(closeParam) : 18;
+  const serviceIdParam = urlParams.get("service_id");
+  const serviceNameParam =
+    urlParams.get("service_name") || "Card Authentication";
+  if (serviceIdParam && selectedServiceIdInput) {
+    selectedServiceIdInput.value = serviceIdParam;
+  }
+  if (serviceNameParam && storeServiceInput) {
+    storeServiceInput.value = decodeURIComponent(
+      serviceNameParam.replace(/\+/g, " "),
+    );
+  }
+  const openTime =
+    openParam && !isNaN(parseInt(openParam)) ? parseInt(openParam) : 8;
+  const closeTime =
+    closeParam && !isNaN(parseInt(closeParam)) ? parseInt(closeParam) : 18;
   function generateTimeSlots(startHour, endHour) {
     if (!timeInput) return;
     timeInput.innerHTML = '<option value="">Please select a time...</option>';
-    for (let i = startHour; i < endHour; i++) {
-      let currentHour = i.toString().padStart(2, "0") + ":00";
-      let nextHour = (i + 1).toString().padStart(2, "0") + ":00";
-      let option = document.createElement("option");
-      option.value = currentHour;
-      option.text = `${currentHour} - ${nextHour}`;
+    const now = new Date();
+    const selectedDate = dateInput ? dateInput.value : "";
+    let addedSlotsCount = 0;
+    for (let minutes = startHour * 60; minutes < endHour * 60; minutes += 30) {
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
+      const nextMinutes = minutes + 30;
+      const nextHour = Math.floor(nextMinutes / 60);
+      const nextMinute = nextMinutes % 60;
+      const currentTime =
+        hour.toString().padStart(2, "0") +
+        ":" +
+        minute.toString().padStart(2, "0");
+      const nextTime =
+        nextHour.toString().padStart(2, "0") +
+        ":" +
+        nextMinute.toString().padStart(2, "0");
+      // If today is selected, hide time slots that have already passed
+      if (selectedDate === localDate) {
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const slotTimeInMinutes = hour * 60 + minute;
+        const currentTimeInMinutes = currentHour * 60 + currentMinute;
+        if (slotTimeInMinutes <= currentTimeInMinutes) {
+          continue;
+        }
+      }
+      const option = document.createElement("option");
+      option.value = currentTime;
+      option.text = `${currentTime} - ${nextTime}`;
       timeInput.appendChild(option);
+      addedSlotsCount++;
+    }
+    if (addedSlotsCount === 0 && selectedDate === localDate) {
+      timeInput.innerHTML =
+        '<option value="">No available time slots today.</option>';
     }
   }
   // Generate time slots from open time to close time
   generateTimeSlots(openTime, closeTime);
+  if (dateInput) {
+    dateInput.addEventListener("change", function () {
+      generateTimeSlots(openTime, closeTime);
+    });
+  }
 
   // Handle form submission
   if (bookingForm) {
@@ -47,18 +97,17 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const serviceIdFromUrl = urlParams.get("service_id");
-      if (!serviceIdFromUrl) {
+      const finalServiceId = document.getElementById("selectedServiceId").value;
+      if (!finalServiceId) {
         alert("Service ID not found. Please select a service first.");
         return;
       }
 
-      const combinedDateTime = `${dateInput.value} ${timeInput.value}`;
+      const combinedDateTime = `${dateInput.value} ${timeInput.value}:00`;
 
       const payload = {
         user_id: parseInt(requestUserId),
-        service_id: parseInt(serviceIdFromUrl),
+        service_id: parseInt(finalServiceId),
         appt_datetime: combinedDateTime,
       };
 
