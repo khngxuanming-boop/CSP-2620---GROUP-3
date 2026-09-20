@@ -139,7 +139,7 @@ def register():
         else:
 
             conn.execute(
-                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)'
+                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)',
                 (username, password, role)
             )
             conn.commit()

@@ -1,54 +1,83 @@
-/* static/style.css */
-body {
-    font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #0f172a;
-    color: #f8fafc;
-    margin: 0;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+:root {
+  --primary: #939cff;
+  --primary-dark: #887af5;
+  --text: #3a3a45;
+  --muted: #8b8b96;
+  --background: #52589a;
+  --card: #e8e4f5;
+  --border: rgba(0, 0, 0, 0.06);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
-h1, h2 {color: #c5c7cc}
+body {
+  background:
+    radial-gradient(circle at top left, rgba(255, 214, 224, 0.35), transparent 40%),
+    radial-gradient(circle at bottom right, rgba(200, 220, 255, 0.35), transparent 40%),
+    var(--background);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100vh;
+  margin: 0;
+}
 
 .card {
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid #334156;
-    border-radius: 12px;
-    padding: 30px;
-    width: 100%;
-    max-width: 500px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    margin-bottom: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 30px;
 }
 
-input[type="text"], input[type="password"] {
-    width: 90%;
-    padding: 12px;
-    margin: 10px 0 20px 0;
-    border-radius: 6px;
-    border: 1px solid #475569;
-    background-color: #1e293b;
-    color: white;
+h1, h2, h3 {
+  color: var(--text);
+  font-weight: 700;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  margin-top: 14px;
+  color: var(--text);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fbfbfd;
+  color: var(--text);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(147, 184, 255, 0.25);
 }
 
 button {
-    background-color: #2461fb;
-    color: #0f172a;
-    font-weight: bold;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    width: 100%;
-    transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 button:hover {
-    background-color: #303768;
-    transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(147, 184, 255, 0.35);
 }
 
-a { color: #1f275e; text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--primary-dark);
+}
