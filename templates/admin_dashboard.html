@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +8,12 @@
     <title>Admin Dashboard | Queue Management System</title>
 
     <!-- Bootstrap -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Main CSS -->
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-
         body {
             background: #f0f2f5;
             color: #2b2d42;
@@ -60,7 +56,7 @@
         }
 
         .logout-btn {
-            border: 1px solid rgba(255,255,255,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             color: white;
         }
 
@@ -99,7 +95,7 @@
             background: white;
             border-radius: 15px;
             padding: 22px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
             transition: 0.2s;
             height: 100%;
         }
@@ -144,7 +140,7 @@
             border-radius: 15px;
             padding: 25px;
             margin-top: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
         }
 
         .card-title {
@@ -314,6 +310,35 @@
         }
 
 
+        /* ================= ADMIN NAVIGATION ================= */
+
+        .admin-navigation {
+            background: white;
+            padding: 12px 35px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .nav-btn {
+            border: none;
+            background: transparent;
+            color: #5c6b73;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .nav-btn.active {
+            background: #3a4750;
+            color: white;
+        }
+
+
         /* ================= RESPONSIVE ================= */
 
         @media (max-width: 768px) {
@@ -332,396 +357,248 @@
 
         }
 
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 768px) {
+
+            .dashboard {
+                padding: 20px;
+            }
+
+            .admin-navbar {
+                padding: 15px 20px;
+            }
+
+            .admin-user span {
+                display: none;
+            }
+
+        }
     </style>
+    
 </head>
 
 
 <body>
 
+<!-- NAVIGATION BAR -->
 
-<!-- =====================================================
-     NAVIGATION BAR
-===================================================== -->
 
-<nav class="admin-navbar">
+    <nav class="admin-navbar">
 
-    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center">
 
-        <div>
-            <div class="brand-title">
-                Queue Management System
+            <div>
+                <div class="brand-title">
+                    Queue Management System
+                </div>
+
+                <div class="brand-subtitle">
+                    Administrator Control Center
+                </div>
             </div>
 
-            <div class="brand-subtitle">
-                Administrator Control Center
+
+            <div class="admin-user">
+
+                <div class="admin-avatar">
+                    A
+                </div>
+
+                <span>
+                    {{ session.get('username', 'Admin') }}
+                </span>
+
+                <a href="{{ url_for('logout') }}" class="btn btn-sm logout-btn">
+                    Logout
+                </a>
+
             </div>
+
         </div>
 
+    </nav>
 
-        <div class="admin-user">
+    <!-- ================= ADMIN NAVIGATION ================= -->
 
-            <div class="admin-avatar">
-                A
-            </div>
+    <div class="admin-navigation">
 
-            <span>
-                {{ session.get('username', 'Admin') }}
-            </span>
+        <button class="nav-btn active" onclick="showSection('dashboard', this)">
+            📊 Dashboard
+        </button>
 
-            <a href="{{ url_for('logout') }}"
-               class="btn btn-sm logout-btn">
-                Logout
-            </a>
+        <button class="nav-btn" onclick="showSection('proposals', this)">
+            📋 Store Proposals
+        </button>
 
-        </div>
+        <button class="nav-btn" onclick="showSection('stores', this)">
+            🏪 Stores
+        </button>
+
+        <button class="nav-btn" onclick="showSection('queues', this)">
+            🎫 Queue Monitor
+        </button>
+
+        <button class="nav-btn" onclick="showSection('history', this)">
+            📜 Queue History
+        </button>
 
     </div>
 
-</nav>
+  <main class="dashboard">
+
+    <!-- ================= DASHBOARD ================= -->
+    <div id="dashboard-section" class="admin-section">
+
+        <!-- WELCOME -->
+        <section class="welcome-section">
+
+            <h2>Admin Dashboard</h2>
+
+            <p>
+                Manage store proposals and monitor the overall
+                queue management system.
+            </p>
+
+        </section>
 
 
-<!-- =====================================================
-     DASHBOARD
-===================================================== -->
+        <!-- SUMMARY CARDS -->
+        <div class="row g-4">
 
-<main class="dashboard">
+            <!-- Total Stores -->
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
 
+                    <div class="stat-header">
+                        <div class="stat-label">
+                            Total Stores
+                        </div>
 
-    <!-- ================= WELCOME ================= -->
-
-    <section class="welcome-section">
-
-        <h2>Admin Dashboard</h2>
-
-        <p>
-            Manage store proposals and monitor the overall
-            queue management system.
-        </p>
-
-    </section>
-
-
-
-    <!-- =================================================
-         SUMMARY CARDS
-    ================================================= -->
-
-    <div class="row g-4">
-
-
-        <!-- Total Stores -->
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="stat-card">
-
-                <div class="stat-header">
-
-                    <div class="stat-label">
-                        Total Stores
+                        <div class="stat-icon">
+                            🏪
+                        </div>
                     </div>
 
-                    <div class="stat-icon">
-                        🏪
+                    <div class="stat-value" id="totalStores">
+                        0
                     </div>
 
+                    <small class="text-muted">
+                        Registered stores
+                    </small>
+
                 </div>
+            </div>
 
-                <div class="stat-value"
-                     id="totalStores">
-                    0
+
+            <!-- Pending -->
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+
+                    <div class="stat-header">
+                        <div class="stat-label">
+                            Pending Proposals
+                        </div>
+
+                        <div class="stat-icon">
+                            📋
+                        </div>
+                    </div>
+
+                    <div class="stat-value" id="pendingProposals">
+                        0
+                    </div>
+
+                    <small class="text-muted">
+                        Awaiting approval
+                    </small>
+
                 </div>
+            </div>
 
-                <small class="text-muted">
-                    Registered stores
-                </small>
 
+            <!-- Waiting -->
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+
+                    <div class="stat-header">
+                        <div class="stat-label">
+                            Customers Waiting
+                        </div>
+
+                        <div class="stat-icon">
+                            👥
+                        </div>
+                    </div>
+
+                    <div class="stat-value" id="waitingCustomers">
+                        0
+                    </div>
+
+                    <small class="text-muted">
+                        Active waiting queues
+                    </small>
+
+                </div>
+            </div>
+
+
+            <!-- Serving -->
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+
+                    <div class="stat-header">
+                        <div class="stat-label">
+                            Customers Serving
+                        </div>
+
+                        <div class="stat-icon">
+                            🎫
+                        </div>
+                    </div>
+
+                    <div class="stat-value" id="servingCustomers">
+                        0
+                    </div>
+
+                    <small class="text-muted">
+                        Currently being served
+                    </small>
+
+                </div>
             </div>
 
         </div>
 
 
-        <!-- Pending -->
+        <!-- RECENT ACTIVITY -->
+        <div class="dashboard-card">
 
-        <div class="col-lg-3 col-md-6">
+            <div class="card-title">
+                Recent Activity
+            </div>
 
-            <div class="stat-card">
+            <div class="card-description mb-3">
+                Latest system activities.
+            </div>
 
-                <div class="stat-header">
+            <div id="activityList">
 
-                    <div class="stat-label">
-                        Pending Proposals
-                    </div>
+                <div class="activity-item">
 
-                    <div class="stat-icon">
+                    <div class="activity-icon">
                         📋
                     </div>
 
-                </div>
-
-                <div class="stat-value"
-                     id="pendingProposals">
-                    0
-                </div>
-
-                <small class="text-muted">
-                    Awaiting approval
-                </small>
-
-            </div>
-
-        </div>
-
-
-        <!-- Waiting -->
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="stat-card">
-
-                <div class="stat-header">
-
-                    <div class="stat-label">
-                        Customers Waiting
-                    </div>
-
-                    <div class="stat-icon">
-                        👥
-                    </div>
-
-                </div>
-
-                <div class="stat-value"
-                     id="waitingCustomers">
-                    0
-                </div>
-
-                <small class="text-muted">
-                    Active waiting queues
-                </small>
-
-            </div>
-
-        </div>
-
-
-        <!-- Serving -->
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="stat-card">
-
-                <div class="stat-header">
-
-                    <div class="stat-label">
-                        Customers Serving
-                    </div>
-
-                    <div class="stat-icon">
-                        🎫
-                    </div>
-
-                </div>
-
-                <div class="stat-value"
-                     id="servingCustomers">
-                    0
-                </div>
-
-                <small class="text-muted">
-                    Currently being served
-                </small>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =================================================
-         STORE PROPOSALS
-    ================================================= -->
-
-    <div class="dashboard-card proposal-card">
-
-        <div class="d-flex justify-content-between
-                    align-items-center mb-3">
-
-            <div>
-
-                <div class="card-title">
-                    Store Registration Proposals
-                </div>
-
-                <div class="card-description">
-                    Review store registration requests submitted
-                    by store owners.
-                </div>
-
-            </div>
-
-            <span class="proposal-badge">
-                Pending Review
-            </span>
-
-        </div>
-
-
-        <div class="table-responsive">
-
-            <table class="table table-hover">
-
-                <thead>
-
-                    <tr>
-                        <th>Store ID</th>
-                        <th>Store Name</th>
-                        <th>Operating Hours</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-
-                </thead>
-
-
-                <tbody id="proposalTable">
-
-                    <tr>
-
-                        <td colspan="5"
-                            class="empty-message">
-
-                            Loading proposals...
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =================================================
-         TWO COLUMN SECTION
-    ================================================= -->
-
-    <div class="row g-4">
-
-
-        <!-- ================= STORE OVERVIEW ================= -->
-
-        <div class="col-lg-7">
-
-            <div class="dashboard-card">
-
-                <div class="d-flex justify-content-between
-                            align-items-center mb-3">
-
                     <div>
 
-                        <div class="card-title">
-                            Store Overview
+                        <div class="activity-text">
+                            Loading activities...
                         </div>
 
-                        <div class="card-description">
-                            Current status of registered stores.
-                        </div>
-
-                    </div>
-
-                    <button
-                        class="btn btn-sm btn-outline-secondary"
-                        onclick="loadStores()">
-
-                        Refresh
-
-                    </button>
-
-                </div>
-
-
-                <div class="table-responsive">
-
-                    <table class="table table-hover">
-
-                        <thead>
-
-                            <tr>
-                                <th>Store</th>
-                                <th>Status</th>
-                                <th>Operating Hours</th>
-                                <th>Wait Time</th>
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody id="storeTable">
-
-                            <tr>
-
-                                <td colspan="4"
-                                    class="empty-message">
-
-                                    Loading stores...
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- ================= RECENT ACTIVITY ================= -->
-
-        <div class="col-lg-5">
-
-            <div class="dashboard-card">
-
-                <div class="card-title">
-                    Recent Activity
-                </div>
-
-                <div class="card-description mb-3">
-                    Latest system activities.
-                </div>
-
-
-                <div id="activityList">
-
-                    <div class="activity-item">
-
-                        <div class="activity-icon">
-                            📋
-                        </div>
-
-                        <div>
-
-                            <div class="activity-text">
-                                Loading activities...
-                            </div>
-
-                            <div class="activity-time">
-                                Please wait
-                            </div>
-
+                        <div class="activity-time">
+                            Please wait
                         </div>
 
                     </div>
@@ -735,191 +612,315 @@
     </div>
 
 
+    <!-- ================= STORE PROPOSALS ================= -->
+    <div id="proposals-section"
+         class="admin-section"
+         style="display: none;">
 
-    <!-- =================================================
-         QUEUE MONITORING
-    ================================================= -->
+        <div class="dashboard-card proposal-card">
 
-    <div class="dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
-        <div class="d-flex justify-content-between
-                    align-items-center mb-3">
+                <div>
 
-            <div>
+                    <div class="card-title">
+                        Store Registration Proposals
+                    </div>
 
-                <div class="card-title">
-                    Live Queue Monitoring
+                    <div class="card-description">
+                        Review store registration requests submitted
+                        by store owners.
+                    </div>
+
                 </div>
 
-                <div class="card-description">
-                    Monitor active queues across all stores.
-                </div>
+                <span class="proposal-badge">
+                    Pending Review
+                </span>
 
             </div>
 
-            <button
-                class="btn btn-sm btn-outline-secondary"
-                onclick="loadQueueMonitor()">
 
-                Refresh
+            <div class="table-responsive">
 
-            </button>
+                <table class="table table-hover">
 
-        </div>
+                    <thead>
 
+                        <tr>
+                            <th>Store ID</th>
+                            <th>Store Name</th>
+                            <th>Operating Hours</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
 
-        <div class="table-responsive">
+                    </thead>
 
-            <table class="table table-hover">
+                    <tbody id="proposalTable">
 
-                <thead>
+                        <tr>
 
-                    <tr>
-                        <th>Store</th>
-                        <th>Counter</th>
-                        <th>Queue Number</th>
-                        <th>Status</th>
-                    </tr>
+                            <td colspan="5" class="empty-message">
+                                Loading proposals...
+                            </td>
 
-                </thead>
+                        </tr>
 
+                    </tbody>
 
-                <tbody id="queueTable">
+                </table>
 
-                    <tr>
-
-                        <td colspan="4"
-                            class="empty-message">
-
-                            Loading queue information...
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
+            </div>
 
         </div>
 
     </div>
 
 
+    <!-- ================= STORES ================= -->
+    <div id="stores-section"
+         class="admin-section"
+         style="display: none;">
 
-    <!-- =================================================
-         QUEUE HISTORY
-    ================================================= -->
+        <div class="dashboard-card">
 
-    <div class="dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
-        <div class="d-flex justify-content-between
-                    align-items-center mb-3">
+                <div>
 
-            <div>
+                    <div class="card-title">
+                        Store Overview
+                    </div>
 
-                <div class="card-title">
-                    Recent Queue History
+                    <div class="card-description">
+                        Current status of registered stores.
+                    </div>
+
                 </div>
 
-                <div class="card-description">
-                    Recent queue activity recorded by the system.
-                </div>
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="loadStores()">
+
+                    Refresh
+
+                </button>
 
             </div>
 
-            <button
-                class="btn btn-sm btn-outline-secondary"
-                onclick="loadHistory()">
 
-                Refresh
+            <div class="table-responsive">
 
-            </button>
+                <table class="table table-hover">
 
-        </div>
+                    <thead>
 
+                        <tr>
+                            <th>Store</th>
+                            <th>Status</th>
+                            <th>Operating Hours</th>
+                            <th>Wait Time</th>
+                        </tr>
 
-        <div class="table-responsive">
+                    </thead>
 
-            <table class="table table-hover">
+                    <tbody id="storeTable">
 
-                <thead>
+                        <tr>
 
-                    <tr>
-                        <th>Queue ID</th>
-                        <th>Counter</th>
-                        <th>Status</th>
-                        <th>Time</th>
-                    </tr>
+                            <td colspan="4" class="empty-message">
+                                Loading stores...
+                            </td>
 
-                </thead>
+                        </tr>
 
+                    </tbody>
 
-                <tbody id="historyTable">
+                </table>
 
-                    <tr>
-
-                        <td colspan="4"
-                            class="empty-message">
-
-                            Loading history...
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
+            </div>
 
         </div>
 
     </div>
 
+
+    <!-- ================= QUEUE MONITOR ================= -->
+    <div id="queues-section"
+         class="admin-section"
+         style="display: none;">
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <div>
+
+                    <div class="card-title">
+                        Live Queue Monitoring
+                    </div>
+
+                    <div class="card-description">
+                        Monitor active queues across all stores.
+                    </div>
+
+                </div>
+
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="loadQueueMonitor()">
+
+                    Refresh
+
+                </button>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover">
+
+                    <thead>
+
+                        <tr>
+                            <th>Store</th>
+                            <th>Counter</th>
+                            <th>Queue Number</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="queueTable">
+
+                        <tr>
+
+                            <td colspan="4" class="empty-message">
+                                Loading queue information...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= QUEUE HISTORY ================= -->
+    <div id="history-section"
+         class="admin-section"
+         style="display: none;">
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <div>
+
+                    <div class="card-title">
+                        Recent Queue History
+                    </div>
+
+                    <div class="card-description">
+                        Recent queue activity recorded by the system.
+                    </div>
+
+                </div>
+
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="loadHistory()">
+
+                    Refresh
+
+                </button>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover">
+
+                    <thead>
+
+                        <tr>
+                            <th>Queue ID</th>
+                            <th>Counter</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="historyTable">
+
+                        <tr>
+
+                            <td colspan="4" class="empty-message">
+                                Loading history...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </main>
-
-
-
-<!-- =====================================================
+    <!-- =====================================================
      JAVASCRIPT
 ===================================================== -->
 
-<script>
+    <script>
 
 
-/* =====================================================
-   LOAD STORES
-===================================================== */
+        /* =====================================================
+           LOAD STORES
+        ===================================================== */
 
-async function loadStores() {
+        async function loadStores() {
 
-    try {
+            try {
 
-        const response =
-            await fetch('/api/stores');
+                const response =
+                    await fetch('/api/stores');
 
-        const stores =
-            await response.json();
-
-
-        const storeTable =
-            document.getElementById('storeTable');
-
-        const proposalTable =
-            document.getElementById('proposalTable');
+                const stores =
+                    await response.json();
 
 
-        storeTable.innerHTML = '';
-        proposalTable.innerHTML = '';
+                const storeTable =
+                    document.getElementById('storeTable');
+
+                const proposalTable =
+                    document.getElementById('proposalTable');
 
 
-        let pending = 0;
+                storeTable.innerHTML = '';
+                proposalTable.innerHTML = '';
 
 
-        if (!stores || stores.length === 0) {
+                let pending = 0;
 
-            storeTable.innerHTML = `
+
+                if (!stores || stores.length === 0) {
+
+                    storeTable.innerHTML = `
                 <tr>
                     <td colspan="4"
                         class="empty-message">
@@ -928,7 +929,7 @@ async function loadStores() {
                 </tr>
             `;
 
-            proposalTable.innerHTML = `
+                    proposalTable.innerHTML = `
                 <tr>
                     <td colspan="5"
                         class="empty-message">
@@ -937,30 +938,30 @@ async function loadStores() {
                 </tr>
             `;
 
-            document.getElementById(
-                'totalStores'
-            ).textContent = 0;
+                    document.getElementById(
+                        'totalStores'
+                    ).textContent = 0;
 
-            document.getElementById(
-                'pendingProposals'
-            ).textContent = 0;
+                    document.getElementById(
+                        'pendingProposals'
+                    ).textContent = 0;
 
-            return;
-        }
-
-
-        stores.forEach(store => {
+                    return;
+                }
 
 
-            /* =========================
-               STORE TABLE
-            ========================= */
-
-            const row =
-                document.createElement('tr');
+                stores.forEach(store => {
 
 
-            row.innerHTML = `
+                    /* =========================
+                       STORE TABLE
+                    ========================= */
+
+                    const row =
+                        document.createElement('tr');
+
+
+                    row.innerHTML = `
 
                 <td>
                     <strong>
@@ -992,28 +993,28 @@ async function loadStores() {
             `;
 
 
-            storeTable.appendChild(row);
+                    storeTable.appendChild(row);
 
 
 
-            /* =========================
-               PROPOSALS
-            ========================= */
+                    /* =========================
+                       PROPOSALS
+                    ========================= */
 
-            if (
-                store.store_status &&
-                store.store_status.toUpperCase()
-                === 'PENDING'
-            ) {
+                    if (
+                        store.store_status &&
+                        store.store_status.toUpperCase()
+                        === 'PENDING'
+                    ) {
 
-                pending++;
-
-
-                const proposalRow =
-                    document.createElement('tr');
+                        pending++;
 
 
-                proposalRow.innerHTML = `
+                        const proposalRow =
+                            document.createElement('tr');
+
+
+                        proposalRow.innerHTML = `
 
                     <td>
                         ${store.store_id}
@@ -1063,28 +1064,28 @@ async function loadStores() {
                 `;
 
 
-                proposalTable.appendChild(
-                    proposalRow
-                );
+                        proposalTable.appendChild(
+                            proposalRow
+                        );
 
-            }
+                    }
 
-        });
-
-
-        document.getElementById(
-            'totalStores'
-        ).textContent = stores.length;
+                });
 
 
-        document.getElementById(
-            'pendingProposals'
-        ).textContent = pending;
+                document.getElementById(
+                    'totalStores'
+                ).textContent = stores.length;
 
 
-        if (pending === 0) {
+                document.getElementById(
+                    'pendingProposals'
+                ).textContent = pending;
 
-            proposalTable.innerHTML = `
+
+                if (pending === 0) {
+
+                    proposalTable.innerHTML = `
                 <tr>
                     <td colspan="5"
                         class="empty-message">
@@ -1093,6 +1094,7 @@ async function loadStores() {
                 </tr>
             `;
 
+<<<<<<< HEAD
         }
 
     }
@@ -1132,50 +1134,36 @@ async function approveStore(storeId) {
                 `/admin/store/${storeId}/approve`,
                 {
                     method: 'POST'
+=======
+>>>>>>> feature/member3
                 }
-            );
 
+            }
 
-        if (response.ok) {
+            catch (error) {
 
-            alert(
-                'Store approved successfully.'
-            );
+                console.error(
+                    'Error loading stores:',
+                    error
+                );
 
-            loadStores();
-
-        }
-
-        else {
-
-            alert(
-                'Unable to approve store.'
-            );
+            }
 
         }
 
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(
-            'An error occurred.'
-        );
-
-    }
-
-}
 
 
+        /* =====================================================
+           APPROVE STORE
+        ===================================================== */
 
-/* =====================================================
-   REJECT STORE
-===================================================== */
+        async function approveStore(storeId) {
 
-async function rejectStore(storeId) {
+            if (!confirm(
+                'Are you sure you want to approve this store?'
+            )) {
 
+<<<<<<< HEAD
     const reason = prompt(
         'Reason for rejecting this store (shown to the owner):'
     );
@@ -1184,10 +1172,16 @@ async function rejectStore(storeId) {
         // User clicked Cancel on the prompt
         return;
     }
+=======
+                return;
+
+            }
+>>>>>>> feature/member3
 
 
-    try {
+            try {
 
+<<<<<<< HEAD
         const formData = new FormData();
         formData.append('reason', reason);
 
@@ -1197,195 +1191,280 @@ async function rejectStore(storeId) {
                 {
                     method: 'POST',
                     body: formData
+=======
+                const response =
+                    await fetch(
+                        `/api/stores/${storeId}`,
+                        {
+                            method: 'PUT',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+
+                            body: JSON.stringify({
+                                store_status: 'APPROVED'
+                            })
+                        }
+                    );
+
+
+                if (response.ok) {
+
+                    alert(
+                        'Store approved successfully.'
+                    );
+
+                    loadStores();
+
+>>>>>>> feature/member3
                 }
-            );
 
+                else {
 
-        if (response.ok) {
+                    alert(
+                        'Unable to approve store.'
+                    );
 
-            alert(
-                'Store proposal rejected.'
-            );
+                }
 
-            loadStores();
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                alert(
+                    'An error occurred.'
+                );
+
+            }
 
         }
 
-        else {
 
-            alert(
-                'Unable to reject store.'
-            );
+
+        /* =====================================================
+           REJECT STORE
+        ===================================================== */
+
+        async function rejectStore(storeId) {
+
+            if (!confirm(
+                'Are you sure you want to reject this store?'
+            )) {
+
+                return;
+
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/stores/${storeId}`,
+                        {
+                            method: 'PUT',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+
+                            body: JSON.stringify({
+                                store_status: 'REJECTED'
+                            })
+                        }
+                    );
+
+
+                if (response.ok) {
+
+                    alert(
+                        'Store proposal rejected.'
+                    );
+
+                    loadStores();
+
+                }
+
+                else {
+
+                    alert(
+                        'Unable to reject store.'
+                    );
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                alert(
+                    'An error occurred.'
+                );
+
+            }
 
         }
 
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(
-            'An error occurred.'
-        );
-
-    }
-
-}
 
 
+        /* =====================================================
+           STATUS BADGE
+        ===================================================== */
 
-/* =====================================================
-   STATUS BADGE
-===================================================== */
+        function getStatusBadge(status) {
 
-function getStatusBadge(status) {
+            if (!status) {
 
-    if (!status) {
+                return '-';
 
-        return '-';
-
-    }
-
-
-    const value =
-        status.toUpperCase();
+            }
 
 
-    if (value === 'PENDING') {
+            const value =
+                status.toUpperCase();
 
-        return `
+
+            if (value === 'PENDING') {
+
+                return `
             <span class="status status-pending">
                 PENDING
             </span>
         `;
 
-    }
+            }
 
 
-    if (
-        value === 'APPROVED' ||
-        value === 'OPEN'
-    ) {
+            if (
+                value === 'APPROVED' ||
+                value === 'OPEN'
+            ) {
 
-        return `
+                return `
             <span class="status status-approved">
                 ${value}
             </span>
         `;
 
-    }
+            }
 
 
-    if (
-        value === 'REJECTED' ||
-        value === 'CLOSED'
-    ) {
+            if (
+                value === 'REJECTED' ||
+                value === 'CLOSED'
+            ) {
 
-        return `
+                return `
             <span class="status status-rejected">
                 ${value}
             </span>
         `;
 
-    }
+            }
 
 
-    return value;
+            return value;
 
-}
-
-
-
-/* =====================================================
-   QUEUE MONITOR
-===================================================== */
-
-async function loadQueueMonitor() {
-
-    try {
-
-        const storesResponse =
-            await fetch('/api/stores');
-
-        const stores =
-            await storesResponse.json();
+        }
 
 
-        const queueTable =
-            document.getElementById('queueTable');
+
+        /* =====================================================
+           QUEUE MONITOR
+        ===================================================== */
+
+        async function loadQueueMonitor() {
+
+            try {
+
+                const storesResponse =
+                    await fetch('/api/stores');
+
+                const stores =
+                    await storesResponse.json();
 
 
-        queueTable.innerHTML = '';
+                const queueTable =
+                    document.getElementById('queueTable');
 
 
-        let waiting = 0;
-        let serving = 0;
-        let foundQueue = false;
+                queueTable.innerHTML = '';
 
 
-        for (const store of stores) {
+                let waiting = 0;
+                let serving = 0;
+                let foundQueue = false;
 
 
-            const counterResponse =
-                await fetch(
-                    `/api/counters/${store.store_id}`
-                );
+                for (const store of stores) {
 
 
-            const counters =
-                await counterResponse.json();
+                    const counterResponse =
+                        await fetch(
+                            `/api/counters/${store.store_id}`
+                        );
 
 
-            for (const counter of counters) {
+                    const counters =
+                        await counterResponse.json();
 
 
-                const queueResponse =
-                    await fetch(
-                        `/api/counters/${counter.counter_id}/queue`
-                    );
+                    for (const counter of counters) {
 
 
-                const queues =
-                    await queueResponse.json();
+                        const queueResponse =
+                            await fetch(
+                                `/api/counters/${counter.counter_id}/queue`
+                            );
 
 
-                if (
-                    !queues ||
-                    queues.length === 0
-                ) {
-
-                    continue;
-
-                }
+                        const queues =
+                            await queueResponse.json();
 
 
-                foundQueue = true;
+                        if (
+                            !queues ||
+                            queues.length === 0
+                        ) {
+
+                            continue;
+
+                        }
 
 
-                queues.forEach(queue => {
-
-                    const status =
-                        queue.queue_status ||
-                        queue.status ||
-                        'UNKNOWN';
+                        foundQueue = true;
 
 
-                    if (status === 'WAITING') {
-                        waiting++;
-                    }
+                        queues.forEach(queue => {
+
+                            const status =
+                                queue.queue_status ||
+                                queue.status ||
+                                'UNKNOWN';
 
 
-                    if (status === 'SERVING') {
-                        serving++;
-                    }
+                            if (status === 'WAITING') {
+                                waiting++;
+                            }
 
 
-                    const row =
-                        document.createElement('tr');
+                            if (status === 'SERVING') {
+                                serving++;
+                            }
 
 
-                    row.innerHTML = `
+                            const row =
+                                document.createElement('tr');
+
+
+                            row.innerHTML = `
 
                         <td>
                             <strong>
@@ -1410,28 +1489,28 @@ async function loadQueueMonitor() {
                     `;
 
 
-                    queueTable.appendChild(row);
+                            queueTable.appendChild(row);
 
-                });
+                        });
 
-            }
+                    }
 
-        }
-
-
-        document.getElementById(
-            'waitingCustomers'
-        ).textContent = waiting;
+                }
 
 
-        document.getElementById(
-            'servingCustomers'
-        ).textContent = serving;
+                document.getElementById(
+                    'waitingCustomers'
+                ).textContent = waiting;
 
 
-        if (!foundQueue) {
+                document.getElementById(
+                    'servingCustomers'
+                ).textContent = serving;
 
-            queueTable.innerHTML = `
+
+                if (!foundQueue) {
+
+                    queueTable.innerHTML = `
                 <tr>
                     <td colspan="4"
                         class="empty-message">
@@ -1440,56 +1519,56 @@ async function loadQueueMonitor() {
                 </tr>
             `;
 
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    'Queue monitor error:',
+                    error
+                );
+
+            }
+
         }
 
-    }
-
-    catch (error) {
-
-        console.error(
-            'Queue monitor error:',
-            error
-        );
-
-    }
-
-}
 
 
+        /* =====================================================
+           QUEUE HISTORY
+        ===================================================== */
 
-/* =====================================================
-   QUEUE HISTORY
-===================================================== */
+        async function loadHistory() {
 
-async function loadHistory() {
+            try {
 
-    try {
-
-        const response =
-            await fetch(
-                '/api/queues/history'
-            );
-
-
-        const history =
-            await response.json();
+                const response =
+                    await fetch(
+                        '/api/queues/history'
+                    );
 
 
-        const table =
-            document.getElementById(
-                'historyTable'
-            );
+                const history =
+                    await response.json();
 
 
-        table.innerHTML = '';
+                const table =
+                    document.getElementById(
+                        'historyTable'
+                    );
 
 
-        if (
-            !history ||
-            history.length === 0
-        ) {
+                table.innerHTML = '';
 
-            table.innerHTML = `
+
+                if (
+                    !history ||
+                    history.length === 0
+                ) {
+
+                    table.innerHTML = `
                 <tr>
                     <td colspan="4"
                         class="empty-message">
@@ -1498,21 +1577,21 @@ async function loadHistory() {
                 </tr>
             `;
 
-            return;
+                    return;
 
-        }
-
-
-        history
-            .slice(0, 10)
-            .forEach(item => {
+                }
 
 
-                const row =
-                    document.createElement('tr');
+                history
+                    .slice(0, 10)
+                    .forEach(item => {
 
 
-                row.innerHTML = `
+                        const row =
+                            document.createElement('tr');
+
+
+                        row.innerHTML = `
 
                     <td>
                         ${item.queue_id || '-'}
@@ -1531,45 +1610,45 @@ async function loadHistory() {
 
                     <td>
                         ${item.updated_at ||
-                          item.created_at ||
-                          '-'}
+                            item.created_at ||
+                            '-'}
                     </td>
 
                 `;
 
 
-                table.appendChild(row);
+                        table.appendChild(row);
 
-            });
+                    });
 
-    }
+            }
 
-    catch (error) {
+            catch (error) {
 
-        console.error(
-            'History error:',
-            error
-        );
+                console.error(
+                    'History error:',
+                    error
+                );
 
-    }
+            }
 
-}
-
-
-
-/* =====================================================
-   RECENT ACTIVITY
-===================================================== */
-
-function loadActivity() {
-
-    const activity =
-        document.getElementById(
-            'activityList'
-        );
+        }
 
 
-    activity.innerHTML = `
+
+        /* =====================================================
+           RECENT ACTIVITY
+        ===================================================== */
+
+        function loadActivity() {
+
+            const activity =
+                document.getElementById(
+                    'activityList'
+                );
+
+
+            activity.innerHTML = `
 
         <div class="activity-item">
 
@@ -1614,40 +1693,69 @@ function loadActivity() {
 
     `;
 
-}
+        }
 
 
 
-/* =====================================================
-   INITIAL LOAD
-===================================================== */
+        /* =====================================================
+           INITIAL LOAD
+        ===================================================== */
 
-loadStores();
+        loadStores();
 
-loadQueueMonitor();
+        loadQueueMonitor();
 
-loadHistory();
+        loadHistory();
 
-loadActivity();
-
-
-/* =====================================================
-   AUTO REFRESH
-===================================================== */
-
-setInterval(() => {
-
-    loadStores();
-
-    loadQueueMonitor();
-
-    loadHistory();
-
-}, 5000);
+        loadActivity();
 
 
-</script>
+        /* =====================================================
+           AUTO REFRESH
+        ===================================================== */
+
+        setInterval(() => {
+
+            loadStores();
+
+            loadQueueMonitor();
+
+            loadHistory();
+
+        }, 5000);
+
+        function showSection(section, button) {
+
+            // Hide all sections
+            document.querySelectorAll('.admin-section').forEach(function (element) {
+                element.style.display = 'none';
+            });
+
+            // Show selected section
+            const selectedSection =
+                document.getElementById(section + '-section');
+
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+
+            // Remove active from all navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(function (btn) {
+                btn.classList.remove('active');
+            });
+
+            // Make clicked button active
+            button.classList.add('active');
+        }
+
+
+    </script>
 
 
 </body>
+<<<<<<< HEAD
 </html>
+=======
+
+</html>
+>>>>>>> feature/member3

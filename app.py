@@ -131,7 +131,7 @@ def register():
         else:
 
             conn.execute(
-                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)',
+                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)'
                 (username, password, role)
             )
             conn.commit()
@@ -178,7 +178,10 @@ def login():
             else:
                 return redirect(url_for('store_discovery'))
         else:
-            return "Incorrect password or username. Please try again!"
+            return render_template(
+                'login.html',
+                error='Incorrect username or password. Please try again!'
+            )
 
     return render_template('login.html')
 
