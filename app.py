@@ -130,7 +130,7 @@ def create_admin():
         print("Admin account created.")
 
     conn.close()
-\
+
 
 
 @app.route('/staff/dashboard/<int:store_id>')
