@@ -281,17 +281,25 @@
 <body>
 
     <!-- Top Navigation Header -->
-   <header class="top-nav">
-        <div class="nav-container">
-            <a href="/" class="brand-title">
-                <span class="brand-icon">⚡</span>
-                <span class="brand-text">Queues</span>
+ <header style="width: 100%; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 14px 0; margin-bottom: 30px;">
+        <div style="max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;">
+            
+            <!-- Brand Logo -->
+            <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                <span style="font-size: 1.25rem;">⚡</span>
+                <span style="font-size: 1.4rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">Queues</span>
             </a>
             
-            <div class="user-meta">
-                <span class="welcome-text">Welcome, <strong>{{ username }}</strong></span>
-                <a href="/logout" class="btn-logout">Logout</a>
+            <!-- User Info & Logout -->
+            <div style="display: flex; align-items: center; gap: 18px;">
+                <span style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.7);">
+                    Welcome, <strong style="color: #3b82f6;">{{ username }}</strong>
+                </span>
+                <a href="/logout" style="color: #f87171; text-decoration: none; font-size: 0.875rem; font-weight: 600; padding: 6px 14px; border-radius: 8px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25);">
+                    Logout
+                </a>
             </div>
+
         </div>
     </header>
 
