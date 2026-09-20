@@ -55,6 +55,35 @@ def forgot_password():
     return render_template('forgot_password.html', message=message)
 
 
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM user WHERE reset_token = ?', (token,)).fetchone()
+
+    if not user:
+        conn.close()
+        return "Invalid or expired reset link."
+
+    expiry = datetime.fromisoformat(user['reset_token_expire'])
+    if datetime.now() > expiry:
+        conn.close()
+        return "This reset link has expired. Please request a new one."
+
+    error = None
+    if request.method == 'POST':
+        new_password = request.form['password']
+
+        conn.execute(
+            'UPDATE user SET password = ?, reset_token = NULL, reset_token_expire = NULL WHERE user_id = ?',
+            (new_password, user['user_id'])
+        )
+        conn.commit()
+        conn.close()
+        return redirect(url_for('login'))
+
+    conn.close()
+    return render_template('reset_password.html', error=error, token=token)
+
 def get_db_connection():
     if 'db' not in g:
         # Adding timeout=20 gives SQLite 20 seconds to wait for open locks before raising an error
