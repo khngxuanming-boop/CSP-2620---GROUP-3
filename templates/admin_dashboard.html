@@ -381,10 +381,8 @@
 
 <body>
 
+<!-- NAVIGATION BAR -->
 
-    <!-- =====================================================
-     NAVIGATION BAR
-===================================================== -->
 
     <nav class="admin-navbar">
 
@@ -447,34 +445,12 @@
 
     </div>
 
-    <!-- =====================================================
-     DASHBOARD
-===================================================== -->
+  <main class="dashboard">
 
-    <main class="dashboard">
+    <!-- ================= DASHBOARD ================= -->
+    <div id="dashboard-section" class="admin-section">
 
-        <!-- DASHBOARD SECTION -->
-        <div id="dashboard-section" class="admin-section">
-
-            <section class="welcome-section">
-
-                <h2>Admin Dashboard</h2>
-
-                <p>
-                    Manage store proposals and monitor the overall
-                    queue management system.
-                </p>
-
-            </section>
-
-            <!-- Your SUMMARY CARDS here -->
-
-            <!-- Your RECENT ACTIVITY here -->
-
-        </div>
-
-        <!-- ================= WELCOME ================= -->
-
+        <!-- WELCOME -->
         <section class="welcome-section">
 
             <h2>Admin Dashboard</h2>
@@ -487,22 +463,14 @@
         </section>
 
 
-
-        <!-- =================================================
-         SUMMARY CARDS
-    ================================================= -->
-
+        <!-- SUMMARY CARDS -->
         <div class="row g-4">
 
-
             <!-- Total Stores -->
-
             <div class="col-lg-3 col-md-6">
-
                 <div class="stat-card">
 
                     <div class="stat-header">
-
                         <div class="stat-label">
                             Total Stores
                         </div>
@@ -510,7 +478,6 @@
                         <div class="stat-icon">
                             🏪
                         </div>
-
                     </div>
 
                     <div class="stat-value" id="totalStores">
@@ -522,18 +489,14 @@
                     </small>
 
                 </div>
-
             </div>
 
 
             <!-- Pending -->
-
             <div class="col-lg-3 col-md-6">
-
                 <div class="stat-card">
 
                     <div class="stat-header">
-
                         <div class="stat-label">
                             Pending Proposals
                         </div>
@@ -541,7 +504,6 @@
                         <div class="stat-icon">
                             📋
                         </div>
-
                     </div>
 
                     <div class="stat-value" id="pendingProposals">
@@ -553,18 +515,14 @@
                     </small>
 
                 </div>
-
             </div>
 
 
             <!-- Waiting -->
-
             <div class="col-lg-3 col-md-6">
-
                 <div class="stat-card">
 
                     <div class="stat-header">
-
                         <div class="stat-label">
                             Customers Waiting
                         </div>
@@ -572,7 +530,6 @@
                         <div class="stat-icon">
                             👥
                         </div>
-
                     </div>
 
                     <div class="stat-value" id="waitingCustomers">
@@ -584,18 +541,14 @@
                     </small>
 
                 </div>
-
             </div>
 
 
             <!-- Serving -->
-
             <div class="col-lg-3 col-md-6">
-
                 <div class="stat-card">
 
                     <div class="stat-header">
-
                         <div class="stat-label">
                             Customers Serving
                         </div>
@@ -603,7 +556,6 @@
                         <div class="stat-icon">
                             🎫
                         </div>
-
                     </div>
 
                     <div class="stat-value" id="servingCustomers">
@@ -615,21 +567,59 @@
                     </small>
 
                 </div>
-
             </div>
 
         </div>
 
 
+        <!-- RECENT ACTIVITY -->
+        <div class="dashboard-card">
 
-        <!-- =================================================
-         STORE PROPOSALS
-    ================================================= -->
+            <div class="card-title">
+                Recent Activity
+            </div>
+
+            <div class="card-description mb-3">
+                Latest system activities.
+            </div>
+
+            <div id="activityList">
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        📋
+                    </div>
+
+                    <div>
+
+                        <div class="activity-text">
+                            Loading activities...
+                        </div>
+
+                        <div class="activity-time">
+                            Please wait
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= STORE PROPOSALS ================= -->
+    <div id="proposals-section"
+         class="admin-section"
+         style="display: none;">
 
         <div class="dashboard-card proposal-card">
 
-            <div class="d-flex justify-content-between
-                    align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
                 <div>
 
@@ -667,15 +657,12 @@
 
                     </thead>
 
-
                     <tbody id="proposalTable">
 
                         <tr>
 
                             <td colspan="5" class="empty-message">
-
                                 Loading proposals...
-
                             </td>
 
                         </tr>
@@ -688,140 +675,85 @@
 
         </div>
 
+    </div>
 
 
-        <!-- =================================================
-         TWO COLUMN SECTION
-    ================================================= -->
+    <!-- ================= STORES ================= -->
+    <div id="stores-section"
+         class="admin-section"
+         style="display: none;">
 
-        <div class="row g-4">
+        <div class="dashboard-card">
 
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
-            <!-- ================= STORE OVERVIEW ================= -->
+                <div>
 
-            <div class="col-lg-7">
-
-                <div class="dashboard-card">
-
-                    <div class="d-flex justify-content-between
-                            align-items-center mb-3">
-
-                        <div>
-
-                            <div class="card-title">
-                                Store Overview
-                            </div>
-
-                            <div class="card-description">
-                                Current status of registered stores.
-                            </div>
-
-                        </div>
-
-                        <button class="btn btn-sm btn-outline-secondary" onclick="loadStores()">
-
-                            Refresh
-
-                        </button>
-
+                    <div class="card-title">
+                        Store Overview
                     </div>
 
-
-                    <div class="table-responsive">
-
-                        <table class="table table-hover">
-
-                            <thead>
-
-                                <tr>
-                                    <th>Store</th>
-                                    <th>Status</th>
-                                    <th>Operating Hours</th>
-                                    <th>Wait Time</th>
-                                </tr>
-
-                            </thead>
-
-
-                            <tbody id="storeTable">
-
-                                <tr>
-
-                                    <td colspan="4" class="empty-message">
-
-                                        Loading stores...
-
-                                    </td>
-
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
+                    <div class="card-description">
+                        Current status of registered stores.
                     </div>
 
                 </div>
+
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="loadStores()">
+
+                    Refresh
+
+                </button>
 
             </div>
 
 
+            <div class="table-responsive">
 
-            <!-- ================= RECENT ACTIVITY ================= -->
+                <table class="table table-hover">
 
-            <div class="col-lg-5">
+                    <thead>
 
-                <div class="dashboard-card">
+                        <tr>
+                            <th>Store</th>
+                            <th>Status</th>
+                            <th>Operating Hours</th>
+                            <th>Wait Time</th>
+                        </tr>
 
-                    <div class="card-title">
-                        Recent Activity
-                    </div>
+                    </thead>
 
-                    <div class="card-description mb-3">
-                        Latest system activities.
-                    </div>
+                    <tbody id="storeTable">
 
+                        <tr>
 
-                    <div id="activityList">
+                            <td colspan="4" class="empty-message">
+                                Loading stores...
+                            </td>
 
-                        <div class="activity-item">
+                        </tr>
 
-                            <div class="activity-icon">
-                                📋
-                            </div>
+                    </tbody>
 
-                            <div>
-
-                                <div class="activity-text">
-                                    Loading activities...
-                                </div>
-
-                                <div class="activity-time">
-                                    Please wait
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
+                </table>
 
             </div>
 
         </div>
 
+    </div>
 
 
-        <!-- =================================================
-         QUEUE MONITORING
-    ================================================= -->
+    <!-- ================= QUEUE MONITOR ================= -->
+    <div id="queues-section"
+         class="admin-section"
+         style="display: none;">
 
         <div class="dashboard-card">
 
-            <div class="d-flex justify-content-between
-                    align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
                 <div>
 
@@ -835,7 +767,9 @@
 
                 </div>
 
-                <button class="btn btn-sm btn-outline-secondary" onclick="loadQueueMonitor()">
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="loadQueueMonitor()">
 
                     Refresh
 
@@ -859,15 +793,12 @@
 
                     </thead>
 
-
                     <tbody id="queueTable">
 
                         <tr>
 
                             <td colspan="4" class="empty-message">
-
                                 Loading queue information...
-
                             </td>
 
                         </tr>
@@ -880,16 +811,17 @@
 
         </div>
 
+    </div>
 
 
-        <!-- =================================================
-         QUEUE HISTORY
-    ================================================= -->
+    <!-- ================= QUEUE HISTORY ================= -->
+    <div id="history-section"
+         class="admin-section"
+         style="display: none;">
 
         <div class="dashboard-card">
 
-            <div class="d-flex justify-content-between
-                    align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
                 <div>
 
@@ -903,7 +835,9 @@
 
                 </div>
 
-                <button class="btn btn-sm btn-outline-secondary" onclick="loadHistory()">
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="loadHistory()">
 
                     Refresh
 
@@ -927,15 +861,12 @@
 
                     </thead>
 
-
                     <tbody id="historyTable">
 
                         <tr>
 
                             <td colspan="4" class="empty-message">
-
                                 Loading history...
-
                             </td>
 
                         </tr>
@@ -948,11 +879,9 @@
 
         </div>
 
+    </div>
 
-    </main>
-
-
-
+</main>
     <!-- =====================================================
      JAVASCRIPT
 ===================================================== -->
