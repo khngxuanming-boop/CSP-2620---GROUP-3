@@ -374,14 +374,17 @@
             }
 
         }
+
+       
+
     </style>
-    
+
 </head>
 
 
 <body>
 
-<!-- NAVIGATION BAR -->
+    <!-- NAVIGATION BAR -->
 
 
     <nav class="admin-navbar">
@@ -445,443 +448,429 @@
 
     </div>
 
-  <main class="dashboard">
+    <main class="dashboard">
 
-    <!-- ================= DASHBOARD ================= -->
-    <div id="dashboard-section" class="admin-section">
+        <!-- ================= DASHBOARD ================= -->
+        <div id="dashboard-section" class="admin-section">
 
-        <!-- WELCOME -->
-        <section class="welcome-section">
+            <!-- WELCOME -->
+            <section class="welcome-section">
 
-            <h2>Admin Dashboard</h2>
+                <h2>Admin Dashboard</h2>
 
-            <p>
-                Manage store proposals and monitor the overall
-                queue management system.
-            </p>
+                <p>
+                    Manage store proposals and monitor the overall
+                    queue management system.
+                </p>
 
-        </section>
+            </section>
 
 
-        <!-- SUMMARY CARDS -->
-        <div class="row g-4">
+            <!-- SUMMARY CARDS -->
+            <div class="row g-4">
 
-            <!-- Total Stores -->
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
+                <!-- Total Stores -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
 
-                    <div class="stat-header">
-                        <div class="stat-label">
-                            Total Stores
+                        <div class="stat-header">
+                            <div class="stat-label">
+                                Total Stores
+                            </div>
+
+                            <div class="stat-icon">
+                                🏪
+                            </div>
                         </div>
 
-                        <div class="stat-icon">
-                            🏪
+                        <div class="stat-value" id="totalStores">
+                            0
                         </div>
+
+                        <small class="text-muted">
+                            Registered stores
+                        </small>
+
                     </div>
-
-                    <div class="stat-value" id="totalStores">
-                        0
-                    </div>
-
-                    <small class="text-muted">
-                        Registered stores
-                    </small>
-
                 </div>
+
+
+                <!-- Pending -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+
+                        <div class="stat-header">
+                            <div class="stat-label">
+                                Pending Proposals
+                            </div>
+
+                            <div class="stat-icon">
+                                📋
+                            </div>
+                        </div>
+
+                        <div class="stat-value" id="pendingProposals">
+                            0
+                        </div>
+
+                        <small class="text-muted">
+                            Awaiting approval
+                        </small>
+
+                    </div>
+                </div>
+
+
+                <!-- Waiting -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+
+                        <div class="stat-header">
+                            <div class="stat-label">
+                                Customers Waiting
+                            </div>
+
+                            <div class="stat-icon">
+                                👥
+                            </div>
+                        </div>
+
+                        <div class="stat-value" id="waitingCustomers">
+                            0
+                        </div>
+
+                        <small class="text-muted">
+                            Active waiting queues
+                        </small>
+
+                    </div>
+                </div>
+
+
+                <!-- Serving -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+
+                        <div class="stat-header">
+                            <div class="stat-label">
+                                Customers Serving
+                            </div>
+
+                            <div class="stat-icon">
+                                🎫
+                            </div>
+                        </div>
+
+                        <div class="stat-value" id="servingCustomers">
+                            0
+                        </div>
+
+                        <small class="text-muted">
+                            Currently being served
+                        </small>
+
+                    </div>
+                </div>
+
             </div>
 
 
-            <!-- Pending -->
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
+            <!-- RECENT ACTIVITY -->
+            <div class="dashboard-card">
 
-                    <div class="stat-header">
-                        <div class="stat-label">
-                            Pending Proposals
-                        </div>
+                <div class="card-title">
+                    Recent Activity
+                </div>
 
-                        <div class="stat-icon">
+                <div class="card-description mb-3">
+                    Latest system activities.
+                </div>
+
+                <div id="activityList">
+
+                    <div class="activity-item">
+
+                        <div class="activity-icon">
                             📋
                         </div>
-                    </div>
 
-                    <div class="stat-value" id="pendingProposals">
-                        0
-                    </div>
+                        <div>
 
-                    <small class="text-muted">
-                        Awaiting approval
-                    </small>
+                            <div class="activity-text">
+                                Loading activities...
+                            </div>
+
+                            <div class="activity-time">
+                                Please wait
+                            </div>
+
+                        </div>
+
+                    </div>
 
                 </div>
-            </div>
 
-
-            <!-- Waiting -->
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-
-                    <div class="stat-header">
-                        <div class="stat-label">
-                            Customers Waiting
-                        </div>
-
-                        <div class="stat-icon">
-                            👥
-                        </div>
-                    </div>
-
-                    <div class="stat-value" id="waitingCustomers">
-                        0
-                    </div>
-
-                    <small class="text-muted">
-                        Active waiting queues
-                    </small>
-
-                </div>
-            </div>
-
-
-            <!-- Serving -->
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-
-                    <div class="stat-header">
-                        <div class="stat-label">
-                            Customers Serving
-                        </div>
-
-                        <div class="stat-icon">
-                            🎫
-                        </div>
-                    </div>
-
-                    <div class="stat-value" id="servingCustomers">
-                        0
-                    </div>
-
-                    <small class="text-muted">
-                        Currently being served
-                    </small>
-
-                </div>
             </div>
 
         </div>
 
 
-        <!-- RECENT ACTIVITY -->
-        <div class="dashboard-card">
+        <!-- ================= STORE PROPOSALS ================= -->
+        <div id="proposals-section" class="admin-section" style="display: none;">
 
-            <div class="card-title">
-                Recent Activity
-            </div>
+            <div class="dashboard-card proposal-card">
 
-            <div class="card-description mb-3">
-                Latest system activities.
-            </div>
-
-            <div id="activityList">
-
-                <div class="activity-item">
-
-                    <div class="activity-icon">
-                        📋
-                    </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
 
                     <div>
 
-                        <div class="activity-text">
-                            Loading activities...
+                        <div class="card-title">
+                            Store Registration Proposals
                         </div>
 
-                        <div class="activity-time">
-                            Please wait
+                        <div class="card-description">
+                            Review store registration requests submitted
+                            by store owners.
                         </div>
 
                     </div>
 
+                    <span class="proposal-badge">
+                        Pending Review
+                    </span>
+
+                </div>
+
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover">
+
+                        <thead>
+
+                            <tr>
+                                <th>Store ID</th>
+                                <th>Store Name</th>
+                                <th>Operating Hours</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="proposalTable">
+
+                            <tr>
+
+                                <td colspan="5" class="empty-message">
+                                    Loading proposals...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
                 </div>
 
             </div>
 
         </div>
 
-    </div>
 
+        <!-- ================= STORES ================= -->
+        <div id="stores-section" class="admin-section" style="display: none;">
 
-    <!-- ================= STORE PROPOSALS ================= -->
-    <div id="proposals-section"
-         class="admin-section"
-         style="display: none;">
+            <div class="dashboard-card">
 
-        <div class="dashboard-card proposal-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
 
-                <div>
+                        <div class="card-title">
+                            Store Overview
+                        </div>
 
-                    <div class="card-title">
-                        Store Registration Proposals
+                        <div class="card-description">
+                            Current status of registered stores.
+                        </div>
+
                     </div>
 
-                    <div class="card-description">
-                        Review store registration requests submitted
-                        by store owners.
-                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadStores()">
+
+                        Refresh
+
+                    </button>
 
                 </div>
 
-                <span class="proposal-badge">
-                    Pending Review
-                </span>
 
-            </div>
+                <div class="table-responsive">
 
+                    <table class="table table-hover">
 
-            <div class="table-responsive">
+                        <thead>
 
-                <table class="table table-hover">
+                            <tr>
+                                <th>Store</th>
+                                <th>Status</th>
+                                <th>Operating Hours</th>
+                                <th>Wait Time</th>
+                            </tr>
 
-                    <thead>
+                        </thead>
 
-                        <tr>
-                            <th>Store ID</th>
-                            <th>Store Name</th>
-                            <th>Operating Hours</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
+                        <tbody id="storeTable">
 
-                    </thead>
+                            <tr>
 
-                    <tbody id="proposalTable">
+                                <td colspan="4" class="empty-message">
+                                    Loading stores...
+                                </td>
 
-                        <tr>
+                            </tr>
 
-                            <td colspan="5" class="empty-message">
-                                Loading proposals...
-                            </td>
+                        </tbody>
 
-                        </tr>
+                    </table>
 
-                    </tbody>
-
-                </table>
+                </div>
 
             </div>
 
         </div>
 
-    </div>
 
+        <!-- ================= QUEUE MONITOR ================= -->
+        <div id="queues-section" class="admin-section" style="display: none;">
 
-    <!-- ================= STORES ================= -->
-    <div id="stores-section"
-         class="admin-section"
-         style="display: none;">
+            <div class="dashboard-card">
 
-        <div class="dashboard-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
 
-                <div>
+                        <div class="card-title">
+                            Live Queue Monitoring
+                        </div>
 
-                    <div class="card-title">
-                        Store Overview
+                        <div class="card-description">
+                            Monitor active queues across all stores.
+                        </div>
+
                     </div>
 
-                    <div class="card-description">
-                        Current status of registered stores.
-                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadQueueMonitor()">
+
+                        Refresh
+
+                    </button>
 
                 </div>
 
-                <button
-                    class="btn btn-sm btn-outline-secondary"
-                    onclick="loadStores()">
 
-                    Refresh
+                <div class="table-responsive">
 
-                </button>
+                    <table class="table table-hover">
 
-            </div>
+                        <thead>
 
+                            <tr>
+                                <th>Store</th>
+                                <th>Counter</th>
+                                <th>Queue Number</th>
+                                <th>Status</th>
+                            </tr>
 
-            <div class="table-responsive">
+                        </thead>
 
-                <table class="table table-hover">
+                        <tbody id="queueTable">
 
-                    <thead>
+                            <tr>
 
-                        <tr>
-                            <th>Store</th>
-                            <th>Status</th>
-                            <th>Operating Hours</th>
-                            <th>Wait Time</th>
-                        </tr>
+                                <td colspan="4" class="empty-message">
+                                    Loading queue information...
+                                </td>
 
-                    </thead>
+                            </tr>
 
-                    <tbody id="storeTable">
+                        </tbody>
 
-                        <tr>
+                    </table>
 
-                            <td colspan="4" class="empty-message">
-                                Loading stores...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
+                </div>
 
             </div>
 
         </div>
 
-    </div>
 
+        <!-- ================= QUEUE HISTORY ================= -->
+        <div id="history-section" class="admin-section" style="display: none;">
 
-    <!-- ================= QUEUE MONITOR ================= -->
-    <div id="queues-section"
-         class="admin-section"
-         style="display: none;">
+            <div class="dashboard-card">
 
-        <div class="dashboard-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
 
-                <div>
+                        <div class="card-title">
+                            Recent Queue History
+                        </div>
 
-                    <div class="card-title">
-                        Live Queue Monitoring
+                        <div class="card-description">
+                            Recent queue activity recorded by the system.
+                        </div>
+
                     </div>
 
-                    <div class="card-description">
-                        Monitor active queues across all stores.
-                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadHistory()">
+
+                        Refresh
+
+                    </button>
 
                 </div>
 
-                <button
-                    class="btn btn-sm btn-outline-secondary"
-                    onclick="loadQueueMonitor()">
 
-                    Refresh
+                <div class="table-responsive">
 
-                </button>
+                    <table class="table table-hover">
 
-            </div>
+                        <thead>
 
+                            <tr>
+                                <th>Queue ID</th>
+                                <th>Counter</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
 
-            <div class="table-responsive">
+                        </thead>
 
-                <table class="table table-hover">
+                        <tbody id="historyTable">
 
-                    <thead>
+                            <tr>
 
-                        <tr>
-                            <th>Store</th>
-                            <th>Counter</th>
-                            <th>Queue Number</th>
-                            <th>Status</th>
-                        </tr>
+                                <td colspan="4" class="empty-message">
+                                    Loading history...
+                                </td>
 
-                    </thead>
+                            </tr>
 
-                    <tbody id="queueTable">
+                        </tbody>
 
-                        <tr>
+                    </table>
 
-                            <td colspan="4" class="empty-message">
-                                Loading queue information...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
+                </div>
 
             </div>
 
         </div>
 
-    </div>
-
-
-    <!-- ================= QUEUE HISTORY ================= -->
-    <div id="history-section"
-         class="admin-section"
-         style="display: none;">
-
-        <div class="dashboard-card">
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-
-                <div>
-
-                    <div class="card-title">
-                        Recent Queue History
-                    </div>
-
-                    <div class="card-description">
-                        Recent queue activity recorded by the system.
-                    </div>
-
-                </div>
-
-                <button
-                    class="btn btn-sm btn-outline-secondary"
-                    onclick="loadHistory()">
-
-                    Refresh
-
-                </button>
-
-            </div>
-
-
-            <div class="table-responsive">
-
-                <table class="table table-hover">
-
-                    <thead>
-
-                        <tr>
-                            <th>Queue ID</th>
-                            <th>Counter</th>
-                            <th>Status</th>
-                            <th>Time</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="historyTable">
-
-                        <tr>
-
-                            <td colspan="4" class="empty-message">
-                                Loading history...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</main>
+    </main>
     <!-- =====================================================
      JAVASCRIPT
 ===================================================== -->
@@ -1682,8 +1671,7 @@
             // Make clicked button active
             button.classList.add('active');
         }
-
-
+        
     </script>
 
 
