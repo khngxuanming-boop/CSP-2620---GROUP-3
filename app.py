@@ -67,6 +67,11 @@ def admin_required():
 
 @app.route('/staff/dashboard/<int:store_id>')
 def staff_dashboard(store_id):
+
+    # Only STAFF can access Staff Dashboard
+    if session.get('role') != 'STAFF':
+        return redirect(url_for('login'))
+
     return render_template(
         'staff_dashboard.html',
         store_id=store_id
