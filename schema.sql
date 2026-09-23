@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
-    counter_status TEXT NOT NULL DEFAULT 'Closed',
+    counter_status TEXT NOT NULL DEFAULT 'closed',
     FOREIGN KEY (store_id)
     REFERENCES store(store_id)
 );
