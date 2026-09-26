@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Register Your Store</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="card" style="max-width: 500px; margin: 50px auto;">
+        <h1>Register Your Store</h1>
+        <p style="color: #6b7280;">Your store will stay Pending until reviewed by a system admin.</p>
+
+        <form method="POST">
+            <label>Store Name</label>
+            <input type="text" name="name" required>
+
+            <label>Operating Hours</label>
+            <input type="text" name="hours" placeholder="e.g. Mon–Fri 9am–6pm" required>
+
+            <button type="submit" style="width: 100%; margin-top: 15px;">Submit for Review</button>
+        </form>
+    </div>
+</body>
+</html>
