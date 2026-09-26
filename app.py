@@ -1194,8 +1194,9 @@ def cancel_queue(queue_id):
 
     queue = conn.execute(
         """
-        SELECT *
-        FROM queue
+        SELECT q.*, s.store_id
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
         WHERE queue_id = ?
         """,
         (queue_id,)
@@ -1225,7 +1226,7 @@ def cancel_queue(queue_id):
 
     conn.commit()
     conn.close()
-    socketio.emit('queue_updated')
+    socketio.emit('queue_status_updated', {'queue_id': queue_id}, to=f"store_{queue['store_id']}")
 
     return jsonify({
         'message': 'Queue cancelled successfully',
