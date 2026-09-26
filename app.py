@@ -188,7 +188,36 @@ def login():
                 return redirect(url_for('admin_dashboard'))
 
             elif user['role'] == 'STAFF':
-                return redirect(url_for('staff_dashboard', store_id=1))
+
+                conn = get_db_connection()
+
+                store = conn.execute(
+                 """
+                 SELECT *
+                 FROM store
+                 WHERE owner_id = ?
+                 ORDER BY store_id DESC
+                 LIMIT 1
+                 """,
+                 (user['user_id'],)
+            ).fetchone()
+ 
+            if not store:
+                return redirect(url_for('register_store'))
+
+            if store['store_status'] == 'PENDING':
+                return redirect(url_for('staff_dashboard_status'))
+
+            if store['store_status'] == 'REJECTED':
+                return redirect(url_for('staff_dashboard_status'))
+    
+            if store['store_status'] == 'APPROVED':
+                return redirect(
+                   url_for(
+                       'staff_dashboard',
+                       store_id=store['store_id']
+                   )
+               )
 
             else:
                 return redirect(url_for('store_discovery'))
