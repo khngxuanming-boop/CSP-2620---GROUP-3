@@ -322,7 +322,13 @@ def walk_in_queue():
         with conn:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'W-%' ORDER BY queue_id DESC LIMIT 1")
+            cursor.execute("""
+                SELECT q.queue_number
+                FROM queue q
+                JOIN service s ON q.service_id = s.service_id
+                WHERE s.store_id = ? AND q.queue_number LIKE 'W-%'
+                ORDER BY q.queue_id DESC LIMIT 1
+            """, (store_id,))
             last_record = cursor.fetchone()
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
             queue_number = f"W-{next_num:03d}"
@@ -364,9 +370,17 @@ def check_in_appointment(appt_id):
                 return jsonify({'error': 'Appointment cannot be checked in'}), 400
 
             service = cursor.execute("SELECT store_id FROM service WHERE service_id = ?", (appt['service_id'],)).fetchone()
+            if not service:
+                return jsonify({'error': 'Service linked to this appointment no longer exists'}), 400
             store_id = service['store_id']
 
-            cursor.execute("SELECT queue_number FROM queue WHERE queue_number LIKE 'A-%' ORDER BY queue_id DESC LIMIT 1")
+            cursor.execute("""
+                SELECT q.queue_number
+                FROM queue q
+                JOIN service s ON q.service_id = s.service_id
+                WHERE s.store_id = ? AND q.queue_number LIKE 'A-%'
+                ORDER BY q.queue_id DESC LIMIT 1
+            """, (store_id))
             last_record = cursor.fetchone()
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
             queue_number = f"A-{next_num:03d}"
@@ -397,10 +411,11 @@ def get_my_queue_status():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name, s.store_id
+            SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name, s.store_id, s.service_name, st.store_name
             FROM queue q
             LEFT JOIN counter c ON q.counter_id = c.counter_id
             JOIN service s ON q.service_id = s.service_id
+            JOIN store st ON s.store_id = st.store_id
             WHERE q.queue_id = ?
         """, (queue_id,))
         my_queue = cursor.fetchone()
@@ -415,7 +430,7 @@ def get_my_queue_status():
         counter_name = my_queue['counter_name'] or '-'
 
         if status != 'WAITING':
-            return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': 0, 'wait_time': 0, 'store_id': my_queue['store_id']}), 200
+            return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': 0, 'wait_time': 0, 'store_id': my_queue['store_id'], 'store_name': my_queue['store_name'], 'service_name': my_queue['service_name']}), 200
 
         cursor.execute(
             "SELECT COUNT(*) AS people_ahead FROM queue WHERE service_id = ? AND queue_status = 'WAITING' AND queue_id < ?",
@@ -424,7 +439,7 @@ def get_my_queue_status():
         people_ahead = cursor.fetchone()['people_ahead']
         wait_time = (people_ahead + 1) * 5  # Assuming each customer takes 5 minutes
 
-        return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': people_ahead, 'wait_time': wait_time, 'store_id': my_queue['store_id']}), 200
+        return jsonify({'queue_number': queue_number, 'status': status, 'counter_name': counter_name, 'people_ahead': people_ahead, 'wait_time': wait_time, 'store_id': my_queue['store_id'], 'store_name': my_queue['store_name'], 'service_name': my_queue['service_name']}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
