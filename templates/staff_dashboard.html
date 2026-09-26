@@ -391,16 +391,16 @@
 
 
           // Summary
-          if (data.summary) {
+          if (data.queue_summary) {
 
             document.getElementById("waitingCount").textContent =
-              data.summary.waiting || 0;
+              data.queue_summary.waiting || 0;
 
             document.getElementById("servingCount").textContent =
-              data.summary.serving || 0;
+              data.queue_summary.serving || 0;
 
             document.getElementById("completedCount").textContent =
-              data.summary.completed || 0;
+              data.queue_summary.completed || 0;
           }
 
 
@@ -560,8 +560,8 @@
               },
 
               body: JSON.stringify({
-                status: newStatus
-              })
+                counter_status: newStatus
+              })  
 
             }
           );
