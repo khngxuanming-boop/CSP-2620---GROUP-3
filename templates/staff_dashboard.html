@@ -15,273 +15,307 @@
     <!-- Your CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"
     />
-  </head>
+  
+<style>
+/* =====================================================
+   STAFF DASHBOARD - ADMIN STYLE
+===================================================== */
+:root {
+    --staff-primary: #3a4750;
+    --staff-secondary: #5c6b73;
+    --staff-bg: #f0f2f5;
+    --staff-text: #2b2d42;
+    --staff-muted: #7b8895;
+    --staff-card: #ffffff;
+    --staff-border: #e5e9ed;
+}
 
-  <body class="bg-light">
+html { scroll-behavior: smooth; }
+body.staff-page {
+    background: var(--staff-bg) !important;
+    color: var(--staff-text);
+    margin: 0;
+}
 
-    <div class="container mt-5 mb-5">
+/* NAVBAR */
+.staff-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--staff-primary);
+    color: #fff;
+    box-shadow: 0 3px 14px rgba(0,0,0,.10);
+}
+.staff-nav-inner {
+    max-width: 1500px;
+    margin: 0 auto;
+    min-height: 72px;
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+.staff-brand { min-width: 220px; }
+.staff-brand-title { font-size: 19px; font-weight: 700; line-height: 1.2; }
+.staff-brand-subtitle { font-size: 11px; opacity: .72; margin-top: 3px; }
+.staff-nav-links {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+.staff-nav-link {
+    color: rgba(255,255,255,.72);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 14px;
+    border-radius: 7px;
+    transition: .2s;
+}
+.staff-nav-link:hover,
+.staff-nav-link.active { background: var(--staff-secondary); color: #fff; }
+.staff-user { display:flex; align-items:center; gap:10px; min-width:190px; justify-content:flex-end; }
+.staff-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--staff-secondary);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700;
+}
+.staff-logout { color:#fff; border:1px solid rgba(255,255,255,.55); }
+.staff-logout:hover { background:#fff; color:var(--staff-primary); }
 
-      <!-- HEADER -->
-      <div class="card shadow border-0 rounded-4 mb-4">
-        <div class="card-body p-4">
+/* PAGE */
+.staff-main { max-width:1500px; margin:0 auto; padding:32px; }
+.staff-section { scroll-margin-top: 92px; }
+.staff-welcome { margin-bottom: 28px; }
+.staff-welcome h2 { font-weight:700; margin-bottom:5px; }
+.staff-welcome p { color:var(--staff-muted); margin-bottom:7px; }
+.store-info { color:var(--staff-muted); font-size:14px; }
 
-          <div class="d-flex justify-content-between align-items-center">
+/* STAT CARDS */
+.staff-stat {
+    background:var(--staff-card);
+    border:0;
+    border-radius:14px;
+    box-shadow:0 4px 18px rgba(0,0,0,.06);
+    padding:22px;
+    height:100%;
+    transition:transform .18s, box-shadow .18s;
+}
+.staff-stat:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.08); }
+.staff-stat-head { display:flex; justify-content:space-between; align-items:center; }
+.staff-stat-label { color:var(--staff-muted); font-size:14px; font-weight:600; }
+.staff-stat-icon {
+    width:42px; height:42px; border-radius:10px;
+    background:#f0f2f5; display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+}
+.staff-stat-number { font-size:2.2rem; font-weight:700; margin-top:10px; }
 
-            <div>
-              <h2 class="fw-bold mb-1">Staff Dashboard</h2>
-              <p class="text-muted mb-0">
-                Queue Management System
-              </p>
+/* CONTENT CARDS */
+.staff-card {
+    background:var(--staff-card);
+    border:0;
+    border-radius:14px;
+    box-shadow:0 4px 18px rgba(0,0,0,.06);
+    margin-bottom:22px;
+}
+.staff-card-body { padding:25px; }
+.section-title { font-weight:700; }
+.section-subtitle { color:var(--staff-muted); margin:0; font-size:14px; }
+
+/* COUNTERS */
+.counter-card {
+    background:#fff;
+    border:1px solid var(--staff-border);
+    border-radius:12px;
+    padding:20px;
+    height:100%;
+    transition:.18s;
+}
+.counter-card:hover { transform:translateY(-2px); box-shadow:0 5px 18px rgba(0,0,0,.06); }
+.counter-name { font-weight:700; }
+.counter-id { color:var(--staff-muted); font-size:13px; }
+.counter-status { padding:5px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+.counter-open { background:#d1e7dd; color:#0f5132; }
+.counter-closed { background:#f8d7da; color:#842029; }
+
+/* TABLES */
+.staff-card .table { margin-bottom:0; }
+.staff-card .table thead th { color:var(--staff-secondary); font-size:13px; font-weight:700; border-bottom:1px solid #dee2e6; }
+.staff-card .table tbody tr:hover { background:#f8f9fa; }
+.queue-number { font-weight:700; font-size:16px; }
+.empty-row { text-align:center; padding:32px !important; color:var(--staff-muted); }
+
+/* RESPONSIVE */
+@media (max-width: 1050px) {
+    .staff-nav-inner { flex-wrap:wrap; padding:12px 20px; }
+    .staff-nav-links { order:3; flex-basis:100%; justify-content:flex-start; overflow-x:auto; }
+    .staff-nav-link { white-space:nowrap; }
+}
+@media (max-width: 700px) {
+    .staff-main { padding:20px 15px; }
+    .staff-brand { min-width:0; }
+    .staff-brand-subtitle { display:none; }
+    .staff-user { min-width:auto; }
+    .staff-user-name { display:none; }
+    .staff-stat-number { font-size:1.9rem; }
+}
+</style>
+
+</head>
+
+  <body class="staff-page">
+
+    <!-- ================= STAFF NAVIGATION ================= -->
+    <nav class="staff-navbar">
+        <div class="staff-nav-inner">
+            <div class="staff-brand">
+                <div class="staff-brand-title">Queue Management System</div>
+                <div class="staff-brand-subtitle">Staff Control Center</div>
             </div>
 
-            <a
-              href="{{ url_for('logout') }}"
-              class="btn btn-outline-danger"
-            >
-              Logout
-            </a>
-
-          </div>
-
-          <hr />
-
-          <h4 id="storeName" class="fw-bold">
-            Store
-          </h4>
-
-          <p class="text-muted mb-0">
-            Store ID:
-            <strong>{{ store_id }}</strong>
-          </p>
-
-        </div>
-      </div>
-
-
-      <!-- QUEUE SUMMARY -->
-      <div class="row g-3 mb-4">
-
-        <!-- WAITING -->
-        <div class="col-md-4">
-          <div class="card shadow border-0 rounded-4">
-            <div class="card-body text-center p-4">
-
-              <h5 class="text-muted">
-                Waiting
-              </h5>
-
-              <h1
-                class="display-4 fw-bold text-warning"
-                id="waitingCount"
-              >
-                0
-              </h1>
-
-              <p class="mb-0">
-                customers
-              </p>
-
-            </div>
-          </div>
-        </div>
-
-
-        <!-- SERVING -->
-        <div class="col-md-4">
-          <div class="card shadow border-0 rounded-4">
-            <div class="card-body text-center p-4">
-
-              <h5 class="text-muted">
-                Serving
-              </h5>
-
-              <h1
-                class="display-4 fw-bold text-primary"
-                id="servingCount"
-              >
-                0
-              </h1>
-
-              <p class="mb-0">
-                customers
-              </p>
-
-            </div>
-          </div>
-        </div>
-
-
-        <!-- COMPLETED -->
-        <div class="col-md-4">
-          <div class="card shadow border-0 rounded-4">
-            <div class="card-body text-center p-4">
-
-              <h5 class="text-muted">
-                Completed
-              </h5>
-
-              <h1
-                class="display-4 fw-bold text-success"
-                id="completedCount"
-              >
-                0
-              </h1>
-
-              <p class="mb-0">
-                customers
-              </p>
-
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-
-      <!-- COUNTERS -->
-      <div class="card shadow border-0 rounded-4 mb-4">
-
-        <div class="card-body p-4">
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-
-            <div>
-              <h4 class="fw-bold mb-1">
-                Counters
-              </h4>
-
-              <p class="text-muted mb-0">
-                Manage your store counters
-              </p>
+            <div class="staff-nav-links">
+                <a href="#dashboard-section" class="staff-nav-link active">Dashboard</a>
+                <a href="#counters-section" class="staff-nav-link">Counters</a>
+                <a href="#queue-section" class="staff-nav-link">Current Queue</a>
+                <a href="#history-section" class="staff-nav-link">Queue History</a>
             </div>
 
-          </div>
-
-          <div
-            class="row g-3"
-            id="counterContainer"
-          >
-
-            <!-- Counters will be inserted here -->
-
-          </div>
-
+            <div class="staff-user">
+                <div class="staff-avatar">S</div>
+                <span class="staff-user-name">{{ session.get('username', 'Staff') }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm staff-logout">Logout</a>
+            </div>
         </div>
+    </nav>
 
-      </div>
+    <main class="staff-main">
 
+        <!-- ================= DASHBOARD ================= -->
+        <section id="dashboard-section" class="staff-section staff-welcome">
+            <h2>Staff Dashboard</h2>
+            <p>Manage your store counters and monitor customer queues.</p>
+            <div class="store-info">
+                Store: <strong id="storeName">Store</strong>
+                &nbsp; | &nbsp;
+                Store ID: <strong>{{ store_id }}</strong>
+            </div>
+        </section>
 
-      <!-- CURRENT QUEUE -->
-      <div class="card shadow border-0 rounded-4 mb-4">
-
-        <div class="card-body p-4">
-
-          <h4 class="fw-bold mb-3">
-            Current Queue
-          </h4>
-
-          <div
-            id="queueContainer"
-            class="table-responsive"
-          >
-
-            <table class="table align-middle">
-
-              <thead>
-                <tr>
-                  <th>Queue Number</th>
-                  <th>Service</th>
-                  <th>Status</th>
-                  <th>Counter</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody id="queueTableBody">
-
-                <tr>
-                  <td
-                    colspan="5"
-                    class="text-center text-muted"
-                  >
-                    Loading queue...
-                  </td>
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- QUEUE HISTORY -->
-      <div class="card shadow border-0 rounded-4 mb-4">
-
-        <div class="card-body p-4">
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-
-            <div>
-              <h4 class="fw-bold mb-1">
-                Queue History
-              </h4>
-
-              <p class="text-muted mb-0">
-                Recently completed, skipped and cancelled queues
-              </p>
+        <!-- ================= SUMMARY ================= -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="staff-stat">
+                    <div class="staff-stat-head">
+                        <div class="staff-stat-label">Customers Waiting</div>
+                        <div class="staff-stat-icon">👥</div>
+                    </div>
+                    <div id="waitingCount" class="staff-stat-number">0</div>
+                    <small class="text-muted">Waiting in queue</small>
+                </div>
             </div>
 
-            <button
-              class="btn btn-outline-primary"
-              onclick="loadHistory()"
-            >
-              Refresh
-            </button>
+            <div class="col-lg-4 col-md-6">
+                <div class="staff-stat">
+                    <div class="staff-stat-head">
+                        <div class="staff-stat-label">Currently Serving</div>
+                        <div class="staff-stat-icon">🎫</div>
+                    </div>
+                    <div id="servingCount" class="staff-stat-number">0</div>
+                    <small class="text-muted">Being served now</small>
+                </div>
+            </div>
 
-          </div>
-
-
-          <div class="table-responsive">
-
-            <table class="table align-middle">
-
-              <thead>
-                <tr>
-                  <th>Queue</th>
-                  <th>Service</th>
-                  <th>Status</th>
-                  <th>Counter</th>
-                </tr>
-              </thead>
-
-              <tbody id="historyTableBody">
-
-                <tr>
-                  <td
-                    colspan="4"
-                    class="text-center text-muted"
-                  >
-                    Loading history...
-                  </td>
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+            <div class="col-lg-4 col-md-6">
+                <div class="staff-stat">
+                    <div class="staff-stat-head">
+                        <div class="staff-stat-label">Completed</div>
+                        <div class="staff-stat-icon">✓</div>
+                    </div>
+                    <div id="completedCount" class="staff-stat-number">0</div>
+                    <small class="text-muted">Completed customers</small>
+                </div>
+            </div>
         </div>
 
-      </div>
+        <!-- ================= COUNTERS ================= -->
+        <section id="counters-section" class="staff-section staff-card">
+            <div class="staff-card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="section-title mb-1">Store Counters</h4>
+                        <p class="section-subtitle">Open or close counters and call the next customer.</p>
+                    </div>
+                </div>
+                <div class="row g-3" id="counterContainer">
+                    <!-- Counters will be inserted here -->
+                </div>
+            </div>
+        </section>
 
-    </div>
+        <!-- ================= CURRENT QUEUE ================= -->
+        <section id="queue-section" class="staff-section staff-card">
+            <div class="staff-card-body">
+                <div class="mb-3">
+                    <h4 class="section-title mb-1">Current Queue</h4>
+                    <p class="section-subtitle">Monitor customers currently waiting or being served.</p>
+                </div>
 
+                <div id="queueContainer" class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Queue Number</th>
+                                <th>Service</th>
+                                <th>Status</th>
+                                <th>Counter</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queueTableBody">
+                            <tr>
+                                <td colspan="5" class="empty-row">Loading queue...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= QUEUE HISTORY ================= -->
+        <section id="history-section" class="staff-section staff-card">
+            <div class="staff-card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="section-title mb-1">Queue History</h4>
+                        <p class="section-subtitle">Recently completed, skipped and cancelled queues.</p>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadHistory()">Refresh</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Queue</th>
+                                <th>Service</th>
+                                <th>Status</th>
+                                <th>Counter</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="4" class="empty-row">Loading history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
 
     <!-- TOAST -->
     <div
@@ -464,20 +498,20 @@
 
             <div class="col-md-4">
 
-              <div class="card border rounded-4 h-100">
+              <div class="counter-card">
 
-                <div class="card-body">
+                <div>
 
                   <div class="d-flex justify-content-between">
 
-                    <h5 class="fw-bold">
+                    <h5 class="counter-name">
                       ${counter.counter_name}
                     </h5>
 
-                    <span class="badge ${
+                    <span class="counter-status ${
                       isOpen
-                        ? "bg-success"
-                        : "bg-secondary"
+                        ? "counter-open"
+                        : "counter-closed"
                     }">
 
                       ${status.toUpperCase()}
@@ -561,7 +595,7 @@
 
               body: JSON.stringify({
                 counter_status: newStatus
-              })  
+              })
 
             }
           );
@@ -686,7 +720,7 @@
           let actionButtons = "";
 
 
-          if (queue.status === "SERVING") {
+          if (queue.queue_status === "SERVING") {
 
             actionButtons = `
 
@@ -731,12 +765,12 @@
               <td>
 
                 <span class="badge ${
-                  queue.status === "SERVING"
+                  queue.queue_status === "SERVING"
                     ? "bg-primary"
                     : "bg-warning text-dark"
                 }">
 
-                  ${queue.status}
+                  ${queue.queue_status}
 
                 </span>
 
@@ -998,14 +1032,14 @@
                 <td>
 
                   <span class="badge ${
-                    queue.status === "COMPLETED"
+                    queue.queue_status === "COMPLETED"
                       ? "bg-success"
-                      : queue.status === "SKIPPED"
+                      : queue.queue_status === "SKIPPED"
                         ? "bg-warning text-dark"
                         : "bg-danger"
                   }">
 
-                    ${queue.status}
+                    ${queue.queue_status}
 
                   </span>
 
@@ -1048,6 +1082,19 @@
 
       }
 
+
+      // ==============================
+      // NAVIGATION ACTIVE STATE
+      // ==============================
+
+      document.querySelectorAll(".staff-nav-link").forEach(link => {
+        link.addEventListener("click", function () {
+          document.querySelectorAll(".staff-nav-link").forEach(item => {
+            item.classList.remove("active");
+          });
+          this.classList.add("active");
+        });
+      });
 
       // ==============================
       // START DASHBOARD
