@@ -491,11 +491,11 @@ def dashboard_page():
     return render_template('dashboard.html')
 
 # Test Session Route for Development Purposes
-@app.route('/set-test-session')
-def set_test_session():
-    session['user_id'] = 1
-    session['username'] = 'testuser'
-    return "Test session set! Now you can test your pages."
+@app.route('/set-test-session/<int:user_id>')
+def set_test_session(user_id):
+    session['user_id'] = user_id
+    session['username'] = f'testuser_{user_id}'
+    return "Test session set! You are now logged in as User ID: {user_id}"
 
 
 #======================================================================
@@ -1194,8 +1194,9 @@ def cancel_queue(queue_id):
 
     queue = conn.execute(
         """
-        SELECT *
-        FROM queue
+        SELECT q.*, s.store_id
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
         WHERE queue_id = ?
         """,
         (queue_id,)
@@ -1225,7 +1226,7 @@ def cancel_queue(queue_id):
 
     conn.commit()
     conn.close()
-    socketio.emit('queue_updated')
+    socketio.emit('queue_status_updated', {'queue_id': queue_id}, to=f"store_{queue['store_id']}")
 
     return jsonify({
         'message': 'Queue cancelled successfully',
