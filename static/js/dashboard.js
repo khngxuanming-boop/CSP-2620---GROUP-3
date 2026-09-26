@@ -88,6 +88,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (queueNumberEl) queueNumberEl.innerText = data.queue_number;
 
+        if (data.store_name) {
+          const storeNameEl = document.getElementById("storeName");
+          if (storeNameEl) storeNameEl.innerText = data.store_name;
+        }
+        if (data.service_name) {
+          const serviceNameEl = document.getElementById("serviceName");
+          if (serviceNameEl) serviceNameEl.innerText = data.service_name;
+        }
+
         // Status UI change color logic
         if (queueStatusEl) {
           queueStatusEl.innerText = data.status;
@@ -132,15 +141,15 @@ document.addEventListener("DOMContentLoaded", function () {
         lastQueueStatus = data.status;
 
         // Trigger notification: Alert when only 2 people are left
-        if (
-          data.status === "WAITING" &&
-          data.people_ahead === 2 &&
-          !hasNotifiedApproaching
-        ) {
-          showNotification(
-            "🔔 Warm reminder: Only 2 people left ahead of you. Please proceed to the service counter.",
-          );
-          hasNotifiedApproaching = true;
+        if (data.status === "WAITING") {
+          if (data.people_ahead === 2 && !hasNotifiedApproaching) {
+            showNotification(
+              "🔔 Warm reminder: Only 2 people left ahead of you. Please proceed to the service counter.",
+            );
+            hasNotifiedApproaching = true;
+          } else if (data.people_ahead > 2) {
+            hasNotifiedApproaching = false;
+          }
         }
       })
       .catch((error) => console.error("Error fetching queue status:", error));
@@ -155,6 +164,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (hiddenStoreIdEl && hiddenStoreIdEl.value) {
       socket.emit("join_store_room", { store_id: hiddenStoreIdEl.value });
     }
+    fetchQueueStatus();
   });
   socket.on("queue_status_updated", function (data) {
     console.log("Queue data changed! Fetching new status instantly...");
