@@ -380,7 +380,7 @@ def check_in_appointment(appt_id):
                 JOIN service s ON q.service_id = s.service_id
                 WHERE s.store_id = ? AND q.queue_number LIKE 'A-%'
                 ORDER BY q.queue_id DESC LIMIT 1
-            """, (store_id))
+            """, (store_id,))
             last_record = cursor.fetchone()
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
             queue_number = f"A-{next_num:03d}"
