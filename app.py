@@ -76,6 +76,8 @@ def staff_dashboard(store_id):
         'staff_dashboard.html',
         store_id=store_id
     )
+    
+
 #======================================================================
 # -- Member 1 (Syahmi): User & Store Api
 #======================================================================
