@@ -32,8 +32,14 @@
                     {% for service in services %}
                         <li style="padding: 10px 0; border-bottom: 1px solid #d1d5db; display: flex; justify-content: space-between; align-items: center;">
                             <span>{{ service['service_name'] }}</span>
-                            <!-- Ready for the queue logic -->
-                            <button style="padding: 5px 15px; font-size: 0.9em;">Join Queue</button>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="/check-in?service_id={{ service['service_id'] }}">
+                                    <button style="padding: 5px 15px; font-size: 0.9em;">Join Queue</button>
+                                </a>
+                                <a href="/booking?service_id={{ service['service_id'] }}&service_name={{ service['service_name'] }}">
+                                    <button style="padding: 5px 15px; font-size: 0.9em;">Book Appointment</button>
+                                </a>
+                            </div>
                         </li>
                     {% else %}
                         <p style="color: #6b7280; font-style: italic;">No services listed yet.</p>
