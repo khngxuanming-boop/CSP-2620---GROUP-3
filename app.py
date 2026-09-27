@@ -23,6 +23,18 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
 mail = Mail(app)
 
+def send_verification_email(email, code):
+    """Send a 6-digit verification code to the given email.
+    Returns True if it sent successfully, False otherwise (and logs the error)."""
+    try:
+        msg = Message('Verify your Queues account', recipients=[email])
+        msg.body = f'Your verification code is: {code}'
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send verification email: {e}")
+        return False
+
 def get_db_connection():
     if 'db' not in g:
         # Adding timeout=20 gives SQLite 20 seconds to wait for open locks before raising an error
@@ -61,10 +73,10 @@ def create_admin():
     if not existing_admin:
         conn.execute(
             '''
-            INSERT INTO user (username, password, role)
-            VALUES (?, ?, ?)
+            INSERT INTO user (username, password, role, is_verified)
+            VALUES (?, ?, ?, ?)
             ''',
-            ('admin', 'admin123', 'ADMIN')
+            ('admin', 'admin123', 'ADMIN', 1)
         )
         conn.commit()
         print("Admin account created.")
@@ -168,6 +180,7 @@ def register():
         # Receive what they typed in the boxes
         username = request.form['username']
         password = request.form['password']
+        email = request.form.get('email', '').strip()
 
         # Grab the role they picked from the dropdown menu/
         role = request.form.get('role', 'CUSTOMER')
@@ -180,17 +193,21 @@ def register():
             error = "That username is already taken! Choose another one."
             return render_template('register.html', error=error)
 
+        code = str(random.randint(100000, 999999))
+
         conn.execute(
-            'INSERT INTO user (username, password, role) VALUES (?, ?, ?)',
-            (username, password, role)
+            'INSERT INTO user (username, password, role, email, verification_code) VALUES (?, ?, ?, ?, ?)',
+            (username, password, role, email, code)
         )
         conn.commit()
 
-        # ONLY send them to login page if success
-        return redirect(url_for('login'))
+        send_verification_email(email, code)
 
-    # If it's a GET request or if there was an error, show the page with the error message
+        session['pending_verify'] = username
+        return redirect(url_for('verify_email'))
+
     return render_template('register.html', error=error)
+
 
 # User Login
 @app.route('/login', methods=['GET', 'POST'])
@@ -265,6 +282,129 @@ def login():
             )
 
     return render_template('login.html')
+
+# User Verify
+@app.route('/verify_email', methods=['GET', 'POST'])
+def verify_email():
+    username = session.get('pending_verify')
+    if not username:
+        return redirect(url_for('login'))
+
+    error = None
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip()
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
+
+        if user and user['verification_code'] == code:
+            conn.execute('UPDATE user SET is_verified = 1, verification_code = NULL WHERE username = ?', (username,))
+            conn.commit()
+            session.pop('pending_verify', None)
+            return redirect(url_for('login'))
+        error = "Incorrect code."
+
+    return render_template('verify_email.html', error=error, username=username)
+
+
+# Resend OTP: generates a fresh code, overwrites the old one, re-sends it.
+@app.route('/resend_code', methods=['POST'])
+def resend_code():
+    username = session.get('pending_verify')
+    if not username:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    new_code = str(random.randint(100000, 999999))
+    conn.execute('UPDATE user SET verification_code = ? WHERE username = ?', (new_code, username))
+    conn.commit()
+
+    sent = send_verification_email(user['email'], new_code)
+    notice = "A new code has been sent to your email." if sent else \
+        "Couldn't send the email right now, please try again in a moment."
+
+    return render_template('verify_email.html', error=None, notice=notice, username=username)
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    message = None
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM user WHERE email = ?', (email,)).fetchone()
+
+        if user:
+            token = secrets.token_urlsafe(32)
+            expiry = datetime.now() + timedelta(minutes=30)
+
+            conn.execute(
+                'UPDATE user SET reset_token = ?, reset_token_expire = ? WHERE user_id = ?',
+                (token, expiry, user['user_id'])
+            )
+            conn.commit()
+
+            reset_link = url_for('reset_password', token=token, _external=True)
+
+            try:
+                msg = Message('Reset your Queues password', recipients=[email])
+                msg.body = f'Click here to reset your password: {reset_link}\nThis link expires in 30 minutes.'
+                mail.send(msg)
+            except Exception as e:
+                print(f"Failed to send reset email: {e}")
+
+        conn.close()
+        message = "If that email is registered, a reset link has been sent."
+
+    return render_template('forgot_password.html', message=message)
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM user WHERE reset_token = ?', (token,)).fetchone()
+
+    if not user:
+        conn.close()
+        return "Invalid or expired reset link."
+
+    expiry = datetime.fromisoformat(user['reset_token_expire'])
+    if datetime.now() > expiry:
+        conn.close()
+        return "This reset link has expired. Please request a new one."
+
+    error = None
+    if request.method == 'POST':
+        new_password = request.form['password']
+
+        conn.execute(
+            'UPDATE user SET password = ?, reset_token = NULL, reset_token_expire = NULL WHERE user_id = ?',
+            (new_password, user['user_id'])
+        )
+        conn.commit()
+        conn.close()
+        return redirect(url_for('login'))
+
+    conn.close()
+    return render_template('reset_password.html', error=error, token=token)
+
+
+@app.route('/my-store')
+def my_store():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    stores = conn.execute(
+        'SELECT * FROM store WHERE owner_id = ?', (session['user_id'],)
+    ).fetchall()
+    conn.close()
+
+    return render_template('my_store.html', stores=stores, username=session.get('username'))
 
 # Store registration ----> Week 4: Adding form
 @app.route('/register_store', methods=['GET', 'POST'])
@@ -1618,6 +1758,7 @@ def get_staff_dashboard(store_id):
 
 if __name__ == '__main__':
     with app.app_context():
-        create_admin()
         init_db()
+        create_admin()
+
     socketio.run(app, debug=True, port=5000)
