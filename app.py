@@ -53,7 +53,6 @@ def create_admin():
         conn.commit()
         print("Admin account created.")
 
-    conn.close()
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
@@ -71,6 +70,27 @@ def staff_dashboard(store_id):
     # Only STAFF can access Staff Dashboard
     if session.get('role') != 'STAFF':
         return redirect(url_for('login'))
+
+    conn = get_db_connection()
+
+    store = conn.execute(
+        """
+        SELECT *
+        FROM store
+        WHERE store_id = ?
+        AND owner_id = ?
+        """,
+        (
+            store_id,
+            session['user_id']
+        )
+    ).fetchone()
+
+    if not store:
+        return "You do not have access to this store.", 403
+
+    if store['store_status'] != 'APPROVED':
+        return redirect(url_for('staff_status'))
 
     return render_template(
         'staff_dashboard.html',
@@ -116,8 +136,6 @@ def store_discovery():
             'SELECT * FROM store'
         ).fetchall()
 
-    conn.close()
-
     return render_template(
         'stores.html',
         stores=stores,
@@ -144,7 +162,7 @@ def register():
 
         if existing_user:
             error = "That username is already taken! Choose another one."
-            conn.close() # Close since failed.
+        
         else:
 
             conn.execute(
@@ -152,7 +170,6 @@ def register():
                 (username, password, role)
             )
             conn.commit()
-            conn.close()
 
         # ONLY send them to login page if success
         return redirect(url_for('login'))
@@ -180,7 +197,6 @@ def login():
             (username, password)
         ).fetchone()
 
-        conn.close()
         if user:
             session['user_id'] = user['user_id']
             session['username'] = user['username']
@@ -190,7 +206,40 @@ def login():
                 return redirect(url_for('admin_dashboard'))
 
             elif user['role'] == 'STAFF':
-                return redirect(url_for('staff_dashboard', store_id=1))
+
+                 conn = get_db_connection()
+
+                 store = conn.execute(
+                   """
+                   SELECT *
+                   FROM store
+                   WHERE owner_id = ?
+                   ORDER BY store_id DESC
+                   LIMIT 1
+                   """,
+                   (user['user_id'],)
+                ).fetchone()
+
+                # STAFF has never submitted a store proposal
+                 if not store:
+                     return redirect(url_for('register_store'))
+
+                # Proposal is still waiting for ADMIN
+                 if store['store_status'] == 'PENDING':
+                     return redirect(url_for('staff_status'))
+
+                # ADMIN rejected the proposal
+                 if store['store_status'] == 'REJECTED':
+                     return redirect(url_for('staff_status'))
+
+                # ADMIN approved the proposal
+                 if store['store_status'] == 'APPROVED':
+                     return redirect(
+                         url_for(
+                             'staff_dashboard',
+                             store_id=store['store_id']
+                         )
+               )
 
             else:
                 return redirect(url_for('store_discovery'))
@@ -205,25 +254,80 @@ def login():
 # Store registration ----> Week 4: Adding form
 @app.route('/register_store', methods=['GET', 'POST'])
 def register_store():
-    if 'user_id' not in session:
+    if session.get('role') != 'STAFF':
         return redirect(url_for('login'))
+    conn = get_db_connection()
+
+    # Check whether this staff already has a proposal
+    existing_store = conn.execute(
+           """
+           SELECT *
+           FROM store
+           WHERE owner_id = ?
+           ORDER BY store_id DESC
+           LIMIT 1
+           """,
+           (session['user_id'],)
+     ).fetchone()
+
+    # If they already have a proposal, don't create another one
+    if existing_store:
+        return redirect(url_for('staff_status'))
 
     if request.method == 'POST':
+
         store_name = request.form['name']
         hours = request.form['hours']
 
-        conn = get_db_connection()
-        # Insert the new store, automatically setting its status to 'Pending'
         conn.execute(
-            'INSERT INTO store (store_name, operating_hours, store_status, owner_id) VALUES (?, ?, ?, ?)',
-            (store_name, hours, 'PENDING', session['user_id'])
+            """
+            INSERT INTO store
+            (
+                store_name,
+                operating_hours,
+                store_status,
+                owner_id
+            )
+            VALUES (?, ?, 'PENDING', ?)
+            """,
+            (
+                store_name,
+                hours,
+                session['user_id']
+            )
         )
-        conn.commit()
-        conn.close()
 
-        return redirect(url_for('my_store'))
+        conn.commit()
+
+        return redirect(url_for('staff_status'))
+
 
     return render_template('register_store.html')
+
+@app.route('/staff/status')
+def staff_status():
+
+    if session.get('role') != 'STAFF':
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+
+    store = conn.execute(
+        """
+        SELECT *
+        FROM store
+        WHERE owner_id = ?
+        ORDER BY store_id DESC
+        LIMIT 1
+        """,
+        (session['user_id'],)
+    ).fetchone()
+
+
+    return render_template(
+        'staff_status.html',
+        store=store
+    )
 
 # Store Details Page ---> Week 3
 @app.route('/store/<int:store_id>')
@@ -240,7 +344,6 @@ def store_details(store_id):
     # Grab all active services linked to this store from Member 3's service table
     services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
 
-    conn.close()
 
     # Fall back error response if someone manually type a fake store ID in the URL
     if not store:
@@ -304,8 +407,6 @@ def create_appointment():
         return jsonify({'message': 'Appointment created successfully!', 'appointment_id': appt_id}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # POST /api/queues/walk-in
 @app.route('/api/queues/walk-in', methods=['POST'])
@@ -350,8 +451,6 @@ def walk_in_queue():
         return jsonify({'message': 'Successfully joined the walk-in queue!', 'queue_id': queue_id, 'queue_number': queue_number}),201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # PUT /api/appointments/<appt_id>/check-in
 @app.route('/api/appointments/<int:appt_id>/check-in', methods=['PUT'])
@@ -390,8 +489,6 @@ def check_in_appointment(appt_id):
         return jsonify({'message': 'Appointment checked in successfully!', 'queue_id': queue_id, 'queue_number': queue_number}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # GET /api/queues/my-status
 @app.route('/api/queues/my-status', methods=['GET'])
@@ -466,8 +563,6 @@ def get_notification():
         ]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # Page Routes
 @app.route('/booking')
@@ -521,7 +616,6 @@ def create_service():
     ).fetchone()
 
     if not store:
-        conn.close()
         return jsonify({
             'error': 'Store not found'
         }), 404
@@ -541,7 +635,6 @@ def create_service():
 
     service_id = cursor.lastrowid
 
-    conn.close()
 
     return jsonify({
         'message': 'Service created successfully',
@@ -563,7 +656,6 @@ def get_services(store_id):
         (store_id,)
     ).fetchall()
 
-    conn.close()
 
     return jsonify([
         dict(row) for row in services
@@ -591,7 +683,6 @@ def update_service(service_id):
     ).fetchone()
 
     if not service:
-        conn.close()
         return jsonify({
             'error': 'Service not found'
         }), 404
@@ -607,7 +698,6 @@ def update_service(service_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': 'Service updated successfully'
@@ -626,7 +716,6 @@ def delete_service(service_id):
     ).fetchone()
 
     if not service:
-        conn.close()
         return jsonify({
             'error': 'Service not found'
         }), 404
@@ -638,7 +727,6 @@ def delete_service(service_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': 'Service deleted successfully'
@@ -675,7 +763,6 @@ def create_counter():
 
     conn.commit()
     counter_id = cursor.lastrowid
-    conn.close()
 
     return jsonify({
         'message': 'Counter created successfully',
@@ -696,7 +783,6 @@ def get_counters(store_id):
         (store_id,)
     ).fetchall()
 
-    conn.close()
 
     return jsonify([
         dict(row) for row in counters
@@ -724,7 +810,6 @@ def update_counter(counter_id):
     ).fetchone()
 
     if not counter:
-        conn.close()
         return jsonify({
             'error': 'Counter not found'
         }), 404
@@ -740,7 +825,6 @@ def update_counter(counter_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': 'Counter updated successfully'
@@ -759,7 +843,6 @@ def delete_counter(counter_id):
     ).fetchone()
 
     if not counter:
-        conn.close()
         return jsonify({
             'error': 'Counter not found'
         }), 404
@@ -770,7 +853,6 @@ def delete_counter(counter_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': 'Counter deleted successfully'
@@ -801,7 +883,6 @@ def update_counter_status(counter_id):
     ).fetchone()
 
     if not counter:
-        conn.close()
         return jsonify({
             'error': 'Counter not found'
         }), 404
@@ -817,7 +898,6 @@ def update_counter_status(counter_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': f'Counter status updated to {counter_status}',
@@ -838,7 +918,6 @@ def get_stores():
         'SELECT * FROM store'
     ).fetchall()
 
-    conn.close()
 
     return jsonify([dict(row) for row in stores]), 200
 
@@ -879,7 +958,6 @@ def create_store():
 
     store_id = cursor.lastrowid
 
-    conn.close()
 
     return jsonify({
         'message': 'Store created successfully',
@@ -904,7 +982,6 @@ def update_store(store_id):
     ).fetchone()
 
     if not existing_store:
-        conn.close()
         return jsonify({
             'error': 'Store not found'
         }), 404
@@ -928,7 +1005,6 @@ def update_store(store_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': 'Store updated successfully'
@@ -945,7 +1021,6 @@ def delete_store(store_id):
     ).fetchone()
 
     if not existing_store:
-        conn.close()
         return jsonify({
             'error': 'Store not found'
         }), 404
@@ -956,12 +1031,97 @@ def delete_store(store_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': 'Store deleted successfully'
     }), 200
 
+# Store approval or rejection by admin
+@app.route('/api/stores/<int:store_id>/status', methods=['PATCH'])
+def update_store_status(store_id):
+
+    if session.get('role') != 'ADMIN':
+        return jsonify({
+            'error': 'Admin access required'
+        }), 403
+
+    data = request.get_json() or {}
+
+    new_status = data.get('store_status')
+
+    if new_status not in ['PENDING', 'APPROVED', 'REJECTED']:
+        return jsonify({
+            'error': 'Invalid store status'
+        }), 400
+
+    conn = get_db_connection()
+
+    store = conn.execute(
+        """
+        SELECT *
+        FROM store
+        WHERE store_id = ?
+        """,
+        (store_id,)
+    ).fetchone()
+
+    if not store:
+        return jsonify({
+            'error': 'Store not found'
+        }), 404
+
+    conn.execute(
+        """
+        UPDATE store
+        SET store_status = ?
+        WHERE store_id = ?
+        """,
+        (
+            new_status,
+            store_id
+        )
+    )
+
+    conn.commit()
+
+    return jsonify({
+        'message': 'Store status updated successfully',
+        'store_id': store_id,
+        'store_status': new_status
+    }), 200
+    
+# Pending Stores API
+@app.route('/api/stores/pending', methods=['GET'])
+def get_pending_stores():
+
+    if session.get('role') != 'ADMIN':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    conn = get_db_connection()
+
+    stores = conn.execute(
+        """
+        SELECT
+            store.store_id,
+            store.store_name,
+            store.operating_hours,
+            store.store_status,
+            store.owner_id,
+            user.username
+        FROM store
+        JOIN user
+        ON store.owner_id = user.user_id
+        WHERE store.store_status = 'PENDING'
+        ORDER BY store.store_id DESC
+        """
+    ).fetchall()
+
+
+    return jsonify([
+        dict(store)
+        for store in stores
+    ]), 200
+    
 # =========================
 # STAFF QUEUE CONTROL API
 # =========================
@@ -983,14 +1143,12 @@ def call_next_customer(counter_id):
     ).fetchone()
 
     if not counter:
-        conn.close()
         return jsonify({
             'error': 'Counter not found'
         }), 404
 
     # Check whether counter is open
     if counter['counter_status'] != 'open':
-        conn.close()
         return jsonify({
             'error': 'Counter is closed'
         }), 400
@@ -1010,7 +1168,6 @@ def call_next_customer(counter_id):
     ).fetchone()
 
     if not queue:
-        conn.close()
         return jsonify({
             'message': 'No customers waiting'
         }), 404
@@ -1038,7 +1195,6 @@ def call_next_customer(counter_id):
         (queue['queue_id'],)
     ).fetchone()
 
-    conn.close()
 
     return jsonify({
         'message': 'Next customer called successfully',
@@ -1062,14 +1218,12 @@ def skip_queue(queue_id):
     ).fetchone()
 
     if not queue:
-        conn.close()
         return jsonify({
             'error': 'Queue not found'
         }), 404
 
     # Only SERVING customer can be skipped
     if queue['queue_status'] != 'SERVING':
-        conn.close()
         return jsonify({
             'error': 'Only a serving customer can be skipped'
         }), 400
@@ -1084,7 +1238,6 @@ def skip_queue(queue_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': 'Customer skipped successfully',
@@ -1109,19 +1262,15 @@ def recall_queue(queue_id):
     ).fetchone()
 
     if not queue:
-        conn.close()
         return jsonify({
             'error': 'Queue not found'
         }), 404
 
     # Customer must currently be SERVING
     if queue['queue_status'] != 'SERVING':
-        conn.close()
         return jsonify({
             'error': 'Only a serving customer can be recalled'
         }), 400
-
-    conn.close()
 
     return jsonify({
         'message': 'Customer recalled successfully',
@@ -1147,14 +1296,12 @@ def complete_queue(queue_id):
     ).fetchone()
 
     if not queue:
-        conn.close()
         return jsonify({
             'error': 'Queue not found'
         }), 404
 
     # Only SERVING customer can be completed
     if queue['queue_status'] != 'SERVING':
-        conn.close()
         return jsonify({
             'error': 'Only a serving customer can be completed'
         }), 400
@@ -1169,7 +1316,6 @@ def complete_queue(queue_id):
     )
 
     conn.commit()
-    conn.close()
 
     return jsonify({
         'message': 'Service completed successfully',
@@ -1194,14 +1340,12 @@ def cancel_queue(queue_id):
     ).fetchone()
 
     if not queue:
-        conn.close()
         return jsonify({
             'error': 'Queue not found'
         }), 404
 
     # Cannot cancel completed/skipped/cancelled queue
     if queue['queue_status'] in ['COMPLETED', 'SKIPPED', 'CANCELLED']:
-        conn.close()
         return jsonify({
             'error': 'Queue can no longer be cancelled'
         }), 400
@@ -1216,7 +1360,6 @@ def cancel_queue(queue_id):
     )
 
     conn.commit()
-    conn.close()
     socketio.emit('queue_updated')
 
     return jsonify({
@@ -1246,7 +1389,6 @@ def get_counter_queue(counter_id):
     ).fetchone()
 
     if not counter:
-        conn.close()
         return jsonify({
             'error': 'Counter not found'
         }), 404
@@ -1263,7 +1405,6 @@ def get_counter_queue(counter_id):
         (counter_id,)
     ).fetchall()
 
-    conn.close()
 
     return jsonify([
         dict(row) for row in queues
@@ -1284,7 +1425,6 @@ def get_queue_history():
         """
     ).fetchall()
 
-    conn.close()
 
     return jsonify([
         dict(row) for row in queues
@@ -1307,7 +1447,6 @@ def get_queue_status(counter_id):
     ).fetchone()
 
     if not counter:
-        conn.close()
         return jsonify({
             'error': 'Counter not found'
         }), 404
@@ -1336,7 +1475,6 @@ def get_queue_status(counter_id):
         (counter_id,)
     ).fetchone()
 
-    conn.close()
 
     return jsonify({
         'counter_id': counter_id,
@@ -1360,7 +1498,6 @@ def get_queue_status_history(queue_id):
         (queue_id,)
     ).fetchall()
 
-    conn.close()
 
     return jsonify([
         dict(row) for row in history
@@ -1386,7 +1523,6 @@ def get_staff_dashboard(store_id):
     ).fetchone()
 
     if not store:
-        conn.close()
         return jsonify({
             'error': 'Store not found'
         }), 404
@@ -1461,7 +1597,6 @@ def get_staff_dashboard(store_id):
         (store_id,)
     ).fetchone()
 
-    conn.close()
 
     return jsonify({
         'store': dict(store),
@@ -1484,5 +1619,4 @@ def get_staff_dashboard(store_id):
 if __name__ == '__main__':
     with app.app_context():
         create_admin()
-
     socketio.run(app, debug=True, port=5000)

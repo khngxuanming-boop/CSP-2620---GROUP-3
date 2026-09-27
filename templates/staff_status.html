@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Store Proposal Status</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 40px;
+            width: 450px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .status {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .pending {
+            color: #facc15;
+        }
+
+        .approved {
+            color: #4ade80;
+        }
+
+        .rejected {
+            color: #f87171;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    {% if store %}
+
+        <h1>Store Proposal</h1>
+
+        <h2>{{ store['store_name'] }}</h2>
+
+        <p>
+            Operating Hours:
+            {{ store['operating_hours'] }}
+        </p>
+
+        {% if store['store_status'] == 'PENDING' %}
+
+            <div class="status pending">
+                ⏳ Pending Approval
+            </div>
+
+            <p>
+                Your store proposal has been submitted.
+                Please wait for the administrator to approve it.
+            </p>
+
+        {% elif store['store_status'] == 'APPROVED' %}
+
+            <div class="status approved">
+                ✓ Approved
+            </div>
+
+            <p>
+                Your store has been approved.
+            </p>
+
+            <a href="{{ url_for('staff_dashboard', store_id=store['store_id']) }}">
+                <button>Go to Staff Dashboard</button>
+            </a>
+
+        {% elif store['store_status'] == 'REJECTED' %}
+
+            <div class="status rejected">
+                ✕ Rejected
+            </div>
+
+            <p>
+                Your store proposal was rejected.
+            </p>
+
+            <a href="{{ url_for('register_store') }}">
+                <button>Submit Again</button>
+            </a>
+
+        {% endif %}
+
+    {% else %}
+
+        <h1>No Store Proposal</h1>
+
+        <p>
+            You have not submitted a store proposal yet.
+        </p>
+
+        <a href="{{ url_for('register_store') }}">
+            <button>Submit Store Proposal</button>
+        </a>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>
