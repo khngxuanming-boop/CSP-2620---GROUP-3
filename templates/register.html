@@ -1,69 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <title>Register to Queues</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
     <div class="card" style="max-width: 400px; margin: 50px auto;">
         <h1>Create Account</h1>
-
+        
         {% if error %}
-        <p
-            style="color: #ef4444; font-weight: bold; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 5px;">
-            {{ error }}</p>
+            <p style="color: #ef4444; font-weight: bold; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 5px;">{{ error }}</p>
         {% endif %}
 
         <form method="POST">
-            <form method="POST">
-                <div style="margin-bottom: 15px;">
-                    <label>Username</label>
-                    <input type="text" name="username" required>
-                </div>
+            <label>Username</label>
+            <input type="text" name="username" required style="width: 100%; box-sizing: border-box;">
+            
+            <label>Email</label>
+            <input type="text" name="email" required style="width: 100%; box-sizing: border-box;">
+            
+            <label>Password</label>
+            <div style="position: relative;">
+                <input type="password" name="password" id="password" required style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+                <span onclick="togglePassword('password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-75%); cursor: pointer; user-select: none; display: flex; align-items: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </span>
+            </div>
 
-                <div style="margin-bottom: 15px;">
-                    <label>Password</label>
+            <label>Account Type</label>
 
-                    <!-- CONTAINER WITH INLINE STYLES -->
-                    <div style="position: relative; width: 100%; display: flex; align-items: center;">
-                        <input type="password" id="password" name="password"
-                            style="width: 100%; padding-right: 45px; box-sizing: border-box; margin: 0;" required>
-
-                        <!-- TOGGLE SPAN WITH INLINE STYLES -->
-                        <span id="toggleBtn" onclick="togglePassword()"
-                            style="position: absolute; right: 12px; cursor: pointer; font-size: 18px; user-select: none; z-index: 100; line-height: 1; display: inline-block; background: none; border: none; padding: 0; margin: 0; width: auto; height: auto; min-width: auto;">👁</span>
-                    </div>
-                </div>
-
-                <label>Account Type</label>
-                <select name="role"
-                    style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #d1d5db;">
-                    <option value="CUSTOMER">Customer</option>
-                    <option value="STAFF">Store Administrator / Staff</option>
-                </select>
-
-                <button type="submit" style="width: 100%;">Register</button>
-            </form>
-            <p style="text-align: center; margin-top: 15px;">
-                Already have an account? <a href="/" style="color: #2563eb;">Login here</a>
-            </p>
+            <select name="role" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #d1d5db;">
+                <option value="CUSTOMER">Customer</option>
+                <option value="STAFF">Store Administrator / Staff</option>
+            </select>
+            
+            <button type="submit" style="width: 100%;">Register</button>
+        </form>
+        <p style="text-align: center; margin-top: 15px;">
+            Already have an account? <a href="/" style="color: #2563eb;">Login here</a>
+        </p>
     </div>
     <script>
-        function togglePassword() {
-            const password = document.getElementById("password");
-            const toggleBtn = document.getElementById("toggleBtn");
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
 
-            if (password.type === "password") {
-                password.type = "text";
-                toggleBtn.textContent = "🙈";
-            } else {
-                password.type = "password";
-                toggleBtn.textContent = "👁";
-            }
+            icon.innerHTML = isHidden
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
         }
     </script>
 </body>
-
 </html>

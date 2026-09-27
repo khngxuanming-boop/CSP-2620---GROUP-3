@@ -46,6 +46,7 @@
                         </form>
                     {% else %}
                         <a href="/store/{{ store['store_id'] }}"><button>View Store Page</button></a>
+                        <a href="/staff/dashboard/{{ store['store_id'] }}"><button>Manage Queue</button></a>
                         <a href="/my-store/{{ store['store_id'] }}/edit"><button>Edit Details</button></a>
                         <!-- Reviews section placeholder — needs a shared 'review' table, not yet in schema -->
                         <p style="color: #9ca3af; font-style: italic; margin-left: 10px;">Reviews coming soon</p>
