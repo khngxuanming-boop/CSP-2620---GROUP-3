@@ -32,8 +32,8 @@ service_id = cur.lastrowid
 cur.execute("INSERT INTO counter (store_id, counter_name, counter_status) VALUES (?, 'Counter 1', 'OPEN')", (store_id,))
 counter_id = cur.lastrowid
 
-cur.execute("INSERT INTO appointment (user_id, service_id, appt_datetime, appt_status) VALUES (?, ?, '2026-09-20 14:00:00', 'BOOKED')", (user_id, service_id))
-cur.execute("INSERT INTO queue (user_id, service_id, counter_id, queue_number, queue_status) VALUES (?, ?, NULL, 'A-001', 'WAITING')", (user_id, service_id))
+# cur.execute("INSERT INTO appointment (user_id, service_id, appt_datetime, appt_status) VALUES (?, ?, '2026-09-20 14:00:00', 'BOOKED')", (user_id, service_id))
+# cur.execute("INSERT INTO queue (user_id, service_id, counter_id, queue_number, queue_status) VALUES (?, ?, NULL, 'A-001', 'WAITING')", (user_id, service_id))
 cur.execute("INSERT INTO notification (user_id, message, is_read) VALUES (?, 'Your turn is approaching! There are 2 customers ahead.', 0)", (user_id,))
 
 connection.commit()

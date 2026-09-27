@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
             const apptId = data.appointment_id;
-            window.location.replace = `/check-in?appt_id=${apptId}`;
+            window.location.replace(`/check-in?appt_id=${apptId}`);
           }
         })
         .catch((error) => {
