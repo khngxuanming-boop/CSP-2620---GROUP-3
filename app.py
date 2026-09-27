@@ -1,11 +1,27 @@
 import sqlite3
+import os
+import random
+import secrets
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
 from flask_socketio import SocketIO, emit, join_room
+from flask_mail import Mail, Message
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'sphinx of black quartz judge my vow'
 DB_NAME = 'queue_system.db'
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True') == 'True'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
+mail = Mail(app)
 
 def get_db_connection():
     if 'db' not in g:
