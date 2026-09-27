@@ -1,4 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
+  history.pushState(null, null, location.href);
+  window.addEventListener("popstate", function () {
+    history.pushState(null, null, location.href);
+    alert(
+      "You are currently in a queue. Please use the 'Cancel Queue' button to leave.",
+    );
+  });
   // From URL get the queue_id
   const urlParams = new URLSearchParams(window.location.search);
   const currentQueueId = urlParams.get("queue_id");
