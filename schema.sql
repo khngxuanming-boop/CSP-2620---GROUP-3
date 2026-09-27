@@ -19,13 +19,7 @@ CREATE TABLE IF NOT EXISTS store (
     store_status TEXT DEFAULT 'PENDING',
     operating_hours TEXT,
     estimated_wait_time INTEGER DEFAULT 0,
-<<<<<<< HEAD
-    owner_id INTEGER,
-    rejection_reason TEXT,
-    FOREIGN KEY (owner_id) REFERENCES user(user_id)
-=======
     owner_id INTEGER NOT NULL
->>>>>>> feature/member3
 );
 
 -- (Member 3 will write the CREATE TABLE service here...)
