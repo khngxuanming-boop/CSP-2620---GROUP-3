@@ -596,50 +596,35 @@ def set_test_session():
 # CREATE - Add a new service
 @app.route('/api/services', methods=['POST'])
 def create_service():
-    data = request.get_json()
+    if session.get('role') != 'STAFF':
+        return jsonify({'error': 'Staff access required'}), 403
 
+    data = request.get_json()
     store_id = data.get('store_id')
     service_name = data.get('service_name')
 
-    # Check required fields
     if not store_id or not service_name:
-        return jsonify({
-            'error': 'store_id and service_name are required'
-        }), 400
+        return jsonify({'error': 'store_id and service_name are required'}), 400
 
     conn = get_db_connection()
 
-    # Check whether the store exists
     store = conn.execute(
-        'SELECT * FROM store WHERE store_id = ?',
-        (store_id,)
+        'SELECT * FROM store WHERE store_id = ? AND owner_id = ?',
+        (store_id, session['user_id'])
     ).fetchone()
 
     if not store:
-        return jsonify({
-            'error': 'Store not found'
-        }), 404
+        return jsonify({'error': 'You do not have access to this store'}), 403
 
-    # Insert service
     cursor = conn.cursor()
-
     cursor.execute(
-        """
-        INSERT INTO service (store_id, service_name)
-        VALUES (?, ?)
-        """,
+        "INSERT INTO service (store_id, service_name) VALUES (?, ?)",
         (store_id, service_name)
     )
-
     conn.commit()
-
     service_id = cursor.lastrowid
 
-
-    return jsonify({
-        'message': 'Service created successfully',
-        'service_id': service_id
-    }), 201
+    return jsonify({'message': 'Service created successfully', 'service_id': service_id}), 201
 
 
 # READ - Get all services for a store
@@ -739,35 +724,35 @@ def delete_service(service_id):
 # CREATE - Add a new counter
 @app.route('/api/counters', methods=['POST'])
 def create_counter():
-    data = request.get_json()
+    if session.get('role') != 'STAFF':
+        return jsonify({'error': 'Staff access required'}), 403
 
+    data = request.get_json()
     store_id = data.get('store_id')
     counter_name = data.get('counter_name')
 
     if not store_id or not counter_name:
-        return jsonify({
-            'error': 'store_id and counter_name are required'
-        }), 400
+        return jsonify({'error': 'store_id and counter_name are required'}), 400
 
     conn = get_db_connection()
 
-    cursor = conn.cursor()
+    store = conn.execute(
+        'SELECT * FROM store WHERE store_id = ? AND owner_id = ?',
+        (store_id, session['user_id'])
+    ).fetchone()
 
+    if not store:
+        return jsonify({'error': 'You do not have access to this store'}), 403
+
+    cursor = conn.cursor()
     cursor.execute(
-        """
-        INSERT INTO counter (store_id, counter_name)
-        VALUES (?, ?)
-        """,
+        "INSERT INTO counter (store_id, counter_name) VALUES (?, ?)",
         (store_id, counter_name)
     )
-
     conn.commit()
     counter_id = cursor.lastrowid
 
-    return jsonify({
-        'message': 'Counter created successfully',
-        'counter_id': counter_id
-    }), 201
+    return jsonify({'message': 'Counter created successfully', 'counter_id': counter_id}), 201
 
 
 # READ - Get all counters for a store

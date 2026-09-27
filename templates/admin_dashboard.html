@@ -374,9 +374,6 @@
             }
 
         }
-
-       
-
     </style>
 
 </head>
@@ -1105,66 +1102,28 @@
         ===================================================== */
 
         async function approveStore(storeId) {
-
-            if (!confirm(
-                'Are you sure you want to approve this store?'
-            )) {
-
+            if (!confirm('Are you sure you want to approve this store?')) {
                 return;
-
             }
-
-
             try {
-
-                const response =
-                    await fetch(
-                        `/api/stores/${storeId}`,
-                        {
-                            method: 'PUT',
-
-                            headers: {
-                                'Content-Type':
-                                    'application/json'
-                            },
-
-                            body: JSON.stringify({
-                                store_status: 'APPROVED'
-                            })
-                        }
-                    );
-
-
-                if (response.ok) {
-
-                    alert(
-                        'Store approved successfully.'
-                    );
-
-                    loadStores();
-
-                }
-
-                else {
-
-                    alert(
-                        'Unable to approve store.'
-                    );
-
-                }
-
-            }
-
-            catch (error) {
-
-                console.error(error);
-
-                alert(
-                    'An error occurred.'
+                const response = await fetch(
+                    `/api/stores/${storeId}/status`,   // <-- add /status
+                    {
+                        method: 'PATCH',                // <-- PATCH, not PUT
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ store_status: 'APPROVED' })
+                    }
                 );
-
+                if (response.ok) {
+                    alert('Store approved successfully.');
+                    loadStores();
+                } else {
+                    alert('Unable to approve store.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred.');
             }
-
         }
 
 
@@ -1174,66 +1133,28 @@
         ===================================================== */
 
         async function rejectStore(storeId) {
-
-            if (!confirm(
-                'Are you sure you want to reject this store?'
-            )) {
-
+            if (!confirm('Are you sure you want to reject this store?')) {
                 return;
-
             }
-
-
             try {
-
-                const response =
-                    await fetch(
-                        `/api/stores/${storeId}`,
-                        {
-                            method: 'PUT',
-
-                            headers: {
-                                'Content-Type':
-                                    'application/json'
-                            },
-
-                            body: JSON.stringify({
-                                store_status: 'REJECTED'
-                            })
-                        }
-                    );
-
-
-                if (response.ok) {
-
-                    alert(
-                        'Store proposal rejected.'
-                    );
-
-                    loadStores();
-
-                }
-
-                else {
-
-                    alert(
-                        'Unable to reject store.'
-                    );
-
-                }
-
-            }
-
-            catch (error) {
-
-                console.error(error);
-
-                alert(
-                    'An error occurred.'
+                const response = await fetch(
+                    `/api/stores/${storeId}/status`,   // <-- add /status
+                    {
+                        method: 'PATCH',                // <-- PATCH, not PUT
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ store_status: 'REJECTED' })
+                    }
                 );
-
+                if (response.ok) {
+                    alert('Store proposal rejected.');
+                    loadStores();
+                } else {
+                    alert('Unable to reject store.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred.');
             }
-
         }
 
 
@@ -1671,7 +1592,7 @@
             // Make clicked button active
             button.classList.add('active');
         }
-        
+
     </script>
 
 
