@@ -162,14 +162,13 @@ def register():
 
         if existing_user:
             error = "That username is already taken! Choose another one."
-        
-        else:
+            return render_template('register.html', error=error)
 
-            conn.execute(
-                'INSERT INTO user (username, password, role) VALUES (?, ?, ?)',
-                (username, password, role)
-            )
-            conn.commit()
+        conn.execute(
+            'INSERT INTO user (username, password, role) VALUES (?, ?, ?)',
+            (username, password, role)
+        )
+        conn.commit()
 
         # ONLY send them to login page if success
         return redirect(url_for('login'))
