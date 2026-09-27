@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
             alert(
               "Check-in successful! Your queue number is: " + data.queue_number,
             );
-            window.location.replace = `/dashboard?queue_id=${data.queue_id}`; // Redirect to the dashboard with queue_id
+            window.location.replace(`/dashboard?queue_id=${data.queue_id}`); // Redirect to the dashboard with queue_id
           }
         })
         .catch((error) => {
