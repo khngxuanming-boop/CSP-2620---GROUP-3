@@ -19,9 +19,13 @@ CREATE TABLE IF NOT EXISTS store (
     store_status TEXT DEFAULT 'PENDING',
     operating_hours TEXT,
     estimated_wait_time INTEGER DEFAULT 0,
+<<<<<<< HEAD
     owner_id INTEGER,
     rejection_reason TEXT,
     FOREIGN KEY (owner_id) REFERENCES user(user_id)
+=======
+    owner_id INTEGER NOT NULL
+>>>>>>> feature/member3
 );
 
 -- (Member 3 will write the CREATE TABLE service here...)
@@ -41,7 +45,7 @@ CREATE TABLE IF NOT EXISTS counter (
     counter_id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
-    counter_status TEXT NOT NULL DEFAULT 'Closed',
+    counter_status TEXT NOT NULL DEFAULT 'closed',
     FOREIGN KEY (store_id)
     REFERENCES store(store_id)
 );
