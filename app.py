@@ -1603,4 +1603,5 @@ def get_staff_dashboard(store_id):
 if __name__ == '__main__':
     with app.app_context():
         create_admin()
+        init_db()
     socketio.run(app, debug=True, port=5000)
