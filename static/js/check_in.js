@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
               "Queue number obtained successfully! Your queue number is: " +
                 data.queue_number,
             );
-            window.location.href = `/dashboard?queue_id=${data.queue_id}`; // Redirect to the dashboard with queue_id
+            window.location.replace(`/dashboard?queue_id=${data.queue_id}`); // Redirect to the dashboard with queue_id
           }
         })
         .catch((error) => {
@@ -73,8 +73,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!apptId) {
         apptId = prompt(
-          "Welcome to check-in! Please enter your Appointment ID:",
+          "Welcome to check-in! Please enter your Appointment ID (Numbers only):",
         );
+        if (apptId && isNaN(parseInt(apptId))) {
+          alert("Invalid ID format. Please enter number only.");
+          return;
+        }
         if (apptId && currentApptIdInput) {
           currentApptIdInput.value = apptId;
         }

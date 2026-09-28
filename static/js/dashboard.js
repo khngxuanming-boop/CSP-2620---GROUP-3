@@ -144,20 +144,41 @@ document.addEventListener("DOMContentLoaded", function () {
           counterNameEl.innerText = data.counter_name ?? "-";
         }
 
-        lastPeopleAhead = data.people_ahead;
-        lastQueueStatus = data.status;
+        if (lastQueueStatus && lastQueueStatus !== data.status) {
+          if (data.status === "SERVING") {
+            alert(
+              `🎉 It is your turn! Please proceed to ${data.counter_name ?? "the counter"}.`,
+            );
+            showNotification(
+              `Is is your turn at ${data.counter_name ?? "the counter"}!`,
+            );
+          } else if (data.status === "COMPLETED") {
+            alert("✅ Your service is completed. Thank you!");
+          } else if (data.status === "SKIPPED") {
+            alert("⚠️ You have been skipped. Please contact the staff.");
+          } else if (data === "CANCELED") {
+            alert("❌ Your queue has been cancelled.");
+          }
+        }
 
         // Trigger notification: Alert when only 2 people are left
         if (data.status === "WAITING") {
-          if (data.people_ahead === 2 && !hasNotifiedApproaching) {
+          if (
+            data.people_ahead <= 2 &&
+            data.people_ahead > 0 &&
+            !hasNotifiedApproaching
+          ) {
             showNotification(
-              "🔔 Warm reminder: Only 2 people left ahead of you. Please proceed to the service counter.",
+              "🔔 Warm reminder: It is almost your turn! Please proceed to the service counter.",
             );
             hasNotifiedApproaching = true;
           } else if (data.people_ahead > 2) {
             hasNotifiedApproaching = false;
           }
         }
+
+        lastPeopleAhead = data.people_ahead;
+        lastQueueStatus = data.status;
       })
       .catch((error) => console.error("Error fetching queue status:", error));
   }
@@ -197,7 +218,13 @@ document.addEventListener("DOMContentLoaded", function () {
               alert("Failed to cancel queue: " + data.error);
             } else {
               alert("Queue cancelled successfully!");
-              window.location.href = "/stores"; // Redirect to stores page
+              cancelBtn.innerText = "Back to stores";
+              cancelBtn.className = "btn btn-secondary w-100 mt-3";
+              const newBtn = cancelBtn.cloneNode(true);
+              cancelBtn.parentNode.replaceChild(newBtn, cancelBtn);
+              newBtn.addEventListener("click", function () {
+                window.location.href = "/stores";
+              });
             }
           })
           .catch((error) => {

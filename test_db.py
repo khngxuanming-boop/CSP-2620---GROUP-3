@@ -11,11 +11,11 @@ cur = connection.cursor()
 # Adding test values
 
 # Create store owner
-cur.execute("INSERT INTO user (username, password, role) VALUES ('testowner', 'password123', 'OWNER')")
+cur.execute("INSERT INTO user (username, password, role) VALUES ('testowner', 'password123', 'STAFF')")
 owner_id = cur.lastrowid
 
 # Create customer
-cur.execute("INSERT INTO user (username, password, role) VALUES ('testuser', 'password123', 'CUSTOMER')")
+cur.execute("INSERT INTO user (username, password, role, email) VALUES ('testuser', 'password123', 'CUSTOMER', 'egenekwang@gmail.com')")
 user_id = cur.lastrowid
 
 # Create store
@@ -29,7 +29,7 @@ store_id = cur.lastrowid
 cur.execute("INSERT INTO service (store_id, service_name) VALUES (?, 'Card Authentication')", (store_id,))
 service_id = cur.lastrowid
 
-cur.execute("INSERT INTO counter (store_id, counter_name, counter_status) VALUES (?, 'Counter 1', 'OPEN')", (store_id,))
+cur.execute("INSERT INTO counter (store_id, counter_name, counter_status) VALUES (?, 'Counter 1', 'open')", (store_id,))
 counter_id = cur.lastrowid
 
 # cur.execute("INSERT INTO appointment (user_id, service_id, appt_datetime, appt_status) VALUES (?, ?, '2026-09-20 14:00:00', 'BOOKED')", (user_id, service_id))
