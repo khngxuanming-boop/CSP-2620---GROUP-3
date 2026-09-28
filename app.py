@@ -1405,7 +1405,8 @@ def call_next_customer(counter_id):
         (queue['queue_id'],)
     ).fetchone()
 
-
+    socketio.emit('queue_status_updated', {'queue_id': queue['queue_id']}, to=f"store_{counter['store_id']}")
+    
     return jsonify({
         'message': 'Next customer called successfully',
         'queue': dict(updated_queue)
