@@ -88,3 +88,12 @@ CREATE TABLE IF NOT EXISTS notification (
     is_read BOOLEAN DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES user(user_id)
 );
+
+CREATE TRIGGER IF NOT EXISTS log_queue_status_change
+AFTER UPDATE OF queue_status ON queue
+FOR EACH ROW
+WHEN OLD.queue_status != NEW.queue_status
+BEGIN
+    INSERT INTO queue_history (queue_id, status_changed_to)
+    VALUES (NEW.queue_id, NEW.queue_status);
+END;

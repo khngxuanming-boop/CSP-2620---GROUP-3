@@ -678,7 +678,7 @@ def get_my_queue_status():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name, s.store_id, s.service_name, st.store_name
+            SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name, s.store_id, s.service_name, st.store_name, st.estimated_wait_time
             FROM queue q
             LEFT JOIN counter c ON q.counter_id = c.counter_id
             JOIN service s ON q.service_id = s.service_id
@@ -713,7 +713,9 @@ def get_my_queue_status():
             (my_queue['service_id'], queue_id)
         )
         people_ahead = cursor.fetchone()['people_ahead']
-        wait_time = (people_ahead + 1) * 5  # Assuming each customer takes 5 minutes
+        db_time = my_queue['estimated_wait_time']
+        per_person_time = db_time if db_time else 5
+        wait_time = (people_ahead + 1) * per_person_time
 
         return jsonify({
             'queue_number': queue_number,
@@ -1367,6 +1369,31 @@ def call_next_customer(counter_id):
     )
 
     conn.commit()
+
+    # Member 2 (Eugene): Notification thorugh email
+    user_info = conn.execute(
+        """
+        SELECT u.email, u.username, c.counter_name, s.store_name
+        FROM queue q
+        JOIN user u ON q.user_id = u.user_id
+        JOIN counter c ON c.counter_id = ?
+        JOIN service serv ON q.service_id = serv.service_id
+        JOIN store s ON serv.store_id = s.store_id
+        WHERE q.queue_id = ?
+        """,
+        (counter_id, queue['queue_id'])
+    ).fetchone()
+
+    if user_info and user_info['email']:
+        try:
+            msg = Message(
+                f"It's your turn at {user_info['store_name']}!",
+                recipients=[user_info['email']]
+            )
+            msg.body = f"Hello {user_info['username']},\n\nIt is now your turn! Please proceed to {user_info['counter_name']} immediately.\n\nThank you for using Queues!"
+            mail.send(msg)
+        except Exception as e:
+            print(f"Failed to send turn notification email: {e}")
 
     # Get updated queue
     updated_queue = conn.execute(
