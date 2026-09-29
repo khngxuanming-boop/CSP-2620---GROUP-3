@@ -357,7 +357,6 @@ def forgot_password():
             except Exception as e:
                 print(f"Failed to send reset email: {e}")
 
-        conn.close()
         message = "If that email is registered, a reset link has been sent."
 
     return render_template('forgot_password.html', message=message)
@@ -369,7 +368,6 @@ def reset_password(token):
     user = conn.execute('SELECT * FROM user WHERE reset_token = ?', (token,)).fetchone()
 
     if not user:
-        conn.close()
         return "Invalid or expired reset link."
 
     expiry = datetime.fromisoformat(user['reset_token_expire'])
@@ -386,10 +384,8 @@ def reset_password(token):
             (new_password, user['user_id'])
         )
         conn.commit()
-        conn.close()
         return redirect(url_for('login'))
 
-    conn.close()
     return render_template('reset_password.html', error=error, token=token)
 
 
@@ -402,7 +398,6 @@ def my_store():
     stores = conn.execute(
         'SELECT * FROM store WHERE owner_id = ?', (session['user_id'],)
     ).fetchall()
-    conn.close()
 
     return render_template('my_store.html', stores=stores, username=session.get('username'))
 
@@ -562,8 +557,6 @@ def create_appointment():
         return jsonify({'message': 'Appointment created successfully!', 'appointment_id': appt_id}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # POST /api/queues/walk-in
 @app.route('/api/queues/walk-in', methods=['POST'])
@@ -614,8 +607,6 @@ def walk_in_queue():
         return jsonify({'message': 'Successfully joined the walk-in queue!', 'queue_id': queue_id, 'queue_number': queue_number}),201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # PUT /api/appointments/<appt_id>/check-in
 @app.route('/api/appointments/<int:appt_id>/check-in', methods=['PUT'])
@@ -664,8 +655,6 @@ def check_in_appointment(appt_id):
         return jsonify({'message': 'Appointment checked in successfully!', 'queue_id': queue_id, 'queue_number': queue_number}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # GET /api/queues/my-status
 @app.route('/api/queues/my-status', methods=['GET'])
@@ -729,8 +718,6 @@ def get_my_queue_status():
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # GET /api/notifications
 @app.route('/api/notifications', methods=['GET'])
@@ -761,8 +748,6 @@ def get_notification():
         ]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # Page Routes
 @app.route('/booking')
