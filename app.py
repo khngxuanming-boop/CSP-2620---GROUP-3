@@ -408,41 +408,86 @@ def register_store():
         return redirect(url_for('login'))
     conn = get_db_connection()
 
-    # Check whether this staff already has a proposal
     existing_store = conn.execute(
-           """
-           SELECT *
-           FROM store
-           WHERE owner_id = ?
-           ORDER BY store_id DESC
-           LIMIT 1
-           """,
-           (session['user_id'],)
-     ).fetchone()
+        """
+        SELECT * FROM store WHERE owner_id = ?
+        ORDER BY store_id DESC LIMIT 1
+        """,
+        (session['user_id'],)
+    ).fetchone()
 
-    # If they already have a proposal, don't create another one
     if existing_store:
+        return redirect(url_for('staff_status'))
+
+    if request.method == 'POST':
+        store_name = request.form['name']
+        hours = request.form['hours']
+        description = request.form.get('description', '')
+
+        conn.execute(
+            """
+            INSERT INTO store
+            (store_name, operating_hours, store_status, owner_id, store_description)
+            VALUES (?, ?, 'PENDING', ?, ?)
+            """,
+            (store_name, hours, session['user_id'], description)
+        )
+        conn.commit()
+
+        return redirect(url_for('staff_status'))
+
+    return render_template('register_store.html')
+
+# Edit Store Proposal 
+@app.route('/edit-store/<int:store_id>', methods=['GET', 'POST'])
+def edit_store(store_id):
+
+    if session.get('role') != 'STAFF':
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+
+    # Get the store belonging to the logged-in staff
+    store = conn.execute(
+        """
+        SELECT *
+        FROM store
+        WHERE store_id = ?
+        AND owner_id = ?
+        """,
+        (store_id, session['user_id'])
+    ).fetchone()
+
+    if not store:
+        return "Store not found or you do not have access.", 403
+
+    # Only rejected proposals can be edited
+    if store['store_status'] != 'REJECTED':
         return redirect(url_for('staff_status'))
 
     if request.method == 'POST':
 
         store_name = request.form['name']
         hours = request.form['hours']
+        description = request.form.get('description', '')
 
+        # Update proposal and send it back to PENDING
         conn.execute(
             """
-            INSERT INTO store
-            (
-                store_name,
-                operating_hours,
-                store_status,
-                owner_id
-            )
-            VALUES (?, ?, 'PENDING', ?)
+            UPDATE store
+            SET store_name = ?,
+                operating_hours = ?,
+                store_description = ?,
+                store_status = 'PENDING',
+                rejection_reason = NULL
+            WHERE store_id = ?
+            AND owner_id = ?
             """,
             (
                 store_name,
                 hours,
+                description,
+                store_id,
                 session['user_id']
             )
         )
@@ -451,8 +496,10 @@ def register_store():
 
         return redirect(url_for('staff_status'))
 
-
-    return render_template('register_store.html')
+    return render_template(
+        'edit_store.html',
+        store=store
+    )
 
 @app.route('/staff/status')
 def staff_status():
@@ -1209,50 +1256,46 @@ def delete_store(store_id):
 # Store approval or rejection by admin
 @app.route('/api/stores/<int:store_id>/status', methods=['PATCH'])
 def update_store_status(store_id):
-
     if session.get('role') != 'ADMIN':
-        return jsonify({
-            'error': 'Admin access required'
-        }), 403
+        return jsonify({'error': 'Admin access required'}), 403
 
     data = request.get_json() or {}
-
     new_status = data.get('store_status')
+    rejection_reason = data.get('rejection_reason', '').strip()
 
     if new_status not in ['PENDING', 'APPROVED', 'REJECTED']:
-        return jsonify({
-            'error': 'Invalid store status'
-        }), 400
+        return jsonify({'error': 'Invalid store status'}), 400
+
+    if new_status == 'REJECTED' and not rejection_reason:
+        return jsonify({'error': 'A rejection reason is required'}), 400
 
     conn = get_db_connection()
 
     store = conn.execute(
-        """
-        SELECT *
-        FROM store
-        WHERE store_id = ?
-        """,
-        (store_id,)
+        'SELECT * FROM store WHERE store_id = ?', (store_id,)
     ).fetchone()
 
     if not store:
-        return jsonify({
-            'error': 'Store not found'
-        }), 404
+        return jsonify({'error': 'Store not found'}), 404
 
+    # Clear any old rejection reason when approving; save the new one when rejecting
     conn.execute(
         """
         UPDATE store
-        SET store_status = ?
+        SET store_status = ?,
+            rejection_reason = ?
         WHERE store_id = ?
         """,
-        (
-            new_status,
-            store_id
-        )
+        (new_status, rejection_reason if new_status == 'REJECTED' else None, store_id)
     )
-
     conn.commit()
+
+    # Let the staff member know why, via your existing notification system
+    create_notification(
+        store['owner_id'],
+        f"Your store '{store['store_name']}' was {new_status.lower()}."
+        + (f" Reason: {rejection_reason}" if new_status == 'REJECTED' else "")
+    )
 
     return jsonify({
         'message': 'Store status updated successfully',

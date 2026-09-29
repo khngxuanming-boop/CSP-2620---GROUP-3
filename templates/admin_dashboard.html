@@ -1002,52 +1002,58 @@
 
                         proposalRow.innerHTML = `
 
-                    <td>
-                        ${store.store_id}
-                    </td>
-
-                    <td>
-                        <strong>
-                            ${store.store_name}
-                        </strong>
-                    </td>
-
-                    <td>
-                        ${store.operating_hours || '-'}
-                    </td>
-
-                    <td>
-                        <span class="status status-pending">
-                            PENDING
-                        </span>
-                    </td>
-
-                    <td>
-
-                        <button
-                            class="btn btn-sm approve-btn"
-                            onclick="approveStore(
-                                ${store.store_id}
-                            )">
-
-                            Approve
-
-                        </button>
+                    proposalRow.innerHTML = `
+                        proposalRow.innerHTML = `
 
 
-                        <button
-                            class="btn btn-sm reject-btn"
-                            onclick="rejectStore(
-                                ${store.store_id}
-                            )">
 
-                            Reject
+                     <td>
+        ${store.store_id}
+    </td>
 
-                        </button>
+    <td>
+        <strong>
+            ${store.store_name}
+        </strong>
+        ${store.store_description ? `<br><small class="text-muted">${store.store_description}</small>` : ''}
+    </td>
 
-                    </td>
+    <td>
+        ${store.operating_hours || '-'}
+    </td>
 
-                `;
+    <td>
+        <span class="status status-pending">
+            PENDING
+        </span>
+    </td>
+
+    <td>
+
+        <button
+            class="btn btn-sm approve-btn"
+            onclick="approveStore(
+                ${store.store_id}
+            )">
+
+            Approve
+
+        </button>
+
+
+        <button
+            class="btn btn-sm reject-btn"
+            onclick="rejectStore(
+                ${store.store_id}
+            )">
+
+            Reject
+
+        </button>
+
+    </td>
+
+`;
 
 
                         proposalTable.appendChild(
@@ -1158,7 +1164,43 @@
         }
 
 
+        async function rejectStore(storeId) {
+            const reason = prompt('Please provide a reason for rejecting this store:');
 
+            // If they cancel the prompt, or leave it blank, stop here
+            if (!reason || !reason.trim()) {
+                if (reason !== null) {
+                    alert('A rejection reason is required.');
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/api/stores/${storeId}/status`,
+                    {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            store_status: 'REJECTED',
+                            rejection_reason: reason.trim()
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Store proposal rejected.');
+                    loadStores();
+                } else {
+                    alert(data.error || 'Unable to reject store.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred.');
+            }
+        }
         /* =====================================================
            STATUS BADGE
         ===================================================== */
