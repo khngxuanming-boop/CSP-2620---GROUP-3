@@ -19,8 +19,11 @@ CREATE TABLE IF NOT EXISTS store (
     store_status TEXT DEFAULT 'PENDING',
     operating_hours TEXT,
     estimated_wait_time INTEGER DEFAULT 0,
-    owner_id INTEGER NOT NULL
+    owner_id INTEGER NOT NULL,
+    store_description TEXT,        
+    rejection_reason TEXT          
 );
+
 
 -- (Member 3 will write the CREATE TABLE service here...)
 
