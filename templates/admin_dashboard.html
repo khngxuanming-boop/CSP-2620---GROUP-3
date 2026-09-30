@@ -7,101 +7,202 @@
 
     <title>Admin Dashboard | Queue Management System</title>
 
-    <!-- Bootstrap -->
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 & Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <!-- Main CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-        body {
-            background: #f0f2f5;
-            color: #2b2d42;
+        :root {
+            --admin-primary: #0f172a;
+            --admin-secondary: #1e293b;
+            --admin-accent: #3b82f6;
+            --admin-bg: #f8fafc;
+            --admin-card: #ffffff;
+            --admin-text: #0f172a;
+            --admin-muted: #64748b;
+            --admin-border: #e2e8f0;
+
+            --status-pending-bg: #fef3c7;
+            --status-pending-text: #d97706;
+            --status-approved-bg: #dcfce7;
+            --status-approved-text: #15803d;
+            --status-rejected-bg: #fee2e2;
+            --status-rejected-text: #b91c1c;
+
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
         }
 
-        /* ================= NAVBAR ================= */
+        body {
+            background-color: var(--admin-bg) !important;
+            color: var(--admin-text);
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
 
+        /* NAVBAR */
         .admin-navbar {
-            background: #3a4750;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
-            padding: 16px 35px;
+            padding: 12px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .brand-title {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
             margin: 0;
+            line-height: 1.2;
         }
 
         .brand-subtitle {
             font-size: 12px;
-            opacity: 0.75;
+            color: #94a3b8;
+            margin-top: 2px;
         }
 
         .admin-user {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .admin-avatar {
             width: 38px;
             height: 38px;
             border-radius: 50%;
-            background: #5c6b73;
+            background: linear-gradient(135deg, #475569, #334155);
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .admin-user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
         }
 
         .logout-btn {
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            text-decoration: none;
         }
 
         .logout-btn:hover {
-            background: white;
-            color: #3a4750;
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
         }
 
+        /* SUB-NAVIGATION */
+        .admin-navigation {
+            background: #ffffff;
+            padding: 8px 32px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--admin-border);
+            overflow-x: auto;
+        }
 
-        /* ================= MAIN ================= */
+        .nav-btn {
+            border: none;
+            background: transparent;
+            color: var(--admin-muted);
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
 
+        .nav-btn:hover {
+            background: var(--admin-bg);
+            color: var(--admin-text);
+        }
+
+        .nav-btn.active {
+            background: var(--admin-accent);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+        }
+
+        /* MAIN CONTAINER */
         .dashboard {
-            padding: 35px;
-            max-width: 1500px;
+            padding: 32px;
+            max-width: 1400px;
             margin: auto;
         }
 
         .welcome-section {
-            margin-bottom: 30px;
+            background: linear-gradient(135deg, #ffffff, #f1f5f9);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
         }
 
         .welcome-section h2 {
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-weight: 800;
+            font-size: 26px;
+            letter-spacing: -0.5px;
+            color: var(--admin-text);
+            margin-bottom: 6px;
         }
 
         .welcome-section p {
-            color: #7b8895;
+            color: var(--admin-muted);
             margin: 0;
+            font-size: 15px;
         }
 
-
-        /* ================= STAT CARDS ================= */
-
+        /* STAT CARDS */
         .stat-card {
-            background: white;
-            border-radius: 15px;
-            padding: 22px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-            transition: 0.2s;
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             height: 100%;
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
         }
 
         .stat-header {
@@ -111,170 +212,183 @@
         }
 
         .stat-label {
-            color: #7b8895;
-            font-size: 14px;
+            color: var(--admin-muted);
+            font-size: 13.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .stat-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: #f0f2f5;
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
         }
 
+        .icon-stores { background: #eff6ff; color: #2563eb; }
+        .icon-pending { background: #fef3c7; color: #d97706; }
+        .icon-waiting { background: #e0e7ff; color: #4f46e5; }
+        .icon-serving { background: #dcfce7; color: #16a34a; }
+
         .stat-value {
-            font-size: 30px;
-            font-weight: 700;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
             margin-top: 12px;
+            color: var(--admin-text);
+            line-height: 1;
         }
 
-
-        /* ================= CARD ================= */
-
+        /* CARD CONTAINERS */
         .dashboard-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 25px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
         }
 
         .card-title {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: var(--admin-text);
             margin-bottom: 4px;
         }
 
         .card-description {
-            color: #7b8895;
-            font-size: 13px;
+            color: var(--admin-muted);
+            font-size: 13.5px;
         }
 
-
-        /* ================= PROPOSAL ================= */
-
+        /* PROPOSALS SPECIAL STYLING */
         .proposal-card {
-            border-top: 4px solid #d99a2b;
+            border-top: 4px solid var(--admin-accent);
         }
 
         .proposal-badge {
-            background: #fff3cd;
-            color: #856404;
-            padding: 7px 12px;
+            background: var(--status-pending-bg);
+            color: var(--status-pending-text);
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
         .approve-btn {
-            background: #198754;
+            background: #16a34a;
             border: none;
             color: white;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-weight: 600;
+            font-size: 12.5px;
+            transition: all 0.2s;
         }
 
         .approve-btn:hover {
-            background: #157347;
+            background: #15803d;
             color: white;
         }
 
         .reject-btn {
-            background: #dc3545;
+            background: #dc2626;
             border: none;
             color: white;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-weight: 600;
+            font-size: 12.5px;
+            transition: all 0.2s;
         }
 
         .reject-btn:hover {
-            background: #bb2d3b;
+            background: #b91c1c;
             color: white;
         }
 
-
-        /* ================= STATUS ================= */
-
+        /* STATUS BADGES */
         .status {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .status-pending {
-            background: #fff3cd;
-            color: #856404;
+            background: var(--status-pending-bg);
+            color: var(--status-pending-text);
         }
 
-        .status-approved {
-            background: #d1e7dd;
-            color: #0f5132;
+        .status-approved, .status-open {
+            background: var(--status-approved-bg);
+            color: var(--status-approved-text);
         }
 
-        .status-rejected {
-            background: #f8d7da;
-            color: #842029;
+        .status-rejected, .status-closed {
+            background: var(--status-rejected-bg);
+            color: var(--status-rejected-text);
         }
 
-        .status-open {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .status-closed {
-            background: #e9ecef;
-            color: #495057;
-        }
-
-
-        /* ================= TABLE ================= */
-
+        /* TABLES */
         .table {
             margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
         .table th {
-            color: #7b8895;
-            font-size: 13px;
-            font-weight: 600;
-            border-bottom: 1px solid #e9ecef;
+            background: #f8fafc;
+            color: var(--admin-muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--admin-border);
         }
 
         .table td {
             vertical-align: middle;
-            padding: 15px 10px;
+            padding: 16px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
         }
 
         .table tr:last-child td {
             border-bottom: none;
         }
 
+        .table-hover tbody tr:hover {
+            background-color: #f8fafc;
+        }
 
-        /* ================= QUEUE ================= */
-
+        /* QUEUE BADGE */
         .queue-number {
-            font-size: 18px;
+            font-family: monospace;
+            font-size: 15px;
             font-weight: 700;
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: #334155;
         }
 
-        .queue-waiting {
-            color: #d99a2b;
-        }
-
-        .queue-serving {
-            color: #198754;
-        }
-
-
-        /* ================= ACTIVITY ================= */
-
+        /* ACTIVITY ITEMS */
         .activity-item {
             display: flex;
-            gap: 15px;
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
         .activity-item:last-child {
@@ -282,167 +396,134 @@
         }
 
         .activity-icon {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: #f0f2f5;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            color: var(--admin-accent);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 18px;
         }
 
         .activity-text {
             font-size: 14px;
+            font-weight: 600;
+            color: var(--admin-text);
         }
 
         .activity-time {
-            font-size: 12px;
-            color: #7b8895;
+            font-size: 12.5px;
+            color: var(--admin-muted);
         }
 
-
-        /* ================= EMPTY ================= */
-
+        /* EMPTY MESSAGE */
         .empty-message {
             text-align: center;
-            padding: 35px;
-            color: #7b8895;
+            padding: 48px !important;
+            color: var(--admin-muted);
+            font-size: 14px;
         }
 
-
-        /* ================= ADMIN NAVIGATION ================= */
-
-        .admin-navigation {
-            background: white;
-            padding: 12px 35px;
-            display: flex;
-            gap: 10px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .nav-btn {
-            border: none;
-            background: transparent;
-            color: #5c6b73;
-            padding: 10px 18px;
+        /* BUTTONS */
+        .btn-outline-secondary {
+            border-color: var(--admin-border);
+            color: var(--admin-muted);
+            font-weight: 600;
             border-radius: 8px;
-            cursor: pointer;
         }
 
-        .nav-btn:hover {
-            background: #f0f2f5;
+        .btn-outline-secondary:hover {
+            background: #f1f5f9;
+            color: var(--admin-text);
+            border-color: #cbd5e1;
         }
 
-        .nav-btn.active {
-            background: #3a4750;
-            color: white;
-        }
-
-
-        /* ================= RESPONSIVE ================= */
-
+        /* RESPONSIVE */
         @media (max-width: 768px) {
-
             .dashboard {
-                padding: 20px;
+                padding: 16px;
             }
 
             .admin-navbar {
-                padding: 15px 20px;
+                padding: 12px 16px;
             }
 
-            .admin-user span {
+            .admin-navigation {
+                padding: 8px 16px;
+            }
+
+            .admin-user-name {
                 display: none;
             }
 
-        }
-
-        /* ================= RESPONSIVE ================= */
-
-        @media (max-width: 768px) {
-
-            .dashboard {
+            .welcome-section {
                 padding: 20px;
             }
 
-            .admin-navbar {
-                padding: 15px 20px;
+            .stat-value {
+                font-size: 2rem;
             }
-
-            .admin-user span {
-                display: none;
-            }
-
         }
     </style>
 
 </head>
 
-
 <body>
 
-    <!-- NAVIGATION BAR -->
-
-
+    <!-- NAVBAR -->
     <nav class="admin-navbar">
-
         <div class="d-flex justify-content-between align-items-center">
-
-            <div>
-                <div class="brand-title">
-                    Queue Management System
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
                 </div>
-
-                <div class="brand-subtitle">
-                    Administrator Control Center
+                <div>
+                    <div class="brand-title">Queue Management System</div>
+                    <div class="brand-subtitle">Administrator Control Center</div>
                 </div>
             </div>
-
 
             <div class="admin-user">
-
                 <div class="admin-avatar">
-                    A
+                    {{ session.get('username', 'A')[0] | upper }}
                 </div>
-
-                <span>
+                <span class="admin-user-name">
                     {{ session.get('username', 'Admin') }}
                 </span>
-
-                <a href="{{ url_for('logout') }}" class="btn btn-sm logout-btn">
-                    Logout
+                <a href="{{ url_for('logout') }}" class="logout-btn">
+                    <i class="bi bi-box-arrow-right me-1"></i> Logout
                 </a>
-
             </div>
-
         </div>
-
     </nav>
 
-    <!-- ================= ADMIN NAVIGATION ================= -->
-
+    <!-- ADMIN NAVIGATION -->
     <div class="admin-navigation">
-
         <button class="nav-btn active" onclick="showSection('dashboard', this)">
-            📊 Dashboard
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
         </button>
 
         <button class="nav-btn" onclick="showSection('proposals', this)">
-            📋 Store Proposals
+            <i class="bi bi-file-earmark-text"></i> Store Proposals
         </button>
 
         <button class="nav-btn" onclick="showSection('stores', this)">
-            🏪 Stores
+            <i class="bi bi-shop"></i> Stores
         </button>
 
         <button class="nav-btn" onclick="showSection('queues', this)">
-            🎫 Queue Monitor
+            <i class="bi bi-display"></i> Queue Monitor
         </button>
 
         <button class="nav-btn" onclick="showSection('history', this)">
-            📜 Queue History
+            <i class="bi bi-clock-history"></i> Queue History
         </button>
 
+        <button class="nav-btn" onclick="showSection('activity', this)">
+            <i class="bi bi-activity"></i> Recent Activity
+        </button>
     </div>
 
     <main class="dashboard">
@@ -452,16 +533,9 @@
 
             <!-- WELCOME -->
             <section class="welcome-section">
-
                 <h2>Admin Dashboard</h2>
-
-                <p>
-                    Manage store proposals and monitor the overall
-                    queue management system.
-                </p>
-
+                <p>Manage store proposals and monitor the overall queue management system.</p>
             </section>
-
 
             <!-- SUMMARY CARDS -->
             <div class="row g-4">
@@ -469,653 +543,353 @@
                 <!-- Total Stores -->
                 <div class="col-lg-3 col-md-6">
                     <div class="stat-card">
-
                         <div class="stat-header">
-                            <div class="stat-label">
-                                Total Stores
-                            </div>
-
-                            <div class="stat-icon">
-                                🏪
+                            <div class="stat-label">Total Stores</div>
+                            <div class="stat-icon icon-stores">
+                                <i class="bi bi-shop"></i>
                             </div>
                         </div>
-
-                        <div class="stat-value" id="totalStores">
-                            0
-                        </div>
-
-                        <small class="text-muted">
-                            Registered stores
-                        </small>
-
+                        <div class="stat-value" id="totalStores">0</div>
+                        <small class="text-muted d-block mt-2">Registered stores</small>
                     </div>
                 </div>
-
 
                 <!-- Pending -->
                 <div class="col-lg-3 col-md-6">
                     <div class="stat-card">
-
                         <div class="stat-header">
-                            <div class="stat-label">
-                                Pending Proposals
-                            </div>
-
-                            <div class="stat-icon">
-                                📋
+                            <div class="stat-label">Pending Proposals</div>
+                            <div class="stat-icon icon-pending">
+                                <i class="bi bi-file-earmark-text"></i>
                             </div>
                         </div>
-
-                        <div class="stat-value" id="pendingProposals">
-                            0
-                        </div>
-
-                        <small class="text-muted">
-                            Awaiting approval
-                        </small>
-
+                        <div class="stat-value" id="pendingProposals">0</div>
+                        <small class="text-muted d-block mt-2">Awaiting approval</small>
                     </div>
                 </div>
-
 
                 <!-- Waiting -->
                 <div class="col-lg-3 col-md-6">
                     <div class="stat-card">
-
                         <div class="stat-header">
-                            <div class="stat-label">
-                                Customers Waiting
-                            </div>
-
-                            <div class="stat-icon">
-                                👥
+                            <div class="stat-label">Customers Waiting</div>
+                            <div class="stat-icon icon-waiting">
+                                <i class="bi bi-people"></i>
                             </div>
                         </div>
-
-                        <div class="stat-value" id="waitingCustomers">
-                            0
-                        </div>
-
-                        <small class="text-muted">
-                            Active waiting queues
-                        </small>
-
+                        <div class="stat-value" id="waitingCustomers">0</div>
+                        <small class="text-muted d-block mt-2">Active waiting queues</small>
                     </div>
                 </div>
-
 
                 <!-- Serving -->
                 <div class="col-lg-3 col-md-6">
                     <div class="stat-card">
-
                         <div class="stat-header">
-                            <div class="stat-label">
-                                Customers Serving
-                            </div>
-
-                            <div class="stat-icon">
-                                🎫
+                            <div class="stat-label">Customers Serving</div>
+                            <div class="stat-icon icon-serving">
+                                <i class="bi bi-ticket-perforated"></i>
                             </div>
                         </div>
-
-                        <div class="stat-value" id="servingCustomers">
-                            0
-                        </div>
-
-                        <small class="text-muted">
-                            Currently being served
-                        </small>
-
+                        <div class="stat-value" id="servingCustomers">0</div>
+                        <small class="text-muted d-block mt-2">Currently being served</small>
                     </div>
-                </div>
-
-            </div>
-
-
-            <!-- RECENT ACTIVITY -->
-            <div class="dashboard-card">
-
-                <div class="card-title">
-                    Recent Activity
-                </div>
-
-                <div class="card-description mb-3">
-                    Latest system activities.
-                </div>
-
-                <div id="activityList">
-
-                    <div class="activity-item">
-
-                        <div class="activity-icon">
-                            📋
-                        </div>
-
-                        <div>
-
-                            <div class="activity-text">
-                                Loading activities...
-                            </div>
-
-                            <div class="activity-time">
-                                Please wait
-                            </div>
-
-                        </div>
-
-                    </div>
-
                 </div>
 
             </div>
 
         </div>
 
+        <!-- ================= RECENT ACTIVITY ================= -->
+        <div id="activity-section" class="admin-section" style="display: none;">
+            <div class="dashboard-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="card-title">Recent Activity</div>
+                        <div class="card-description">Latest system activities and logs.</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadActivity()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                    </button>
+                </div>
+
+                <div id="activityList">
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="bi bi-info-circle"></i>
+                        </div>
+                        <div>
+                            <div class="activity-text">Loading activities...</div>
+                            <div class="activity-time">Please wait</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- ================= STORE PROPOSALS ================= -->
         <div id="proposals-section" class="admin-section" style="display: none;">
-
             <div class="dashboard-card proposal-card">
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
-
                     <div>
-
-                        <div class="card-title">
-                            Store Registration Proposals
-                        </div>
-
-                        <div class="card-description">
-                            Review store registration requests submitted
-                            by store owners.
-                        </div>
-
+                        <div class="card-title">Store Registration Proposals</div>
+                        <div class="card-description">Review store registration requests submitted by store owners.</div>
                     </div>
-
-                    <span class="proposal-badge">
-                        Pending Review
-                    </span>
-
+                    <span class="proposal-badge">Pending Review</span>
                 </div>
 
-
                 <div class="table-responsive">
-
-                    <table class="table table-hover">
-
+                    <table class="table table-hover align-middle">
                         <thead>
-
                             <tr>
                                 <th>Store ID</th>
                                 <th>Store Name</th>
                                 <th>Operating Hours</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th class="text-end">Action</th>
                             </tr>
-
                         </thead>
-
                         <tbody id="proposalTable">
-
                             <tr>
-
                                 <td colspan="5" class="empty-message">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                     Loading proposals...
                                 </td>
-
                             </tr>
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
         </div>
-
 
         <!-- ================= STORES ================= -->
         <div id="stores-section" class="admin-section" style="display: none;">
-
             <div class="dashboard-card">
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
-
                     <div>
-
-                        <div class="card-title">
-                            Store Overview
-                        </div>
-
-                        <div class="card-description">
-                            Current status of registered stores.
-                        </div>
-
+                        <div class="card-title">Store Overview</div>
+                        <div class="card-description">Current status of registered stores.</div>
                     </div>
-
                     <button class="btn btn-sm btn-outline-secondary" onclick="loadStores()">
-
-                        Refresh
-
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
-
                 </div>
 
-
                 <div class="table-responsive">
-
-                    <table class="table table-hover">
-
+                    <table class="table table-hover align-middle">
                         <thead>
-
                             <tr>
                                 <th>Store</th>
                                 <th>Status</th>
                                 <th>Operating Hours</th>
                                 <th>Wait Time</th>
                             </tr>
-
                         </thead>
-
                         <tbody id="storeTable">
-
                             <tr>
-
                                 <td colspan="4" class="empty-message">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                     Loading stores...
                                 </td>
-
                             </tr>
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
         </div>
-
 
         <!-- ================= QUEUE MONITOR ================= -->
         <div id="queues-section" class="admin-section" style="display: none;">
-
             <div class="dashboard-card">
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
-
                     <div>
-
-                        <div class="card-title">
-                            Live Queue Monitoring
-                        </div>
-
-                        <div class="card-description">
-                            Monitor active queues across all stores.
-                        </div>
-
+                        <div class="card-title">Live Queue Monitoring</div>
+                        <div class="card-description">Monitor active queues across all stores.</div>
                     </div>
-
                     <button class="btn btn-sm btn-outline-secondary" onclick="loadQueueMonitor()">
-
-                        Refresh
-
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
-
                 </div>
 
-
                 <div class="table-responsive">
-
-                    <table class="table table-hover">
-
+                    <table class="table table-hover align-middle">
                         <thead>
-
                             <tr>
                                 <th>Store</th>
                                 <th>Counter</th>
                                 <th>Queue Number</th>
                                 <th>Status</th>
                             </tr>
-
                         </thead>
-
                         <tbody id="queueTable">
-
                             <tr>
-
                                 <td colspan="4" class="empty-message">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                     Loading queue information...
                                 </td>
-
                             </tr>
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
         </div>
-
 
         <!-- ================= QUEUE HISTORY ================= -->
         <div id="history-section" class="admin-section" style="display: none;">
-
             <div class="dashboard-card">
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
-
                     <div>
-
-                        <div class="card-title">
-                            Recent Queue History
-                        </div>
-
-                        <div class="card-description">
-                            Recent queue activity recorded by the system.
-                        </div>
-
+                        <div class="card-title">Recent Queue History</div>
+                        <div class="card-description">Recent queue activity recorded by the system.</div>
                     </div>
-
                     <button class="btn btn-sm btn-outline-secondary" onclick="loadHistory()">
-
-                        Refresh
-
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
-
                 </div>
 
-
                 <div class="table-responsive">
-
-                    <table class="table table-hover">
-
+                    <table class="table table-hover align-middle">
                         <thead>
-
                             <tr>
                                 <th>Queue ID</th>
                                 <th>Counter</th>
                                 <th>Status</th>
                                 <th>Time</th>
                             </tr>
-
                         </thead>
-
                         <tbody id="historyTable">
-
                             <tr>
-
                                 <td colspan="4" class="empty-message">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                     Loading history...
                                 </td>
-
                             </tr>
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
         </div>
 
     </main>
-    <!-- =====================================================
-     JAVASCRIPT
-===================================================== -->
 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JAVASCRIPT -->
     <script>
-
-
         /* =====================================================
            LOAD STORES
         ===================================================== */
-
         async function loadStores() {
-
             try {
+                const response = await fetch('/api/stores');
+                const stores = await response.json();
 
-                const response =
-                    await fetch('/api/stores');
-
-                const stores =
-                    await response.json();
-
-
-                const storeTable =
-                    document.getElementById('storeTable');
-
-                const proposalTable =
-                    document.getElementById('proposalTable');
-
+                const storeTable = document.getElementById('storeTable');
+                const proposalTable = document.getElementById('proposalTable');
 
                 storeTable.innerHTML = '';
                 proposalTable.innerHTML = '';
 
-
                 let pending = 0;
 
-
                 if (!stores || stores.length === 0) {
-
                     storeTable.innerHTML = `
-                <tr>
-                    <td colspan="4"
-                        class="empty-message">
-                        No stores found.
-                    </td>
-                </tr>
-            `;
+                        <tr>
+                            <td colspan="4" class="empty-message">
+                                <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
+                                No stores found.
+                            </td>
+                        </tr>
+                    `;
 
                     proposalTable.innerHTML = `
-                <tr>
-                    <td colspan="5"
-                        class="empty-message">
-                        No store proposals.
-                    </td>
-                </tr>
-            `;
+                        <tr>
+                            <td colspan="5" class="empty-message">
+                                <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
+                                No store proposals.
+                            </td>
+                        </tr>
+                    `;
 
-                    document.getElementById(
-                        'totalStores'
-                    ).textContent = 0;
-
-                    document.getElementById(
-                        'pendingProposals'
-                    ).textContent = 0;
-
+                    document.getElementById('totalStores').textContent = 0;
+                    document.getElementById('pendingProposals').textContent = 0;
                     return;
                 }
 
-
                 stores.forEach(store => {
-
-
-                    /* =========================
-                       STORE TABLE
-                    ========================= */
-
-                    const row =
-                        document.createElement('tr');
-
-
+                    /* STORE TABLE */
+                    const row = document.createElement('tr');
                     row.innerHTML = `
-
-                <td>
-                    <strong>
-                        ${store.store_name}
-                    </strong>
-
-                    <br>
-
-                    <small class="text-muted">
-                        ID: ${store.store_id}
-                    </small>
-                </td>
-
-                <td>
-                    ${getStatusBadge(
-                        store.store_status
-                    )}
-                </td>
-
-                <td>
-                    ${store.operating_hours || '-'}
-                </td>
-
-                <td>
-                    ${store.estimated_wait_time || 0}
-                    min
-                </td>
-
-            `;
-
-
+                        <td>
+                            <strong>${store.store_name}</strong>
+                            <br>
+                            <small class="text-muted">ID: #${store.store_id}</small>
+                        </td>
+                        <td>${getStatusBadge(store.store_status)}</td>
+                        <td>${store.operating_hours || '-'}</td>
+                        <td>${store.estimated_wait_time || 0} min</td>
+                    `;
                     storeTable.appendChild(row);
 
-
-
-                    /* =========================
-                       PROPOSALS
-                    ========================= */
-
-                    if (
-                        store.store_status &&
-                        store.store_status.toUpperCase()
-                        === 'PENDING'
-                    ) {
-
+                    /* PROPOSALS */
+                    if (store.store_status && store.store_status.toUpperCase() === 'PENDING') {
                         pending++;
-
-
-                        const proposalRow =
-                            document.createElement('tr');
-
+                        const proposalRow = document.createElement('tr');
 
                         proposalRow.innerHTML = `
-
-                    proposalRow.innerHTML = `
-                        proposalRow.innerHTML = `
-
-
-
-                     <td>
-        ${store.store_id}
-    </td>
-
-    <td>
-        <strong>
-            ${store.store_name}
-        </strong>
-        ${store.store_description ? `<br><small class="text-muted">${store.store_description}</small>` : ''}
-    </td>
-
-    <td>
-        ${store.operating_hours || '-'}
-    </td>
-
-    <td>
-        <span class="status status-pending">
-            PENDING
-        </span>
-    </td>
-
-    <td>
-
-        <button
-            class="btn btn-sm approve-btn"
-            onclick="approveStore(
-                ${store.store_id}
-            )">
-
-            Approve
-
-        </button>
-
-
-        <button
-            class="btn btn-sm reject-btn"
-            onclick="rejectStore(
-                ${store.store_id}
-            )">
-
-            Reject
-
-        </button>
-
-    </td>
-
-`;
-
-
-                        proposalTable.appendChild(
-                            proposalRow
-                        );
-
+                            <td><strong>#${store.store_id}</strong></td>
+                            <td>
+                                <strong>${store.store_name}</strong>
+                                ${store.store_description ? `<br><small class="text-muted">${store.store_description}</small>` : ''}
+                            </td>
+                            <td>${store.operating_hours || '-'}</td>
+                            <td><span class="status status-pending">PENDING</span></td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <button class="btn btn-sm approve-btn" onclick="approveStore(${store.store_id})">
+                                        <i class="bi bi-check-lg me-1"></i> Approve
+                                    </button>
+                                    <button class="btn btn-sm reject-btn" onclick="rejectStore(${store.store_id})">
+                                        <i class="bi bi-x-lg me-1"></i> Reject
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        proposalTable.appendChild(proposalRow);
                     }
-
                 });
 
-
-                document.getElementById(
-                    'totalStores'
-                ).textContent = stores.length;
-
-
-                document.getElementById(
-                    'pendingProposals'
-                ).textContent = pending;
-
+                document.getElementById('totalStores').textContent = stores.length;
+                document.getElementById('pendingProposals').textContent = pending;
 
                 if (pending === 0) {
-
                     proposalTable.innerHTML = `
-                <tr>
-                    <td colspan="5"
-                        class="empty-message">
-                        No pending store proposals.
-                    </td>
-                </tr>
-            `;
-
+                        <tr>
+                            <td colspan="5" class="empty-message">
+                                <i class="bi bi-check2-circle fs-3 d-block mb-2 text-success"></i>
+                                No pending store proposals.
+                            </td>
+                        </tr>
+                    `;
                 }
-
+            } catch (error) {
+                console.error('Error loading stores:', error);
             }
-
-            catch (error) {
-
-                console.error(
-                    'Error loading stores:',
-                    error
-                );
-
-            }
-
         }
-
-
 
         /* =====================================================
            APPROVE STORE
         ===================================================== */
-
         async function approveStore(storeId) {
             if (!confirm('Are you sure you want to approve this store?')) {
                 return;
             }
             try {
                 const response = await fetch(
-                    `/api/stores/${storeId}/status`,   // <-- add /status
+                    `/api/stores/${storeId}/status`,
                     {
-                        method: 'PATCH',                // <-- PATCH, not PUT
+                        method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ store_status: 'APPROVED' })
                     }
@@ -1132,42 +906,12 @@
             }
         }
 
-
-
         /* =====================================================
            REJECT STORE
         ===================================================== */
-
-        async function rejectStore(storeId) {
-            if (!confirm('Are you sure you want to reject this store?')) {
-                return;
-            }
-            try {
-                const response = await fetch(
-                    `/api/stores/${storeId}/status`,   // <-- add /status
-                    {
-                        method: 'PATCH',                // <-- PATCH, not PUT
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ store_status: 'REJECTED' })
-                    }
-                );
-                if (response.ok) {
-                    alert('Store proposal rejected.');
-                    loadStores();
-                } else {
-                    alert('Unable to reject store.');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('An error occurred.');
-            }
-        }
-
-
         async function rejectStore(storeId) {
             const reason = prompt('Please provide a reason for rejecting this store:');
 
-            // If they cancel the prompt, or leave it blank, stop here
             if (!reason || !reason.trim()) {
                 if (reason !== null) {
                     alert('A rejection reason is required.');
@@ -1201,442 +945,194 @@
                 alert('An error occurred.');
             }
         }
+
         /* =====================================================
            STATUS BADGE
         ===================================================== */
-
         function getStatusBadge(status) {
+            if (!status) return '-';
 
-            if (!status) {
-
-                return '-';
-
-            }
-
-
-            const value =
-                status.toUpperCase();
-
+            const value = status.toUpperCase();
 
             if (value === 'PENDING') {
-
-                return `
-            <span class="status status-pending">
-                PENDING
-            </span>
-        `;
-
+                return `<span class="status status-pending">PENDING</span>`;
             }
 
-
-            if (
-                value === 'APPROVED' ||
-                value === 'OPEN'
-            ) {
-
-                return `
-            <span class="status status-approved">
-                ${value}
-            </span>
-        `;
-
+            if (value === 'APPROVED' || value === 'OPEN') {
+                return `<span class="status status-approved">${value}</span>`;
             }
 
-
-            if (
-                value === 'REJECTED' ||
-                value === 'CLOSED'
-            ) {
-
-                return `
-            <span class="status status-rejected">
-                ${value}
-            </span>
-        `;
-
+            if (value === 'REJECTED' || value === 'CLOSED') {
+                return `<span class="status status-rejected">${value}</span>`;
             }
-
 
             return value;
-
         }
-
-
 
         /* =====================================================
            QUEUE MONITOR
         ===================================================== */
-
         async function loadQueueMonitor() {
-
             try {
+                const storesResponse = await fetch('/api/stores');
+                const stores = await storesResponse.json();
 
-                const storesResponse =
-                    await fetch('/api/stores');
-
-                const stores =
-                    await storesResponse.json();
-
-
-                const queueTable =
-                    document.getElementById('queueTable');
-
-
+                const queueTable = document.getElementById('queueTable');
                 queueTable.innerHTML = '';
-
 
                 let waiting = 0;
                 let serving = 0;
                 let foundQueue = false;
 
-
                 for (const store of stores) {
-
-
-                    const counterResponse =
-                        await fetch(
-                            `/api/counters/${store.store_id}`
-                        );
-
-
-                    const counters =
-                        await counterResponse.json();
-
+                    const counterResponse = await fetch(`/api/counters/${store.store_id}`);
+                    const counters = await counterResponse.json();
 
                     for (const counter of counters) {
+                        const queueResponse = await fetch(`/api/counters/${counter.counter_id}/queue`);
+                        const queues = await queueResponse.json();
 
-
-                        const queueResponse =
-                            await fetch(
-                                `/api/counters/${counter.counter_id}/queue`
-                            );
-
-
-                        const queues =
-                            await queueResponse.json();
-
-
-                        if (
-                            !queues ||
-                            queues.length === 0
-                        ) {
-
-                            continue;
-
-                        }
-
+                        if (!queues || queues.length === 0) continue;
 
                         foundQueue = true;
 
-
                         queues.forEach(queue => {
+                            const status = queue.queue_status || queue.status || 'UNKNOWN';
 
-                            const status =
-                                queue.queue_status ||
-                                queue.status ||
-                                'UNKNOWN';
+                            if (status === 'WAITING') waiting++;
+                            if (status === 'SERVING') serving++;
 
-
-                            if (status === 'WAITING') {
-                                waiting++;
-                            }
-
-
-                            if (status === 'SERVING') {
-                                serving++;
-                            }
-
-
-                            const row =
-                                document.createElement('tr');
-
-
+                            const row = document.createElement('tr');
                             row.innerHTML = `
-
-                        <td>
-                            <strong>
-                                ${store.store_name}
-                            </strong>
-                        </td>
-
-                        <td>
-                            ${counter.counter_name}
-                        </td>
-
-                        <td>
-                            <span class="queue-number">
-                                ${queue.queue_number}
-                            </span>
-                        </td>
-
-                        <td>
-                            ${getStatusBadge(status)}
-                        </td>
-
-                    `;
-
-
+                                <td><strong>${store.store_name}</strong></td>
+                                <td>${counter.counter_name}</td>
+                                <td><span class="queue-number">Q-${String(queue.queue_number || queue.queue_id || 0).padStart(3, '0')}</span></td>
+                                <td>${getStatusBadge(status)}</td>
+                            `;
                             queueTable.appendChild(row);
-
                         });
-
                     }
-
                 }
 
-
-                document.getElementById(
-                    'waitingCustomers'
-                ).textContent = waiting;
-
-
-                document.getElementById(
-                    'servingCustomers'
-                ).textContent = serving;
-
+                document.getElementById('waitingCustomers').textContent = waiting;
+                document.getElementById('servingCustomers').textContent = serving;
 
                 if (!foundQueue) {
-
                     queueTable.innerHTML = `
-                <tr>
-                    <td colspan="4"
-                        class="empty-message">
-                        No active queues.
-                    </td>
-                </tr>
-            `;
-
+                        <tr>
+                            <td colspan="4" class="empty-message">
+                                <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
+                                No active queues.
+                            </td>
+                        </tr>
+                    `;
                 }
-
+            } catch (error) {
+                console.error('Queue monitor error:', error);
             }
-
-            catch (error) {
-
-                console.error(
-                    'Queue monitor error:',
-                    error
-                );
-
-            }
-
         }
-
-
 
         /* =====================================================
            QUEUE HISTORY
         ===================================================== */
-
         async function loadHistory() {
-
             try {
+                const response = await fetch('/api/queues/history');
+                const history = await response.json();
 
-                const response =
-                    await fetch(
-                        '/api/queues/history'
-                    );
-
-
-                const history =
-                    await response.json();
-
-
-                const table =
-                    document.getElementById(
-                        'historyTable'
-                    );
-
-
+                const table = document.getElementById('historyTable');
                 table.innerHTML = '';
 
-
-                if (
-                    !history ||
-                    history.length === 0
-                ) {
-
+                if (!history || history.length === 0) {
                     table.innerHTML = `
-                <tr>
-                    <td colspan="4"
-                        class="empty-message">
-                        No queue history found.
-                    </td>
-                </tr>
-            `;
-
+                        <tr>
+                            <td colspan="4" class="empty-message">
+                                <i class="bi bi-clock-history fs-3 d-block mb-2 text-muted"></i>
+                                No queue history found.
+                            </td>
+                        </tr>
+                    `;
                     return;
-
                 }
 
-
-                history
-                    .slice(0, 10)
-                    .forEach(item => {
-
-
-                        const row =
-                            document.createElement('tr');
-
-
-                        row.innerHTML = `
-
-                    <td>
-                        ${item.queue_id || '-'}
-                    </td>
-
-                    <td>
-                        ${item.counter_id || '-'}
-                    </td>
-
-                    <td>
-                        ${getStatusBadge(
-                            item.queue_status ||
-                            item.status
-                        )}
-                    </td>
-
-                    <td>
-                        ${item.updated_at ||
-                            item.created_at ||
-                            '-'}
-                    </td>
-
-                `;
-
-
-                        table.appendChild(row);
-
-                    });
-
+                history.slice(0, 10).forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="queue-number">Q-${String(item.queue_id || 0).padStart(3, '0')}</span></td>
+                        <td>${item.counter_id ? 'Counter #' + item.counter_id : '-'}</td>
+                        <td>${getStatusBadge(item.queue_status || item.status)}</td>
+                        <td class="text-muted small">${item.updated_at || item.created_at || '-'}</td>
+                    `;
+                    table.appendChild(row);
+                });
+            } catch (error) {
+                console.error('History error:', error);
             }
-
-            catch (error) {
-
-                console.error(
-                    'History error:',
-                    error
-                );
-
-            }
-
         }
-
-
 
         /* =====================================================
            RECENT ACTIVITY
         ===================================================== */
-
         function loadActivity() {
-
-            const activity =
-                document.getElementById(
-                    'activityList'
-                );
-
+            const activity = document.getElementById('activityList');
 
             activity.innerHTML = `
-
-        <div class="activity-item">
-
-            <div class="activity-icon">
-                🏪
-            </div>
-
-            <div>
-
-                <div class="activity-text">
-                    Store information updated
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                    <div>
+                        <div class="activity-text">Store information updated</div>
+                        <div class="activity-time">System monitoring</div>
+                    </div>
                 </div>
 
-                <div class="activity-time">
-                    System monitoring
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="bi bi-ticket-perforated"></i>
+                    </div>
+                    <div>
+                        <div class="activity-text">Queue system is active</div>
+                        <div class="activity-time">Live monitoring</div>
+                    </div>
                 </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="activity-item">
-
-            <div class="activity-icon">
-                🎫
-            </div>
-
-            <div>
-
-                <div class="activity-text">
-                    Queue system is active
-                </div>
-
-                <div class="activity-time">
-                    Live monitoring
-                </div>
-
-            </div>
-
-        </div>
-
-    `;
-
+            `;
         }
 
-
-
         /* =====================================================
-           INITIAL LOAD
+           NAVIGATION & TOGGLE SECTION
         ===================================================== */
-
-        loadStores();
-
-        loadQueueMonitor();
-
-        loadHistory();
-
-        loadActivity();
-
-
-        /* =====================================================
-           AUTO REFRESH
-        ===================================================== */
-
-        setInterval(() => {
-
-            loadStores();
-
-            loadQueueMonitor();
-
-            loadHistory();
-
-        }, 5000);
-
         function showSection(section, button) {
-
-            // Hide all sections
             document.querySelectorAll('.admin-section').forEach(function (element) {
                 element.style.display = 'none';
             });
 
-            // Show selected section
-            const selectedSection =
-                document.getElementById(section + '-section');
-
+            const selectedSection = document.getElementById(section + '-section');
             if (selectedSection) {
                 selectedSection.style.display = 'block';
             }
 
-            // Remove active from all navigation buttons
             document.querySelectorAll('.nav-btn').forEach(function (btn) {
                 btn.classList.remove('active');
             });
 
-            // Make clicked button active
             button.classList.add('active');
         }
 
-    </script>
+        /* =====================================================
+           INITIAL LOAD & REFRESH TIMERS
+        ===================================================== */
+        loadStores();
+        loadQueueMonitor();
+        loadHistory();
+        loadActivity();
 
+        setInterval(() => {
+            loadStores();
+            loadQueueMonitor();
+            loadHistory();
+        }, 5000);
+    </script>
 
 </body>
 
