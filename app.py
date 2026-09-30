@@ -1857,6 +1857,78 @@ def get_staff_dashboard(store_id):
         }
     }), 200
 
+# =========================
+# ADMIN STATISTICS API
+# =========================
+
+@app.route('/api/stats/queues', methods=['GET'])
+def get_queue_stats():
+    if session.get('role') != 'ADMIN':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    period = request.args.get('period', 'day')  # day | week | month | year
+
+    period_formats = {
+        'day':   '%Y-%m-%d',
+        'week':  '%Y-%W',      # ISO-ish year-week
+        'month': '%Y-%m',
+        'year':  '%Y'
+    }
+
+    if period not in period_formats:
+        return jsonify({'error': 'period must be one of: day, week, month, year'}), 400
+
+    fmt = period_formats[period]
+
+    conn = get_db_connection()
+
+    rows = conn.execute(
+        f"""
+        SELECT strftime('{fmt}', created_at) AS period_label,
+               COUNT(*) AS total_queues
+        FROM queue
+        GROUP BY period_label
+        ORDER BY period_label DESC
+        LIMIT 30
+        """
+    ).fetchall()
+
+    return jsonify([dict(row) for row in rows]), 200
+
+
+@app.route('/api/stats/stores', methods=['GET'])
+def get_store_stats():
+    if session.get('role') != 'ADMIN':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    period = request.args.get('period', 'month')
+
+    period_formats = {
+        'day':   '%Y-%m-%d',
+        'week':  '%Y-%W',
+        'month': '%Y-%m',
+        'year':  '%Y'
+    }
+
+    if period not in period_formats:
+        return jsonify({'error': 'period must be one of: day, week, month, year'}), 400
+
+    fmt = period_formats[period]
+
+    conn = get_db_connection()
+
+    rows = conn.execute(
+        f"""
+        SELECT strftime('{fmt}', created_at) AS period_label,
+               COUNT(*) AS total_registered
+        FROM store
+        GROUP BY period_label
+        ORDER BY period_label DESC
+        LIMIT 30
+        """
+    ).fetchall()
+
+    return jsonify([dict(row) for row in rows]), 200
 
 if __name__ == '__main__':
     with app.app_context():

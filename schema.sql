@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS store (
     estimated_wait_time INTEGER DEFAULT 0,
     owner_id INTEGER NOT NULL,
     store_description TEXT,        
-    rejection_reason TEXT          
+    rejection_reason TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP          
 );
 
 
@@ -65,8 +66,9 @@ CREATE TABLE IF NOT EXISTS queue (
     user_id INTEGER NOT NULL,
     service_id INTEGER NOT NULL,
     counter_id INTEGER,
-    queue_number TEXT NOT NULL,
+    queue_number TEXT NOT NULL, 
     queue_status TEXT DEFAULT 'WAITING',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user(user_id),
     FOREIGN KEY (service_id) REFERENCES service(service_id),
     FOREIGN KEY (counter_id) REFERENCES counter(counter_id)
