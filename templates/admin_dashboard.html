@@ -10,7 +10,8 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Bootstrap 5 & Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -39,7 +40,7 @@
 
             --radius-lg: 16px;
             --radius-md: 12px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
         }
@@ -229,10 +230,25 @@
             font-size: 20px;
         }
 
-        .icon-stores { background: #eff6ff; color: #2563eb; }
-        .icon-pending { background: #fef3c7; color: #d97706; }
-        .icon-waiting { background: #e0e7ff; color: #4f46e5; }
-        .icon-serving { background: #dcfce7; color: #16a34a; }
+        .icon-stores {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .icon-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .icon-waiting {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .icon-serving {
+            background: #dcfce7;
+            color: #16a34a;
+        }
 
         .stat-value {
             font-size: 2.5rem;
@@ -328,12 +344,14 @@
             color: var(--status-pending-text);
         }
 
-        .status-approved, .status-open {
+        .status-approved,
+        .status-open {
             background: var(--status-approved-bg);
             color: var(--status-approved-text);
         }
 
-        .status-rejected, .status-closed {
+        .status-rejected,
+        .status-closed {
             background: var(--status-rejected-bg);
             color: var(--status-rejected-text);
         }
@@ -476,7 +494,8 @@
     <nav class="admin-navbar">
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center"
+                    style="width: 38px; height: 38px;">
                     <i class="bi bi-shield-lock-fill fs-5"></i>
                 </div>
                 <div>
@@ -523,6 +542,10 @@
 
         <button class="nav-btn" onclick="showSection('activity', this)">
             <i class="bi bi-activity"></i> Recent Activity
+        </button>
+
+        <button class="nav-btn" onclick="showSection('statistics', this)">
+            📈 Statistics
         </button>
     </div>
 
@@ -633,7 +656,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <div class="card-title">Store Registration Proposals</div>
-                        <div class="card-description">Review store registration requests submitted by store owners.</div>
+                        <div class="card-description">Review store registration requests submitted by store owners.
+                        </div>
                     </div>
                     <span class="proposal-badge">Pending Review</span>
                 </div>
@@ -766,8 +790,80 @@
                             </tr>
                         </tbody>
                     </table>
+
                 </div>
             </div>
+        </div>
+
+        <!-- ================= STATISTICS ================= -->
+        <div id="statistics-section" class="admin-section" style="display: none;">
+
+            <div class="row g-4">
+
+                <div class="col-lg-6">
+                    <div class="dashboard-card h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="card-title">Queue Statistics</div>
+                                <div class="card-description">
+                                    Number of queue entries created over time.
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <select id="queueChartType" class="form-select form-select-sm" style="width: auto;"
+                                    onchange="loadQueueStats()">
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="trend">Trend Chart</option>
+                                </select>
+
+                                <select id="queuePeriodSelect" class="form-select form-select-sm" style="width: auto;"
+                                    onchange="loadQueueStats()">
+                                    <option value="day">By Day</option>
+                                    <option value="week">By Week</option>
+                                    <option value="month" selected>By Month</option>
+                                    <option value="year">By Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <canvas id="queueChart" height="220"></canvas>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="dashboard-card h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="card-title">Store Registrations</div>
+                                <div class="card-description">
+                                    Number of stores registered over time.
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <select id="storeChartType" class="form-select form-select-sm" style="width: auto;"
+                                    onchange="loadStoreStats()">
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="trend">Trend Chart</option>
+                                </select>
+
+                                <select id="storePeriodSelect" class="form-select form-select-sm" style="width: auto;"
+                                    onchange="loadStoreStats()">
+                                    <option value="day">By Day</option>
+                                    <option value="week">By Week</option>
+                                    <option value="month" selected>By Month</option>
+                                    <option value="year">By Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <canvas id="storeChart" height="220"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
 
     </main>
@@ -1098,7 +1194,240 @@
                 </div>
             `;
         }
+        /* =====================================================
+                 STATISTICS
+              ===================================================== */
+        /* =====================================================
+    STATISTICS
+ ===================================================== */
 
+        async function loadQueueStats() {
+            const period = document.getElementById('queuePeriodSelect').value;
+            const chartType = document.getElementById('queueChartType').value;
+
+            try {
+                const response = await fetch(`/api/stats/queues?period=${period}`);
+                const data = await response.json();
+
+                if (!response.ok || data.length === 0) {
+                    renderEmptyChart('queueChart');
+                    return;
+                }
+
+                const rows = [...data].reverse();
+
+                const labels = rows.map(r => r.period_label);
+                const totals = rows.map(r => r.total_queues);
+
+                if (chartType === 'bar') {
+                    renderBarChart(
+                        'queueChart',
+                        'queueChartRef',
+                        labels,
+                        totals,
+                        'Total Queues',
+                        '#3a7bd5'
+                    );
+                } else {
+                    renderTrendChart(
+                        'queueChart',
+                        'queueChartRef',
+                        labels,
+                        totals,
+                        'Total Queues',
+                        '#3b82f6'
+                    );
+                }
+
+            } catch (error) {
+                console.error('Queue statistics error:', error);
+                renderEmptyChart('queueChart');
+            }
+        }
+
+
+        async function loadStoreStats() {
+            const period = document.getElementById('storePeriodSelect').value;
+            const chartType = document.getElementById('storeChartType').value;
+
+            try {
+                const response = await fetch(`/api/stats/stores?period=${period}`);
+                const data = await response.json();
+
+                if (!response.ok || data.length === 0) {
+                    renderEmptyChart('storeChart');
+                    return;
+                }
+
+                const rows = [...data].reverse();
+
+                const labels = rows.map(r => r.period_label);
+                const totals = rows.map(r => r.total_registered);
+
+                if (chartType === 'bar') {
+                    renderBarChart(
+                        'storeChart',
+                        'storeChartRef',
+                        labels,
+                        totals,
+                        'Stores Registered',
+                        '#3a7bd5'
+                    );
+                } else {
+                    renderTrendChart(
+                        'storeChart',
+                        'storeChartRef',
+                        labels,
+                        totals,
+                        'Stores Registered',
+                        '#3b82f6'
+                    );
+                }
+
+            } catch (error) {
+                console.error('Store statistics error:', error);
+                renderEmptyChart('storeChart');
+            }
+        }
+
+
+        /* =====================================================
+           BAR CHART
+        ===================================================== */
+
+        function renderBarChart(canvasId, refName, labels, values, label, color) {
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            if (window[refName]) {
+                window[refName].destroy();
+            }
+
+            window[refName] = new Chart(ctx, {
+                type: 'bar',
+
+                data: {
+                    labels: labels,
+
+                    datasets: [{
+                        label: label,
+                        data: values,
+                        backgroundColor: color,
+                        borderRadius: 6
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        /* =====================================================
+           TREND / LINE CHART
+        ===================================================== */
+
+        function renderTrendChart(canvasId, refName, labels, values, label, color) {
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            if (window[refName]) {
+                window[refName].destroy();
+            }
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+
+            gradient.addColorStop(0, color + '55');
+            gradient.addColorStop(1, color + '00');
+
+            window[refName] = new Chart(ctx, {
+
+                type: 'line',
+
+                data: {
+                    labels: labels,
+
+                    datasets: [{
+                        label: label,
+                        data: values,
+
+                        borderColor: color,
+                        backgroundColor: gradient,
+
+                        fill: true,
+                        tension: 0.4,
+
+                        cubicInterpolationMode: 'monotone',
+
+                        pointRadius: 4,
+                        pointBackgroundColor: color,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+
+                        borderWidth: 2
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        /* =====================================================
+           EMPTY CHART
+        ===================================================== */
+
+        function renderEmptyChart(canvasId) {
+
+            const refName =
+                canvasId === 'queueChart'
+                    ? 'queueChartRef'
+                    : 'storeChartRef';
+
+            if (window[refName]) {
+                window[refName].destroy();
+                window[refName] = null;
+            }
+        }
         /* =====================================================
            NAVIGATION & TOGGLE SECTION
         ===================================================== */
@@ -1127,6 +1456,7 @@
         loadHistory();
         loadActivity();
 
+
         setInterval(() => {
             loadStores();
             loadQueueMonitor();
@@ -1134,6 +1464,8 @@
         }, 5000);
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 </body>
 
-</html>     
+</html>
