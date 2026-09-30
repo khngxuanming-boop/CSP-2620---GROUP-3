@@ -357,7 +357,6 @@ def forgot_password():
             except Exception as e:
                 print(f"Failed to send reset email: {e}")
 
-        conn.close()
         message = "If that email is registered, a reset link has been sent."
 
     return render_template('forgot_password.html', message=message)
@@ -369,7 +368,6 @@ def reset_password(token):
     user = conn.execute('SELECT * FROM user WHERE reset_token = ?', (token,)).fetchone()
 
     if not user:
-        conn.close()
         return "Invalid or expired reset link."
 
     expiry = datetime.fromisoformat(user['reset_token_expire'])
@@ -386,10 +384,8 @@ def reset_password(token):
             (new_password, user['user_id'])
         )
         conn.commit()
-        conn.close()
         return redirect(url_for('login'))
 
-    conn.close()
     return render_template('reset_password.html', error=error, token=token)
 
 
@@ -402,7 +398,6 @@ def my_store():
     stores = conn.execute(
         'SELECT * FROM store WHERE owner_id = ?', (session['user_id'],)
     ).fetchall()
-    conn.close()
 
     return render_template('my_store.html', stores=stores, username=session.get('username'))
 
@@ -413,41 +408,86 @@ def register_store():
         return redirect(url_for('login'))
     conn = get_db_connection()
 
-    # Check whether this staff already has a proposal
     existing_store = conn.execute(
-           """
-           SELECT *
-           FROM store
-           WHERE owner_id = ?
-           ORDER BY store_id DESC
-           LIMIT 1
-           """,
-           (session['user_id'],)
-     ).fetchone()
+        """
+        SELECT * FROM store WHERE owner_id = ?
+        ORDER BY store_id DESC LIMIT 1
+        """,
+        (session['user_id'],)
+    ).fetchone()
 
-    # If they already have a proposal, don't create another one
     if existing_store:
+        return redirect(url_for('staff_status'))
+
+    if request.method == 'POST':
+        store_name = request.form['name']
+        hours = request.form['hours']
+        description = request.form.get('description', '')
+
+        conn.execute(
+            """
+            INSERT INTO store
+            (store_name, operating_hours, store_status, owner_id, store_description)
+            VALUES (?, ?, 'PENDING', ?, ?)
+            """,
+            (store_name, hours, session['user_id'], description)
+        )
+        conn.commit()
+
+        return redirect(url_for('staff_status'))
+
+    return render_template('register_store.html')
+
+# Edit Store Proposal 
+@app.route('/edit-store/<int:store_id>', methods=['GET', 'POST'])
+def edit_store(store_id):
+
+    if session.get('role') != 'STAFF':
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+
+    # Get the store belonging to the logged-in staff
+    store = conn.execute(
+        """
+        SELECT *
+        FROM store
+        WHERE store_id = ?
+        AND owner_id = ?
+        """,
+        (store_id, session['user_id'])
+    ).fetchone()
+
+    if not store:
+        return "Store not found or you do not have access.", 403
+
+    # Only rejected proposals can be edited
+    if store['store_status'] != 'REJECTED':
         return redirect(url_for('staff_status'))
 
     if request.method == 'POST':
 
         store_name = request.form['name']
         hours = request.form['hours']
+        description = request.form.get('description', '')
 
+        # Update proposal and send it back to PENDING
         conn.execute(
             """
-            INSERT INTO store
-            (
-                store_name,
-                operating_hours,
-                store_status,
-                owner_id
-            )
-            VALUES (?, ?, 'PENDING', ?)
+            UPDATE store
+            SET store_name = ?,
+                operating_hours = ?,
+                store_description = ?,
+                store_status = 'PENDING',
+                rejection_reason = NULL
+            WHERE store_id = ?
+            AND owner_id = ?
             """,
             (
                 store_name,
                 hours,
+                description,
+                store_id,
                 session['user_id']
             )
         )
@@ -456,8 +496,10 @@ def register_store():
 
         return redirect(url_for('staff_status'))
 
-
-    return render_template('register_store.html')
+    return render_template(
+        'edit_store.html',
+        store=store
+    )
 
 @app.route('/staff/status')
 def staff_status():
@@ -562,8 +604,6 @@ def create_appointment():
         return jsonify({'message': 'Appointment created successfully!', 'appointment_id': appt_id}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # POST /api/queues/walk-in
 @app.route('/api/queues/walk-in', methods=['POST'])
@@ -614,8 +654,6 @@ def walk_in_queue():
         return jsonify({'message': 'Successfully joined the walk-in queue!', 'queue_id': queue_id, 'queue_number': queue_number}),201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # PUT /api/appointments/<appt_id>/check-in
 @app.route('/api/appointments/<int:appt_id>/check-in', methods=['PUT'])
@@ -664,8 +702,6 @@ def check_in_appointment(appt_id):
         return jsonify({'message': 'Appointment checked in successfully!', 'queue_id': queue_id, 'queue_number': queue_number}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # GET /api/queues/my-status
 @app.route('/api/queues/my-status', methods=['GET'])
@@ -729,8 +765,6 @@ def get_my_queue_status():
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # GET /api/notifications
 @app.route('/api/notifications', methods=['GET'])
@@ -761,8 +795,6 @@ def get_notification():
         ]), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
 
 # Page Routes
 @app.route('/booking')
@@ -1224,50 +1256,46 @@ def delete_store(store_id):
 # Store approval or rejection by admin
 @app.route('/api/stores/<int:store_id>/status', methods=['PATCH'])
 def update_store_status(store_id):
-
     if session.get('role') != 'ADMIN':
-        return jsonify({
-            'error': 'Admin access required'
-        }), 403
+        return jsonify({'error': 'Admin access required'}), 403
 
     data = request.get_json() or {}
-
     new_status = data.get('store_status')
+    rejection_reason = data.get('rejection_reason', '').strip()
 
     if new_status not in ['PENDING', 'APPROVED', 'REJECTED']:
-        return jsonify({
-            'error': 'Invalid store status'
-        }), 400
+        return jsonify({'error': 'Invalid store status'}), 400
+
+    if new_status == 'REJECTED' and not rejection_reason:
+        return jsonify({'error': 'A rejection reason is required'}), 400
 
     conn = get_db_connection()
 
     store = conn.execute(
-        """
-        SELECT *
-        FROM store
-        WHERE store_id = ?
-        """,
-        (store_id,)
+        'SELECT * FROM store WHERE store_id = ?', (store_id,)
     ).fetchone()
 
     if not store:
-        return jsonify({
-            'error': 'Store not found'
-        }), 404
+        return jsonify({'error': 'Store not found'}), 404
 
+    # Clear any old rejection reason when approving; save the new one when rejecting
     conn.execute(
         """
         UPDATE store
-        SET store_status = ?
+        SET store_status = ?,
+            rejection_reason = ?
         WHERE store_id = ?
         """,
-        (
-            new_status,
-            store_id
-        )
+        (new_status, rejection_reason if new_status == 'REJECTED' else None, store_id)
     )
-
     conn.commit()
+
+    # Let the staff member know why, via your existing notification system
+    create_notification(
+        store['owner_id'],
+        f"Your store '{store['store_name']}' was {new_status.lower()}."
+        + (f" Reason: {rejection_reason}" if new_status == 'REJECTED' else "")
+    )
 
     return jsonify({
         'message': 'Store status updated successfully',
@@ -1829,6 +1857,78 @@ def get_staff_dashboard(store_id):
         }
     }), 200
 
+# =========================
+# ADMIN STATISTICS API
+# =========================
+
+@app.route('/api/stats/queues', methods=['GET'])
+def get_queue_stats():
+    if session.get('role') != 'ADMIN':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    period = request.args.get('period', 'day')  # day | week | month | year
+
+    period_formats = {
+        'day':   '%Y-%m-%d',
+        'week':  '%Y-%W',      # ISO-ish year-week
+        'month': '%Y-%m',
+        'year':  '%Y'
+    }
+
+    if period not in period_formats:
+        return jsonify({'error': 'period must be one of: day, week, month, year'}), 400
+
+    fmt = period_formats[period]
+
+    conn = get_db_connection()
+
+    rows = conn.execute(
+        f"""
+        SELECT strftime('{fmt}', created_at) AS period_label,
+               COUNT(*) AS total_queues
+        FROM queue
+        GROUP BY period_label
+        ORDER BY period_label DESC
+        LIMIT 30
+        """
+    ).fetchall()
+
+    return jsonify([dict(row) for row in rows]), 200
+
+
+@app.route('/api/stats/stores', methods=['GET'])
+def get_store_stats():
+    if session.get('role') != 'ADMIN':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    period = request.args.get('period', 'month')
+
+    period_formats = {
+        'day':   '%Y-%m-%d',
+        'week':  '%Y-%W',
+        'month': '%Y-%m',
+        'year':  '%Y'
+    }
+
+    if period not in period_formats:
+        return jsonify({'error': 'period must be one of: day, week, month, year'}), 400
+
+    fmt = period_formats[period]
+
+    conn = get_db_connection()
+
+    rows = conn.execute(
+        f"""
+        SELECT strftime('{fmt}', created_at) AS period_label,
+               COUNT(*) AS total_registered
+        FROM store
+        GROUP BY period_label
+        ORDER BY period_label DESC
+        LIMIT 30
+        """
+    ).fetchall()
+
+    return jsonify([dict(row) for row in rows]), 200
 
 if __name__ == '__main__':
     with app.app_context():

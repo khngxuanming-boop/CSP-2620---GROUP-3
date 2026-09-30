@@ -7,24 +7,44 @@
 
   <title>Staff Dashboard - Queue Management</title>
 
+<<<<<<< HEAD
   <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+=======
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Your CSS -->
+  <!-- Bootstrap 5 & Bootstrap Icons -->
+>>>>>>> feature/member3
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 
   <style>
-    /* =====================================================
-   STAFF DASHBOARD - ADMIN STYLE
-===================================================== */
     :root {
-      --staff-primary: #3a4750;
-      --staff-secondary: #5c6b73;
-      --staff-bg: #f0f2f5;
-      --staff-text: #2b2d42;
-      --staff-muted: #7b8895;
+      --staff-primary: #0f172a;
+      --staff-primary-hover: #1e293b;
+      --staff-accent: #3b82f6;
+      --staff-accent-light: #eff6ff;
+      --staff-bg: #f8fafc;
       --staff-card: #ffffff;
-      --staff-border: #e5e9ed;
+      --staff-text: #0f172a;
+      --staff-muted: #64748b;
+      --staff-border: #e2e8f0;
+      
+      --status-open-bg: #dcfce7;
+      --status-open-text: #15803d;
+      --status-closed-bg: #fee2e2;
+      --status-closed-text: #b91c1c;
+      
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
     }
 
     html {
@@ -32,9 +52,11 @@
     }
 
     body.staff-page {
-      background: var(--staff-bg) !important;
+      background-color: var(--staff-bg) !important;
       color: var(--staff-text);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       margin: 0;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* NAVBAR */
@@ -42,133 +64,197 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: var(--staff-primary);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
-      box-shadow: 0 3px 14px rgba(0, 0, 0, .10);
     }
 
     .staff-nav-inner {
-      max-width: 1500px;
+      max-width: 1400px;
       margin: 0 auto;
-      min-height: 72px;
-      padding: 10px 32px;
+      min-height: 70px;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
-      gap: 25px;
+      justify-content: space-between;
+      gap: 20px;
     }
 
     .staff-brand {
-      min-width: 220px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .staff-brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     .staff-brand-title {
-      font-size: 19px;
+      font-size: 17px;
       font-weight: 700;
+      letter-spacing: -0.3px;
       line-height: 1.2;
     }
 
     .staff-brand-subtitle {
-      font-size: 11px;
-      opacity: .72;
-      margin-top: 3px;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
     }
 
     .staff-nav-links {
-      flex: 1;
       display: flex;
-      justify-content: center;
-      gap: 5px;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 5px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .staff-nav-link {
-      color: rgba(255, 255, 255, .72);
+      color: #94a3b8;
       text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      padding: 9px 14px;
-      border-radius: 7px;
-      transition: .2s;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
     }
 
-    .staff-nav-link:hover,
-    .staff-nav-link.active {
-      background: var(--staff-secondary);
+    .staff-nav-link:hover {
       color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .staff-nav-link.active {
+      background: var(--staff-accent);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
     }
 
     .staff-user {
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-width: 190px;
-      justify-content: flex-end;
+      gap: 12px;
     }
 
     .staff-avatar {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
-      background: var(--staff-secondary);
+      background: linear-gradient(135deg, #475569, #334155);
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
+      font-size: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .staff-user-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f1f5f9;
     }
 
     .staff-logout {
-      color: #fff;
-      border: 1px solid rgba(255, 255, 255, .55);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s;
     }
 
     .staff-logout:hover {
-      background: #fff;
-      color: var(--staff-primary);
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
     }
 
-    /* PAGE */
+    /* MAIN CONTAINER */
     .staff-main {
-      max-width: 1500px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 32px;
+      padding: 32px 24px 60px;
     }
 
     .staff-section {
-      scroll-margin-top: 92px;
+      scroll-margin-top: 90px;
     }
 
-    .staff-welcome {
+    /* HEADER BANNER */
+    .staff-welcome-card {
+      background: linear-gradient(135deg, #ffffff, #f1f5f9);
+      border: 1px solid var(--staff-border);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
       margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
     }
 
-    .staff-welcome h2 {
-      font-weight: 700;
-      margin-bottom: 5px;
+    .staff-welcome-card h2 {
+      font-weight: 800;
+      font-size: 26px;
+      letter-spacing: -0.5px;
+      color: var(--staff-text);
+      margin-bottom: 6px;
     }
 
-    .staff-welcome p {
+    .staff-welcome-card p {
       color: var(--staff-muted);
-      margin-bottom: 7px;
+      margin-bottom: 12px;
+      font-size: 15px;
     }
 
-    .store-info {
+    .store-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--staff-border);
+      font-size: 13px;
       color: var(--staff-muted);
-      font-size: 14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .store-badge strong {
+      color: var(--staff-text);
     }
 
     /* STAT CARDS */
     .staff-stat {
       background: var(--staff-card);
-      border: 0;
-      border-radius: 14px;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, .06);
-      padding: 22px;
+      border: 1px solid var(--staff-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
       height: 100%;
-      transition: transform .18s, box-shadow .18s;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
 
     .staff-stat:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: #cbd5e1;
     }
 
     .staff-stat-head {
@@ -179,160 +265,241 @@
 
     .staff-stat-label {
       color: var(--staff-muted);
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .staff-stat-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      background: #f0f2f5;
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
     }
 
+    .icon-waiting { background: #eff6ff; color: #2563eb; }
+    .icon-serving { background: #fef3c7; color: #d97706; }
+    .icon-completed { background: #dcfce7; color: #16a34a; }
+
     .staff-stat-number {
-      font-size: 2.2rem;
-      font-weight: 700;
-      margin-top: 10px;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-top: 12px;
+      color: var(--staff-text);
+      line-height: 1;
     }
 
     /* CONTENT CARDS */
     .staff-card {
       background: var(--staff-card);
-      border: 0;
-      border-radius: 14px;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, .06);
-      margin-bottom: 22px;
+      border: 1px solid var(--staff-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 28px;
+      overflow: hidden;
     }
 
     .staff-card-body {
-      padding: 25px;
+      padding: 28px;
     }
 
     .section-title {
       font-weight: 700;
+      font-size: 19px;
+      letter-spacing: -0.3px;
+      color: var(--staff-text);
     }
 
     .section-subtitle {
       color: var(--staff-muted);
       margin: 0;
-      font-size: 14px;
+      font-size: 13.5px;
     }
 
-    /* COUNTERS */
+    /* COUNTERS GRID */
     .counter-card {
       background: #fff;
       border: 1px solid var(--staff-border);
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       padding: 20px;
       height: 100%;
-      transition: .18s;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .counter-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 18px rgba(0, 0, 0, .06);
+      box-shadow: var(--shadow-md);
+      border-color: #cbd5e1;
+    }
+
+    .counter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
     }
 
     .counter-name {
       font-weight: 700;
-    }
-
-    .counter-id {
-      color: var(--staff-muted);
-      font-size: 13px;
+      font-size: 17px;
+      margin: 0;
+      color: var(--staff-text);
     }
 
     .counter-status {
-      padding: 5px 10px;
+      padding: 4px 10px;
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     .counter-open {
-      background: #d1e7dd;
-      color: #0f5132;
+      background: var(--status-open-bg);
+      color: var(--status-open-text);
     }
 
     .counter-closed {
-      background: #f8d7da;
-      color: #842029;
+      background: var(--status-closed-bg);
+      color: var(--status-closed-text);
     }
 
     /* TABLES */
-    .staff-card .table {
+    .table-custom {
       margin-bottom: 0;
+      border-collapse: separate;
+      border-spacing: 0;
     }
 
-    .staff-card .table thead th {
-      color: var(--staff-secondary);
-      font-size: 13px;
+    .table-custom thead th {
+      background: #f8fafc;
+      color: var(--staff-muted);
+      font-size: 12px;
       font-weight: 700;
-      border-bottom: 1px solid #dee2e6;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--staff-border);
     }
 
-    .staff-card .table tbody tr:hover {
-      background: #f8f9fa;
+    .table-custom tbody tr {
+      transition: background 0.15s ease;
     }
 
-    .queue-number {
+    .table-custom tbody tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .table-custom tbody td {
+      padding: 16px 18px;
+      vertical-align: middle;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+
+    .table-custom tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .queue-badge {
+      font-family: monospace;
       font-weight: 700;
-      font-size: 16px;
+      font-size: 15px;
+      background: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #334155;
     }
 
     .empty-row {
       text-align: center;
-      padding: 32px !important;
+      padding: 48px !important;
       color: var(--staff-muted);
+      font-size: 14px;
+    }
+
+    /* FORM STYLES */
+    .form-control {
+      border-radius: 8px;
+      border: 1px solid var(--staff-border);
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+
+    .form-control:focus {
+      border-color: var(--staff-accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    /* BUTTONS */
+    .btn {
+      border-radius: 8px;
+      font-weight: 600;
+      padding: 8px 16px;
+      font-size: 13.5px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12.5px;
+      border-radius: 6px;
+    }
+
+    .btn-primary {
+      background-color: var(--staff-accent);
+      border-color: var(--staff-accent);
+    }
+
+    .btn-primary:hover {
+      background-color: #2563eb;
+      border-color: #2563eb;
     }
 
     /* RESPONSIVE */
-    @media (max-width: 1050px) {
+    @media (max-width: 992px) {
       .staff-nav-inner {
         flex-wrap: wrap;
-        padding: 12px 20px;
+        padding: 12px 16px;
       }
 
       .staff-nav-links {
         order: 3;
-        flex-basis: 100%;
+        width: 100%;
         justify-content: flex-start;
         overflow-x: auto;
       }
 
-      .staff-nav-link {
-        white-space: nowrap;
+      .staff-user {
+        margin-left: auto;
       }
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 576px) {
       .staff-main {
-        padding: 20px 15px;
+        padding: 16px 12px;
       }
 
-      .staff-brand {
-        min-width: 0;
-      }
-
-      .staff-brand-subtitle {
-        display: none;
-      }
-
-      .staff-user {
-        min-width: auto;
-      }
-
+      .staff-brand-subtitle,
       .staff-user-name {
         display: none;
       }
 
       .staff-stat-number {
-        font-size: 1.9rem;
+        font-size: 2rem;
+      }
+
+      .staff-welcome-card {
+        padding: 20px;
       }
     }
   </style>
@@ -345,117 +512,142 @@
   <nav class="staff-navbar">
     <div class="staff-nav-inner">
       <div class="staff-brand">
-        <div class="staff-brand-title">Queue Management System</div>
-        <div class="staff-brand-subtitle">Staff Control Center</div>
+        <div class="staff-brand-icon">
+          <i class="bi bi-layers-fill"></i>
+        </div>
+        <div>
+          <div class="staff-brand-title">Queue Management System</div>
+          <div class="staff-brand-subtitle">Staff Control Center</div>
+        </div>
       </div>
 
       <div class="staff-nav-links">
-        <a href="#dashboard-section" class="staff-nav-link active">Dashboard</a>
-        <a href="#counters-section" class="staff-nav-link">Counters</a>
-        <a href="#queue-section" class="staff-nav-link">Current Queue</a>
-        <a href="#history-section" class="staff-nav-link">Queue History</a>
+        <a href="#dashboard-section" class="staff-nav-link active"><i class="bi bi-grid-1x2-fill me-1"></i> Dashboard</a>
+        <a href="#counters-section" class="staff-nav-link"><i class="bi bi-display me-1"></i> Counters</a>
+        <a href="#queue-section" class="staff-nav-link"><i class="bi bi-people-fill me-1"></i> Current Queue</a>
+        <a href="#services-section" class="staff-nav-link"><i class="bi bi-gear-wide-connected me-1"></i> Services</a>
+        <a href="#history-section" class="staff-nav-link"><i class="bi bi-clock-history me-1"></i> Queue History</a>
       </div>
 
       <div class="staff-user">
-        <div class="staff-avatar">S</div>
+        <div class="staff-avatar">{{ session.get('username', 'S')[0] | upper }}</div>
         <span class="staff-user-name">{{ session.get('username', 'Staff') }}</span>
-        <a href="{{ url_for('logout') }}" class="btn btn-sm staff-logout">Logout</a>
+        <a href="{{ url_for('logout') }}" class="btn staff-logout"><i class="bi bi-box-arrow-right me-1"></i> Logout</a>
       </div>
     </div>
   </nav>
 
   <main class="staff-main">
 
-    <!-- ================= DASHBOARD ================= -->
-    <section id="dashboard-section" class="staff-section staff-welcome">
-      <h2>Staff Dashboard</h2>
-      <p>Manage your store counters and monitor customer queues.</p>
-      <div class="store-info">
-        Store: <strong id="storeName">Store</strong>
-        &nbsp; | &nbsp;
-        Store ID: <strong>{{ store_id }}</strong>
+    <!-- ================= DASHBOARD WELCOME ================= -->
+    <section id="dashboard-section" class="staff-section staff-welcome-card">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div>
+          <h2>Staff Dashboard</h2>
+          <p>Manage store counters and monitor customer queues in real-time.</p>
+          <div class="store-badge">
+            <i class="bi bi-shop text-primary"></i> Store: <strong id="storeName">Store</strong>
+            <span class="text-muted mx-1">|</span>
+            <i class="bi bi-hash text-primary"></i> ID: <strong>{{ store_id }}</strong>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- ================= SUMMARY ================= -->
+    <!-- ================= SUMMARY CARDS ================= -->
     <div class="row g-3 mb-4">
       <div class="col-lg-4 col-md-6">
         <div class="staff-stat">
           <div class="staff-stat-head">
-            <div class="staff-stat-label">Customers Waiting</div>
-            <div class="staff-stat-icon">👥</div>
+            <span class="staff-stat-label">Customers Waiting</span>
+            <div class="staff-stat-icon icon-waiting">
+              <i class="bi bi-people"></i>
+            </div>
           </div>
           <div id="waitingCount" class="staff-stat-number">0</div>
-          <small class="text-muted">Waiting in queue</small>
+          <small class="text-muted mt-2 d-block">Waiting in queue line</small>
         </div>
       </div>
 
       <div class="col-lg-4 col-md-6">
         <div class="staff-stat">
           <div class="staff-stat-head">
-            <div class="staff-stat-label">Currently Serving</div>
-            <div class="staff-stat-icon">🎫</div>
+            <span class="staff-stat-label">Currently Serving</span>
+            <div class="staff-stat-icon icon-serving">
+              <i class="bi bi-ticket-perforated"></i>
+            </div>
           </div>
           <div id="servingCount" class="staff-stat-number">0</div>
-          <small class="text-muted">Being served now</small>
+          <small class="text-muted mt-2 d-block">Active counter sessions</small>
         </div>
       </div>
 
       <div class="col-lg-4 col-md-6">
         <div class="staff-stat">
           <div class="staff-stat-head">
-            <div class="staff-stat-label">Completed</div>
-            <div class="staff-stat-icon">✓</div>
+            <span class="staff-stat-label">Completed</span>
+            <div class="staff-stat-icon icon-completed">
+              <i class="bi bi-check2-circle"></i>
+            </div>
           </div>
           <div id="completedCount" class="staff-stat-number">0</div>
-          <small class="text-muted">Completed customers</small>
+          <small class="text-muted mt-2 d-block">Successfully served today</small>
         </div>
       </div>
     </div>
 
     <!-- ================= COUNTERS ================= -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h4 class="section-title mb-1">Store Counters</h4>
-        <p class="section-subtitle">Open or close counters and call the next customer.</p>
+    <section id="counters-section" class="staff-section staff-card">
+      <div class="staff-card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="section-title mb-1">Store Counters</h4>
+            <p class="section-subtitle">Open or close counters and call the next customer.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showAddCounterForm()">
+            <i class="bi bi-plus-lg me-1"></i> Add Counter
+          </button>
+        </div>
+
+        <div id="addCounterForm" style="display:none;" class="mb-4 p-3 border rounded bg-light">
+          <div class="input-group">
+            <input type="text" id="newCounterName" class="form-control" placeholder="Counter name (e.g. Counter 1)">
+            <button class="btn btn-success" onclick="createCounter()">Save Counter</button>
+            <button class="btn btn-outline-secondary" onclick="hideAddCounterForm()">Cancel</button>
+          </div>
+        </div>
+
+        <div class="row g-3" id="counterContainer">
+          <!-- Counters will be inserted here -->
+        </div>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="showAddCounterForm()">+ Add Counter</button>
-    </div>
+    </section>
 
-    <div id="addCounterForm" style="display:none;" class="mb-3">
-      <div class="input-group">
-        <input type="text" id="newCounterName" class="form-control" placeholder="Counter name (e.g. Counter 1)">
-        <button class="btn btn-success" onclick="createCounter()">Save</button>
-        <button class="btn btn-outline-secondary" onclick="hideAddCounterForm()">Cancel</button>
-      </div>
-    </div>
-
-    <div class="row g-3" id="counterContainer">
-      <!-- Counters will be inserted here -->
-    </div>
-
-        <!-- ================= CURRENT QUEUE ================= -->
+    <!-- ================= CURRENT QUEUE ================= -->
     <section id="queue-section" class="staff-section staff-card">
       <div class="staff-card-body">
-        <div class="mb-3">
+        <div class="mb-4">
           <h4 class="section-title mb-1">Current Queue</h4>
           <p class="section-subtitle">Monitor customers currently waiting or being served.</p>
         </div>
 
         <div id="queueContainer" class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-custom align-middle">
             <thead>
               <tr>
                 <th>Queue Number</th>
                 <th>Service</th>
                 <th>Status</th>
                 <th>Counter</th>
-                <th>Action</th>
+                <th class="text-end">Action</th>
               </tr>
             </thead>
             <tbody id="queueTableBody">
               <tr>
-                <td colspan="5" class="empty-row">Loading queue...</td>
+                <td colspan="5" class="empty-row">
+                  <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                  Loading queue...
+                </td>
               </tr>
             </tbody>
           </table>
@@ -471,47 +663,56 @@
             <h4 class="section-title mb-1">Store Services</h4>
             <p class="section-subtitle">Manage the services customers can book or queue for.</p>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="showAddServiceForm()">+ Add Service</button>
+          <button class="btn btn-primary btn-sm" onclick="showAddServiceForm()">
+            <i class="bi bi-plus-lg me-1"></i> Add Service
+          </button>
         </div>
 
-        <div id="addServiceForm" style="display:none;" class="mb-3">
+        <div id="addServiceForm" style="display:none;" class="mb-4 p-3 border rounded bg-light">
           <div class="input-group">
             <input type="text" id="newServiceName" class="form-control" placeholder="Service name (e.g. Haircut)">
-            <button class="btn btn-success" onclick="createService()">Save</button>
+            <button class="btn btn-success" onclick="createService()">Save Service</button>
             <button class="btn btn-outline-secondary" onclick="hideAddServiceForm()">Cancel</button>
           </div>
         </div>
 
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-custom align-middle">
             <thead>
               <tr>
                 <th>Service ID</th>
                 <th>Service Name</th>
-                <th>Action</th>
+                <th class="text-end">Action</th>
               </tr>
             </thead>
             <tbody id="serviceTableBody">
-              <tr><td colspan="3" class="empty-row">Loading services...</td></tr>
+              <tr>
+                <td colspan="3" class="empty-row">
+                  <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                  Loading services...
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
-    
+
     <!-- ================= QUEUE HISTORY ================= -->
     <section id="history-section" class="staff-section staff-card">
       <div class="staff-card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h4 class="section-title mb-1">Queue History</h4>
             <p class="section-subtitle">Recently completed, skipped and cancelled queues.</p>
           </div>
-          <button class="btn btn-outline-primary btn-sm" onclick="loadHistory()">Refresh</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="loadHistory()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+          </button>
         </div>
 
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-custom align-middle">
             <thead>
               <tr>
                 <th>Queue</th>
@@ -522,7 +723,10 @@
             </thead>
             <tbody id="historyTableBody">
               <tr>
-                <td colspan="4" class="empty-row">Loading history...</td>
+                <td colspan="4" class="empty-row">
+                  <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                  Loading history...
+                </td>
               </tr>
             </tbody>
           </table>
@@ -532,760 +736,360 @@
 
   </main>
 
-  <!-- TOAST -->
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-
-    <div id="alertToast" class="toast align-items-center text-white bg-info border-0" role="alert" aria-live="assertive"
-      aria-atomic="true">
-
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="alertToast" class="toast align-items-center text-white bg-dark border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
-
-        <div class="toast-body fs-6" id="toastMessage"></div>
-
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-          aria-label="Close"></button>
-
+        <div class="toast-body fs-6 d-flex align-items-center gap-2" id="toastMessage"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
-
-        <!-- ================= CURRENT QUEUE ================= -->
-        <section id="queue-section" class="staff-section staff-card">
-            <div class="staff-card-body">
-                <div class="mb-3">
-                    <h4 class="section-title mb-1">Current Queue</h4>
-                    <p class="section-subtitle">Monitor customers currently waiting or being served.</p>
-                </div>
-
+    </div>
   </div>
 
-
-  <!-- Bootstrap -->
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 
   <!-- STAFF DASHBOARD JAVASCRIPT -->
   <script>
-
     const storeId = JSON.parse('{{ store_id | tojson }}');
-
 
     // ==============================
     // TOAST MESSAGE
     // ==============================
-
     function showMessage(message, type = "info") {
-
       const toast = document.getElementById("alertToast");
       const toastMessage = document.getElementById("toastMessage");
 
-      toastMessage.textContent = message;
+      toastMessage.innerHTML = message;
+      toast.className = `toast align-items-center text-white border-0 shadow-lg bg-${type}`;
 
-      toast.classList.remove(
-        "bg-info",
-        "bg-success",
-        "bg-danger",
-        "bg-warning"
-      );
-
-      toast.classList.add("bg-" + type);
-
-      const toastObject =
-        bootstrap.Toast.getOrCreateInstance(toast);
-
+      const toastObject = bootstrap.Toast.getOrCreateInstance(toast);
       toastObject.show();
     }
-
 
     // ==============================
     // LOAD STAFF DASHBOARD
     // ==============================
-
     async function loadDashboard() {
-
       try {
-
-        const response = await fetch(
-          `/api/staff/dashboard/${storeId}`
-        );
-
+        const response = await fetch(`/api/staff/dashboard/${storeId}`);
         const data = await response.json();
 
         if (!response.ok) {
-
-          showMessage(
-            data.error || "Unable to load dashboard",
-            "danger"
-          );
-
+          showMessage(data.error || "Unable to load dashboard", "danger");
           return;
         }
 
-
         // Store name
         if (data.store) {
-
-          document.getElementById("storeName").textContent =
-            data.store.store_name;
+          document.getElementById("storeName").textContent = data.store.store_name;
         }
-
 
         // Summary
         if (data.queue_summary) {
-
-          document.getElementById("waitingCount").textContent =
-            data.queue_summary.waiting || 0;
-
-          document.getElementById("servingCount").textContent =
-            data.queue_summary.serving || 0;
-
-          document.getElementById("completedCount").textContent =
-            data.queue_summary.completed || 0;
+          document.getElementById("waitingCount").textContent = data.queue_summary.waiting || 0;
+          document.getElementById("servingCount").textContent = data.queue_summary.serving || 0;
+          document.getElementById("completedCount").textContent = data.queue_summary.completed || 0;
         }
 
-
-        // Counters
+        // Counters & Queue
         loadCounters(data.counters || []);
-
-
-        // Queue
         loadQueues(data.counters || []);
-
-      }
-
-      catch (error) {
-
+      } catch (error) {
         console.error(error);
-
-        showMessage(
-          "Failed to connect to server",
-          "danger"
-        );
+        showMessage("Failed to connect to server", "danger");
       }
     }
-
 
     // ==============================
     // DISPLAY COUNTERS
     // ==============================
-
     function loadCounters(counters) {
-
-      const container =
-        document.getElementById("counterContainer");
-
+      const container = document.getElementById("counterContainer");
       container.innerHTML = "";
 
-
       if (counters.length === 0) {
-
         container.innerHTML = `
-            <div class="col-12">
-              <div class="alert alert-secondary">
-                No counters found.
-              </div>
+          <div class="col-12">
+            <div class="alert alert-light border text-center text-muted py-4 mb-0">
+              <i class="bi bi-info-circle fs-5 d-block mb-2"></i>
+              No counters found. Create one using the button above.
             </div>
-          `;
-
+          </div>
+        `;
         return;
       }
 
-
       counters.forEach(counter => {
-
-        const status =
-          counter.counter_status || "closed";
-
-        const isOpen =
-          status.toLowerCase() === "open";
-
+        const status = counter.counter_status || "closed";
+        const isOpen = status.toLowerCase() === "open";
 
         container.innerHTML += `
-
-            <div class="col-md-4">
-
-              <div class="counter-card">
-
-                <div>
-
-                  <div class="d-flex justify-content-between">
-
-                    <h5 class="counter-name">
-                      ${counter.counter_name}
-                    </h5>
-
-                    <span class="counter-status ${isOpen
-            ? "counter-open"
-            : "counter-closed"
-          }">
-
-                      ${status.toUpperCase()}
-
-                    </span>
-
-                  </div>
-
-
-                  <hr>
-
-
-                  <p class="text-muted mb-3">
-
-                    Counter ID:
-                    ${counter.counter_id}
-
-                  </p>
-
-
-                  <button
-                    class="btn ${isOpen
-            ? "btn-danger"
-            : "btn-success"
-          } w-100"
-                    onclick="changeCounterStatus(
-                      ${counter.counter_id},
-                      '${isOpen ? "closed" : "open"}'
-                    )"
-                  >
-
-                    ${isOpen
-            ? "Close Counter"
-            : "Open Counter"
-          }
-
-                  </button>
-                  <button
-                     class="btn btn-primary w-100 mt-2"
-                     onclick="callNext(${counter.counter_id})"
-                     ${!isOpen ? "disabled" : ""}
-                  >
-                     Call Next Customer
-                 
-                  </button>
+          <div class="col-md-6 col-lg-4">
+            <div class="counter-card">
+              <div>
+                <div class="counter-header">
+                  <h5 class="counter-name">
+                    <i class="bi bi-aspect-ratio me-1 text-muted"></i> ${counter.counter_name}
+                  </h5>
+                  <span class="counter-status ${isOpen ? "counter-open" : "counter-closed"}">
+                    ${status.toUpperCase()}
+                  </span>
                 </div>
-
+                <div class="text-muted small mb-3">
+                  Counter ID: <strong>#${counter.counter_id}</strong>
+                </div>
               </div>
 
+              <div class="d-flex flex-column gap-2 mt-3">
+                <button
+                  class="btn ${isOpen ? "btn-outline-danger" : "btn-outline-success"} w-100"
+                  onclick="changeCounterStatus(${counter.counter_id}, '${isOpen ? "closed" : "open"}')"
+                >
+                  <i class="bi ${isOpen ? "bi-door-closed" : "bi-door-open"} me-1"></i>
+                  ${isOpen ? "Close Counter" : "Open Counter"}
+                </button>
+                
+                <button
+                   class="btn btn-primary w-100"
+                   onclick="callNext(${counter.counter_id})"
+                   ${!isOpen ? "disabled" : ""}
+                >
+                   <i class="bi bi-megaphone me-1"></i> Call Next Customer
+                </button>
+              </div>
             </div>
-
-          `;
-
+          </div>
+        `;
       });
-
     }
-
 
     // ==============================
     // OPEN / CLOSE COUNTER
     // ==============================
-
-    async function changeCounterStatus(
-      counterId,
-      newStatus
-    ) {
-
+    async function changeCounterStatus(counterId, newStatus) {
       try {
+        const response = await fetch(`/api/counters/${counterId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ counter_status: newStatus })
+        });
 
-        const response = await fetch(
-          `/api/counters/${counterId}/status`,
-          {
-
-            method: "PATCH",
-
-            headers: {
-              "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-              counter_status: newStatus
-            })
-
-          }
-        );
-
-
-        const data =
-          await response.json();
-
+        const data = await response.json();
 
         if (!response.ok) {
-
-          showMessage(
-            data.error || "Unable to change counter status",
-            "danger"
-          );
-
+          showMessage(data.error || "Unable to change counter status", "danger");
           return;
         }
 
-
-        showMessage(
-          `Counter ${newStatus} successfully`,
-          "success"
-        );
-
-
+        showMessage(`Counter ${newStatus} successfully`, "success");
         loadDashboard();
-
-      }
-
-      catch (error) {
-
+      } catch (error) {
         console.error(error);
-
-        showMessage(
-          "Failed to update counter",
-          "danger"
-        );
+        showMessage("Failed to update counter", "danger");
       }
-
     }
-
 
     // ==============================
     // LOAD QUEUES
     // ==============================
-
     async function loadQueues(counters) {
-
-      const tbody =
-        document.getElementById("queueTableBody");
-
+      const tbody = document.getElementById("queueTableBody");
       tbody.innerHTML = "";
-
 
       let queues = [];
 
-
       for (const counter of counters) {
-
         try {
-
-          const response = await fetch(
-            `/api/counters/${counter.counter_id}/queue`
-          );
-
-          const data =
-            await response.json();
-
+          const response = await fetch(`/api/counters/${counter.counter_id}/queue`);
+          const data = await response.json();
 
           if (response.ok) {
-
             data.forEach(queue => {
-
               queues.push({
                 ...queue,
-                counter_name:
-                  counter.counter_name
+                counter_name: counter.counter_name
               });
-
             });
-
           }
-
-        }
-
-        catch (error) {
-
+        } catch (error) {
           console.error(error);
-
         }
-
       }
-
 
       if (queues.length === 0) {
-
         tbody.innerHTML = `
-
-            <tr>
-
-              <td
-                colspan="5"
-                class="text-center text-muted"
-              >
-
-                No active queues.
-
-              </td>
-
-            </tr>
-
-          `;
-
+          <tr>
+            <td colspan="5" class="empty-row">
+              <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
+              No active queues.
+            </td>
+          </tr>
+        `;
         return;
-
       }
 
-
       queues.forEach(queue => {
-
         let actionButtons = "";
 
-
         if (queue.queue_status === "SERVING") {
-
           actionButtons = `
-
-              <button
-                class="btn btn-warning btn-sm me-1"
-                onclick="recallQueue(${queue.queue_id})"
-              >
-                Recall
+            <div class="d-flex gap-1 justify-content-end">
+              <button class="btn btn-warning btn-sm" onclick="recallQueue(${queue.queue_id})">
+                <i class="bi bi-arrow-repeat me-1"></i> Recall
               </button>
-
-              <button
-                class="btn btn-success btn-sm me-1"
-                onclick="completeQueue(${queue.queue_id})"
-              >
-                Complete
+              <button class="btn btn-success btn-sm" onclick="completeQueue(${queue.queue_id})">
+                <i class="bi bi-check-lg me-1"></i> Complete
               </button>
-
-              <button
-                class="btn btn-danger btn-sm"
-                onclick="skipQueue(${queue.queue_id})"
-              >
-                Skip
+              <button class="btn btn-outline-danger btn-sm" onclick="skipQueue(${queue.queue_id})">
+                <i class="bi bi-skip-forward me-1"></i> Skip
               </button>
-
-            `;
-
+            </div>
+          `;
         }
 
-
         tbody.innerHTML += `
-
-            <tr>
-
-              <td class="fw-bold">
-                Q-${String(queue.queue_id).padStart(3, "0")}
-              </td>
-
-              <td>
-                ${queue.service_id || "-"}
-              </td>
-
-              <td>
-
-                <span class="badge ${queue.queue_status === "SERVING"
-            ? "bg-primary"
-            : "bg-warning text-dark"
-          }">
-
-                  ${queue.queue_status}
-
-                </span>
-
-              </td>
-
-              <td>
-                ${queue.counter_name}
-              </td>
-
-              <td>
-
-                ${actionButtons}
-
-              </td>
-
-            </tr>
-
-          `;
-
+          <tr>
+            <td>
+              <span class="queue-badge">Q-${String(queue.queue_id).padStart(3, "0")}</span>
+            </td>
+            <td class="fw-medium">${queue.service_id || "-"}</td>
+            <td>
+              <span class="badge ${queue.queue_status === "SERVING" ? "bg-primary" : "bg-warning text-dark"}">
+                ${queue.queue_status}
+              </span>
+            </td>
+            <td>${queue.counter_name}</td>
+            <td class="text-end">${actionButtons}</td>
+          </tr>
+        `;
       });
-
     }
-
 
     // ==============================
     // CALL NEXT CUSTOMER
     // ==============================
-
     async function callNext(counterId) {
-
       try {
+        const response = await fetch(`/api/counters/${counterId}/call-next`, {
+          method: "POST"
+        });
 
-        const response = await fetch(
-          `/api/counters/${counterId}/call-next`,
-          {
-            method: "POST"
-          }
-        );
-
-
-        const data =
-          await response.json();
-
+        const data = await response.json();
 
         if (!response.ok) {
-
-          showMessage(
-            data.error || data.message || "No customer waiting",
-            "warning"
-          );
-
+          showMessage(data.error || data.message || "No customer waiting", "warning");
           return;
         }
 
-
-        showMessage(
-          "Next customer called successfully",
-          "success"
-        );
-
-
+        showMessage("Next customer called successfully", "success");
         loadDashboard();
-
-      }
-
-      catch (error) {
-
+      } catch (error) {
         console.error(error);
-
-        showMessage(
-          "Failed to call next customer",
-          "danger"
-        );
-
+        showMessage("Failed to call next customer", "danger");
       }
-
     }
 
-
     // ==============================
-    // RECALL
+    // QUEUE ACTIONS
     // ==============================
-
     async function recallQueue(queueId) {
-
-      await queueAction(
-        `/api/queues/${queueId}/recall`,
-        "PATCH",
-        "Customer recalled successfully"
-      );
-
+      await queueAction(`/api/queues/${queueId}/recall`, "PATCH", "Customer recalled successfully");
     }
-
-
-    // ==============================
-    // SKIP
-    // ==============================
 
     async function skipQueue(queueId) {
-
-      await queueAction(
-        `/api/queues/${queueId}/skip`,
-        "PATCH",
-        "Customer skipped successfully"
-      );
-
+      await queueAction(`/api/queues/${queueId}/skip`, "PATCH", "Customer skipped successfully");
     }
-
-
-    // ==============================
-    // COMPLETE
-    // ==============================
 
     async function completeQueue(queueId) {
-
-      await queueAction(
-        `/api/queues/${queueId}/complete`,
-        "PATCH",
-        "Queue completed successfully"
-      );
-
+      await queueAction(`/api/queues/${queueId}/complete`, "PATCH", "Queue completed successfully");
     }
 
-
-    // ==============================
-    // GENERIC QUEUE ACTION
-    // ==============================
-
-    async function queueAction(
-      url,
-      method,
-      successMessage
-    ) {
-
+    async function queueAction(url, method, successMessage) {
       try {
-
-        const response =
-          await fetch(url, {
-            method: method
-          });
-
-
-        const data =
-          await response.json();
-
+        const response = await fetch(url, { method: method });
+        const data = await response.json();
 
         if (!response.ok) {
-
-          showMessage(
-            data.error || "Action failed",
-            "danger"
-          );
-
+          showMessage(data.error || "Action failed", "danger");
           return;
         }
 
-
-        showMessage(
-          successMessage,
-          "success"
-        );
-
-
+        showMessage(successMessage, "success");
         loadDashboard();
-
         loadHistory();
-
-      }
-
-      catch (error) {
-
+      } catch (error) {
         console.error(error);
-
-        showMessage(
-          "Failed to perform action",
-          "danger"
-        );
-
+        showMessage("Failed to perform action", "danger");
       }
-
     }
-
 
     // ==============================
     // QUEUE HISTORY
     // ==============================
-
     async function loadHistory() {
-
-      const tbody =
-        document.getElementById("historyTableBody");
-
+      const tbody = document.getElementById("historyTableBody");
 
       try {
-
-        const response =
-          await fetch("/api/queues/history");
-
-
-        const data =
-          await response.json();
-
+        const response = await fetch("/api/queues/history");
+        const data = await response.json();
 
         if (!response.ok) {
-
-          showMessage(
-            data.error || "Unable to load history",
-            "danger"
-          );
-
+          showMessage(data.error || "Unable to load history", "danger");
           return;
         }
-
 
         tbody.innerHTML = "";
 
-
         if (data.length === 0) {
-
           tbody.innerHTML = `
-
-              <tr>
-
-                <td
-                  colspan="4"
-                  class="text-center text-muted"
-                >
-
-                  No queue history.
-
-                </td>
-
-              </tr>
-
-            `;
-
+            <tr>
+              <td colspan="4" class="empty-row">
+                <i class="bi bi-clock-history fs-3 d-block mb-2 text-muted"></i>
+                No queue history found.
+              </td>
+            </tr>
+          `;
           return;
-
         }
 
-
         data.forEach(queue => {
-
           tbody.innerHTML += `
-
-              <tr>
-
-                <td class="fw-bold">
-
-                  Q-${String(queue.queue_id)
-              .padStart(3, "0")}
-
-                </td>
-
-                <td>
-                  ${queue.service_id || "-"}
-                </td>
-
-                <td>
-
-                  <span class="badge ${queue.queue_status === "COMPLETED"
-              ? "bg-success"
-              : queue.queue_status === "SKIPPED"
-                ? "bg-warning text-dark"
-                : "bg-danger"
-            }">
-
-                    ${queue.queue_status}
-
-                  </span>
-
-                </td>
-
-                <td>
-                  ${queue.counter_id || "-"}
-                </td>
-
-              </tr>
-
-            `;
-
-        });
-
-      }
-
-      catch (error) {
-
-        console.error(error);
-
-        tbody.innerHTML = `
-
             <tr>
-
-              <td
-                colspan="4"
-                class="text-center text-danger"
-              >
-
-                Failed to load history.
-
+              <td>
+                <span class="queue-badge">Q-${String(queue.queue_id).padStart(3, "0")}</span>
               </td>
-
+              <td>${queue.service_id || "-"}</td>
+              <td>
+                <span class="badge ${
+                  queue.queue_status === "COMPLETED"
+                    ? "bg-success"
+                    : queue.queue_status === "SKIPPED"
+                    ? "bg-warning text-dark"
+                    : "bg-danger"
+                }">
+                  ${queue.queue_status}
+                </span>
+              </td>
+              <td>${queue.counter_id || "-"}</td>
             </tr>
-
           `;
-
+        });
+      } catch (error) {
+        console.error(error);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-row text-danger">
+              Failed to load history.
+            </td>
+          </tr>
+        `;
       }
-
     }
-
 
     // ==============================
     // NAVIGATION ACTIVE STATE
     // ==============================
-
     document.querySelectorAll(".staff-nav-link").forEach(link => {
       link.addEventListener("click", function () {
         document.querySelectorAll(".staff-nav-link").forEach(item => {
@@ -1296,21 +1100,49 @@
     });
 
     // ==============================
-    // START DASHBOARD
+    // SERVICES MANAGEMENT
     // ==============================
+    async function loadServices() {
+      const tbody = document.getElementById('serviceTableBody');
+      try {
+        const response = await fetch(`/api/services/${storeId}`);
+        const services = await response.json();
 
-    loadDashboard();
+        if (!response.ok) {
+          showMessage(services.error || 'Unable to load services', 'danger');
+          return;
+        }
 
-    loadHistory();
+        tbody.innerHTML = '';
 
-    // Refresh every 5 seconds
-    setInterval(() => {
+        if (services.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="3" class="empty-row">
+                No services configured yet.
+              </td>
+            </tr>`;
+          return;
+        }
 
-      loadDashboard();
-
-      loadHistory();
-
-    }, 5000);
+        services.forEach(service => {
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>#${service.service_id}</strong></td>
+              <td class="fw-medium">${service.service_name}</td>
+              <td class="text-end">
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteService(${service.service_id})">
+                  <i class="bi bi-trash me-1"></i> Delete
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      } catch (error) {
+        console.error(error);
+        tbody.innerHTML = `<tr><td colspan="3" class="empty-row text-danger">Failed to load services.</td></tr>`;
+      }
+    }
 
     function showAddCounterForm() {
       document.getElementById('addCounterForm').style.display = 'block';
@@ -1346,13 +1178,75 @@
         showMessage('Counter created successfully', 'success');
         hideAddCounterForm();
         loadDashboard();
-      }
-      catch (error) {
+      } catch (error) {
         console.error(error);
         showMessage('Failed to create counter', 'danger');
       }
     }
 
+    function showAddServiceForm() {
+      document.getElementById('addServiceForm').style.display = 'block';
+    }
+
+    function hideAddServiceForm() {
+      document.getElementById('addServiceForm').style.display = 'none';
+      document.getElementById('newServiceName').value = '';
+    }
+
+    async function createService() {
+      const name = document.getElementById('newServiceName').value.trim();
+      if (!name) {
+        showMessage('Please enter a service name', 'warning');
+        return;
+      }
+      try {
+        const response = await fetch('/api/services', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ store_id: storeId, service_name: name })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          showMessage(data.error || 'Unable to create service', 'danger');
+          return;
+        }
+        showMessage('Service created successfully', 'success');
+        hideAddServiceForm();
+        loadServices();
+      } catch (error) {
+        console.error(error);
+        showMessage('Failed to create service', 'danger');
+      }
+    }
+
+    async function deleteService(serviceId) {
+      if (!confirm('Delete this service? This cannot be undone.')) return;
+      try {
+        const response = await fetch(`/api/services/${serviceId}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (!response.ok) {
+          showMessage(data.error || 'Unable to delete service', 'danger');
+          return;
+        }
+        showMessage('Service deleted', 'success');
+        loadServices();
+      } catch (error) {
+        console.error(error);
+        showMessage('Failed to delete service', 'danger');
+      }
+    }
+
+    // ==============================
+    // INITIALIZATION & TIMERS
+    // ==============================
+    loadDashboard();
+    loadHistory();
+    loadServices();
+
+    setInterval(() => {
+      loadDashboard();
+      loadHistory();
+    }, 5000);
   </script>
 
 </body>

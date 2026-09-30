@@ -1,27 +1,140 @@
-<!-- WEEK 4 ADDITION OF EDIT STORE FORM -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <title>Edit Store</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Edit Store Proposal</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 40px;
+            width: 450px;
+            border-radius: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .buttons {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .cancel {
+            background: #475569;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .reason {
+            background: #3b1d1d;
+            color: #fecaca;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
+
 <body>
-    <div class="card" style="max-width: 500px; margin: 50px auto;">
-        <h1>Edit {{ store['store_name'] }}</h1>
-        <p style="color: #6b7280;">Editing will send this store back to Pending for re-review.</p>
 
-        <form method="POST">
-            <label>Store Name</label>
-            <input type="text" name="name" value="{{ store['store_name'] }}" required>
+<div class="card">
 
-            <label>Operating Hours</label>
-            <input type="text" name="hours" value="{{ store['operating_hours'] }}" required>
+    <h1>Edit Store Proposal</h1>
 
-            <button type="submit" style="width: 100%; margin-top: 15px;">Save & Resubmit</button>
-        </form>
-        <p style="text-align: center; margin-top: 15px;">
-            <a href="/my-store" style="color: #2563eb;">← Back to My Stores</a>
-        </p>
+    {% if store['rejection_reason'] %}
+    <div class="reason">
+        <strong>Previous rejection reason:</strong><br>
+        {{ store['rejection_reason'] }}
     </div>
+    {% endif %}
+
+    <form method="POST">
+
+        <label>Store Name</label>
+        <input
+            type="text"
+            name="name"
+            value="{{ store['store_name'] }}"
+            required
+        >
+
+        <label>Operating Hours</label>
+        <input
+            type="text"
+            name="hours"
+            value="{{ store['operating_hours'] }}"
+            required
+        >
+
+        <label>Description</label>
+        <textarea name="description">{{ store['store_description'] or '' }}</textarea>
+
+        <div class="buttons">
+
+            <button type="submit">
+                Resubmit Proposal
+            </button>
+
+            <a href="{{ url_for('staff_status') }}" style="flex:1;">
+                <button type="button" class="cancel">
+                    Cancel
+                </button>
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
 </body>
+
 </html>
