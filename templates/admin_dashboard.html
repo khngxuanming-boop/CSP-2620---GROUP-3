@@ -730,9 +730,17 @@
                         <div class="card-title">Live Queue Monitoring</div>
                         <div class="card-description">Monitor active queues across all stores.</div>
                     </div>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="loadQueueMonitor()">
-                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-                    </button>
+                    <div class="d-flex gap-2">
+                        <!-- Store Selector Dropdown -->
+                        <select id="storeFilterSelect" class="form-select form-select-sm" style="width: auto;"
+                            onchange="loadQueueMonitor()">
+                            <option value="ALL">All Stores</option>
+                        </select>
+
+                        <button class="btn btn-sm btn-outline-secondary" onclick="loadQueueMonitor()">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -766,9 +774,17 @@
                         <div class="card-title">Recent Queue History</div>
                         <div class="card-description">Recent queue activity recorded by the system.</div>
                     </div>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="loadHistory()">
-                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-                    </button>
+                    <div class="d-flex gap-2">
+                        <!-- Store Filter Dropdown -->
+                        <select id="historyStoreFilterSelect" class="form-select form-select-sm" style="width: auto;"
+                            onchange="loadHistory()">
+                            <option value="ALL">All Stores</option>
+                        </select>
+
+                        <button class="btn btn-sm btn-outline-secondary" onclick="loadHistory()">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -790,14 +806,12 @@
                             </tr>
                         </tbody>
                     </table>
-
                 </div>
             </div>
         </div>
 
         <!-- ================= STATISTICS ================= -->
         <div id="statistics-section" class="admin-section" style="display: none;">
-
             <div class="row g-4">
 
                 <div class="col-lg-6">
@@ -805,12 +819,16 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
                                 <div class="card-title">Queue Statistics</div>
-                                <div class="card-description">
-                                    Number of queue entries created over time.
-                                </div>
+                                <div class="card-description">Number of queue entries created over time.</div>
                             </div>
 
                             <div class="d-flex gap-2">
+                                <!-- Store Selector Dropdown for Queue Stats -->
+                                <select id="statsStoreFilterSelect" class="form-select form-select-sm"
+                                    style="width: auto;" onchange="loadQueueStats()">
+                                    <option value="ALL">All Stores</option>
+                                </select>
+
                                 <select id="queueChartType" class="form-select form-select-sm" style="width: auto;"
                                     onchange="loadQueueStats()">
                                     <option value="bar">Bar Chart</option>
@@ -836,9 +854,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
                                 <div class="card-title">Store Registrations</div>
-                                <div class="card-description">
-                                    Number of stores registered over time.
-                                </div>
+                                <div class="card-description">Number of stores registered over time.</div>
                             </div>
 
                             <div class="d-flex gap-2">
@@ -863,7 +879,6 @@
                 </div>
 
             </div>
-
         </div>
 
     </main>
@@ -873,13 +888,144 @@
 
     <!-- JAVASCRIPT -->
     <script>
+
         /* =====================================================
-           LOAD STORES
+    POPULATE STORE SELECTOR DROPDOWNS
+ ===================================================== */
+        async function populateStoreDropdown(stores) {
+            const dropdownIds = ['storeFilterSelect', 'historyStoreFilterSelect', 'statsStoreFilterSelect'];
+
+            dropdownIds.forEach(id => {
+                const select = document.getElementById(id);
+                if (!select) return;
+
+                const currentSelected = select.value;
+                select.innerHTML = '<option value="ALL">All Stores</option>';
+
+                stores.forEach(store => {
+                    const option = document.createElement('option');
+                    option.value = store.store_id;
+                    option.textContent = store.store_name;
+                    if (String(store.store_id) === currentSelected) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        /* =====================================================
+           QUEUE HISTORY (With store filtering)
         ===================================================== */
+        async function loadHistory() {
+            try {
+                const selectedStoreId = document.getElementById('historyStoreFilterSelect')?.value || 'ALL';
+
+                // Pass store_id as a query string parameter if a store is selected
+                const url = selectedStoreId !== 'ALL'
+                    ? `/api/queues/history?store_id=${selectedStoreId}`
+                    : '/api/queues/history';
+
+                const response = await fetch(url);
+                let history = await response.json();
+
+                const table = document.getElementById('historyTable');
+                table.innerHTML = '';
+
+                // If backend does not support filtering, filter on client-side:
+                if (selectedStoreId !== 'ALL' && history.length > 0 && history[0].store_id !== undefined) {
+                    history = history.filter(item => String(item.store_id) === String(selectedStoreId));
+                }
+
+                if (!history || history.length === 0) {
+                    table.innerHTML = `
+                <tr>
+                    <td colspan="4" class="empty-message">
+                        <i class="bi bi-clock-history fs-3 d-block mb-2 text-muted"></i>
+                        No queue history found for the selected filter.
+                    </td>
+                </tr>
+            `;
+                    return;
+                }
+
+                history.slice(0, 10).forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td><span class="queue-number">Q-${String(item.queue_id || 0).padStart(3, '0')}</span></td>
+                <td>${item.counter_id ? 'Counter #' + item.counter_id : '-'}</td>
+                <td>${getStatusBadge(item.queue_status || item.status)}</td>
+                <td class="text-muted small">${item.updated_at || item.created_at || '-'}</td>
+            `;
+                    table.appendChild(row);
+                });
+            } catch (error) {
+                console.error('History error:', error);
+            }
+        }
+
+        /* =====================================================
+           STATISTICS (With store filtering)
+        ===================================================== */
+        async function loadQueueStats() {
+            const period = document.getElementById('queuePeriodSelect').value;
+            const chartType = document.getElementById('queueChartType').value;
+            const selectedStoreId = document.getElementById('statsStoreFilterSelect')?.value || 'ALL';
+
+            try {
+                let url = `/api/stats/queues?period=${period}`;
+                if (selectedStoreId !== 'ALL') {
+                    url += `&store_id=${selectedStoreId}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!response.ok || !data || data.length === 0) {
+                    renderEmptyChart('queueChart');
+                    return;
+                }
+
+                const rows = [...data].reverse();
+
+                const labels = rows.map(r => r.period_label);
+                const totals = rows.map(r => r.total_queues);
+
+                if (chartType === 'bar') {
+                    renderBarChart(
+                        'queueChart',
+                        'queueChartRef',
+                        labels,
+                        totals,
+                        'Total Queues',
+                        '#3a7bd5'
+                    );
+                } else {
+                    renderTrendChart(
+                        'queueChart',
+                        'queueChartRef',
+                        labels,
+                        totals,
+                        'Total Queues',
+                        '#3b82f6'
+                    );
+                }
+
+            } catch (error) {
+                console.error('Queue statistics error:', error);
+                renderEmptyChart('queueChart');
+            }
+        }
+        /* =====================================================
+    LOAD STORES 
+ ===================================================== */
         async function loadStores() {
             try {
                 const response = await fetch('/api/stores');
                 const stores = await response.json();
+
+                // Populate dropdown menu for filtering
+                populateStoreDropdown(stores);
 
                 const storeTable = document.getElementById('storeTable');
                 const proposalTable = document.getElementById('proposalTable');
@@ -890,68 +1036,44 @@
                 let pending = 0;
 
                 if (!stores || stores.length === 0) {
-                    storeTable.innerHTML = `
-                        <tr>
-                            <td colspan="4" class="empty-message">
-                                <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
-                                No stores found.
-                            </td>
-                        </tr>
-                    `;
-
-                    proposalTable.innerHTML = `
-                        <tr>
-                            <td colspan="5" class="empty-message">
-                                <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
-                                No store proposals.
-                            </td>
-                        </tr>
-                    `;
-
+                    storeTable.innerHTML = `<tr><td colspan="4" class="empty-message">No stores found.</td></tr>`;
+                    proposalTable.innerHTML = `<tr><td colspan="5" class="empty-message">No store proposals.</td></tr>`;
                     document.getElementById('totalStores').textContent = 0;
                     document.getElementById('pendingProposals').textContent = 0;
                     return;
                 }
 
                 stores.forEach(store => {
-                    /* STORE TABLE */
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>
-                            <strong>${store.store_name}</strong>
-                            <br>
-                            <small class="text-muted">ID: #${store.store_id}</small>
-                        </td>
-                        <td>${getStatusBadge(store.store_status)}</td>
-                        <td>${store.operating_hours || '-'}</td>
-                        <td>${store.estimated_wait_time || 0} min</td>
-                    `;
+                <td>
+                    <strong>${store.store_name}</strong><br>
+                    <small class="text-muted">ID: #${store.store_id}</small>
+                </td>
+                <td>${getStatusBadge(store.store_status)}</td>
+                <td>${store.operating_hours || '-'}</td>
+                <td>${store.estimated_wait_time || 0} min</td>
+            `;
                     storeTable.appendChild(row);
 
-                    /* PROPOSALS */
                     if (store.store_status && store.store_status.toUpperCase() === 'PENDING') {
                         pending++;
                         const proposalRow = document.createElement('tr');
-
                         proposalRow.innerHTML = `
-                            <td><strong>#${store.store_id}</strong></td>
-                            <td>
-                                <strong>${store.store_name}</strong>
-                                ${store.store_description ? `<br><small class="text-muted">${store.store_description}</small>` : ''}
-                            </td>
-                            <td>${store.operating_hours || '-'}</td>
-                            <td><span class="status status-pending">PENDING</span></td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1">
-                                    <button class="btn btn-sm approve-btn" onclick="approveStore(${store.store_id})">
-                                        <i class="bi bi-check-lg me-1"></i> Approve
-                                    </button>
-                                    <button class="btn btn-sm reject-btn" onclick="rejectStore(${store.store_id})">
-                                        <i class="bi bi-x-lg me-1"></i> Reject
-                                    </button>
-                                </div>
-                            </td>
-                        `;
+                    <td><strong>#${store.store_id}</strong></td>
+                    <td>
+                        <strong>${store.store_name}</strong>
+                        ${store.store_description ? `<br><small class="text-muted">${store.store_description}</small>` : ''}
+                    </td>
+                    <td>${store.operating_hours || '-'}</td>
+                    <td><span class="status status-pending">PENDING</span></td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-1">
+                            <button class="btn btn-sm approve-btn" onclick="approveStore(${store.store_id})">Approve</button>
+                            <button class="btn btn-sm reject-btn" onclick="rejectStore(${store.store_id})">Reject</button>
+                        </div>
+                    </td>
+                `;
                         proposalTable.appendChild(proposalRow);
                     }
                 });
@@ -960,17 +1082,80 @@
                 document.getElementById('pendingProposals').textContent = pending;
 
                 if (pending === 0) {
-                    proposalTable.innerHTML = `
-                        <tr>
-                            <td colspan="5" class="empty-message">
-                                <i class="bi bi-check2-circle fs-3 d-block mb-2 text-success"></i>
-                                No pending store proposals.
-                            </td>
-                        </tr>
-                    `;
+                    proposalTable.innerHTML = `<tr><td colspan="5" class="empty-message">No pending store proposals.</td></tr>`;
                 }
             } catch (error) {
                 console.error('Error loading stores:', error);
+            }
+        }
+
+        /* =====================================================
+           QUEUE MONITOR 
+        ===================================================== */
+        async function loadQueueMonitor() {
+            try {
+                const selectedStoreId = document.getElementById('storeFilterSelect').value;
+
+                const storesResponse = await fetch('/api/stores');
+                let stores = await storesResponse.json();
+
+                // Filter stores if a specific store is selected
+                if (selectedStoreId !== 'ALL') {
+                    stores = stores.filter(s => String(s.store_id) === String(selectedStoreId));
+                }
+
+                const queueTable = document.getElementById('queueTable');
+                queueTable.innerHTML = '';
+
+                let waiting = 0;
+                let serving = 0;
+                let foundQueue = false;
+
+                for (const store of stores) {
+                    const counterResponse = await fetch(`/api/counters/${store.store_id}`);
+                    const counters = await counterResponse.json();
+
+                    for (const counter of counters) {
+                        const queueResponse = await fetch(`/api/counters/${counter.counter_id}/queue`);
+                        const queues = await queueResponse.json();
+
+                        if (!queues || queues.length === 0) continue;
+
+                        foundQueue = true;
+
+                        queues.forEach(queue => {
+                            const status = queue.queue_status || queue.status || 'UNKNOWN';
+
+                            if (status === 'WAITING') waiting++;
+                            if (status === 'SERVING') serving++;
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                        <td><strong>${store.store_name}</strong></td>
+                        <td>${counter.counter_name}</td>
+                        <td><span class="queue-number">Q-${String(queue.queue_number || queue.queue_id || 0).padStart(3, '0')}</span></td>
+                        <td>${getStatusBadge(status)}</td>
+                    `;
+                            queueTable.appendChild(row);
+                        });
+                    }
+                }
+
+                document.getElementById('waitingCustomers').textContent = waiting;
+                document.getElementById('servingCustomers').textContent = serving;
+
+                if (!foundQueue) {
+                    queueTable.innerHTML = `
+                <tr>
+                    <td colspan="4" class="empty-message">
+                        <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
+                        No active queues found for the selected store.
+                    </td>
+                </tr>
+            `;
+                }
+            } catch (error) {
+                console.error('Queue monitor error:', error);
             }
         }
 
@@ -1197,9 +1382,6 @@
         /* =====================================================
                  STATISTICS
               ===================================================== */
-        /* =====================================================
-    STATISTICS
- ===================================================== */
 
         async function loadQueueStats() {
             const period = document.getElementById('queuePeriodSelect').value;
