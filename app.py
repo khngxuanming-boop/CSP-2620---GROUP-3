@@ -598,7 +598,7 @@ def staff_status():
         store=store
     )
 
-# Store Details Page ---> Week 3
+# Store Details Page ---> Week 3 & Week 7 (live queue)
 @app.route('/store/<int:store_id>')
 def store_details(store_id):
     # Check if the user has a session, if not, redirect to login
@@ -610,16 +610,40 @@ def store_details(store_id):
     # Grab the specific store record based on the clicked store id.
     store = conn.execute('SELECT * FROM store WHERE store_id =?', (store_id,)).fetchone()
 
-    # Grab all active services linked to this store from Member 3's service table
-    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
-
-
     # Fall back error response if someone manually type a fake store ID in the URL
     if not store:
         return "Store not found", 404
 
+    # Grab all active services linked to this store from Member 3's service table
+    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
+
+    # Same live "how many waiting" / "is it open" numbers as the directory
+    # page, so this page stays consistent with the card the customer clicked.
+    waiting_count = conn.execute(
+        '''
+        SELECT COUNT(*) AS c
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        ''',
+        (store_id,)
+    ).fetchone()['c']
+
+    open_counters = conn.execute(
+        "SELECT COUNT(*) AS c FROM counter WHERE store_id = ? AND counter_status = 'open'",
+        (store_id,)
+    ).fetchone()['c']
+
     # Render the template and pass along the user's session name
-    return render_template('store_details.html', store=store, services=services, username=session.get('username'))
+    return render_template(
+        'store_details.html',
+        store=store,
+        services=services,
+        waiting_count=waiting_count,
+        is_open=open_counters > 0,
+        username=session.get('username')
+    )
 
 # User Logout ---> Week 3
 @app.route('/logout')
