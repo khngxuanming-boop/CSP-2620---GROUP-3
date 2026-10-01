@@ -141,7 +141,7 @@ def home():
 
 
 # =========================
-# STORE DIRECTORY
+# STORE DIRECTORY ---> Week 7 S(Search Filter)
 # =========================
 
 # Shows every store, with search-by-name and filter-by-service, plus a
