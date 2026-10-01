@@ -144,30 +144,102 @@ def home():
 # STORE DIRECTORY
 # =========================
 
+# Shows every store, with search-by-name and filter-by-service, plus a
+# live "X waiting" count and an open/closed badge per store so customers
+# don't have to click into every store to see if it's worth queueing.
 @app.route('/stores')
 def store_discovery():
 
     search_query = request.args.get('search', '')
+    # ?service=... from the new filter dropdown (empty string = "All services")
+    service_filter = request.args.get('service', '')
 
     # Grab the logged in user's name from memory
     current_username = session.get('username')
 
     conn = get_db_connection()
 
-    if search_query:
-        stores = conn.execute(
+    # Build the store list depending on which filters are active. When a
+    # service is picked we JOIN through the service table and DISTINCT the
+    # result so a store offering that service more than once (shouldn't
+    # happen, but just in case) doesn't show up twice.
+    if search_query and service_filter:
+        stores_raw = conn.execute(
+            '''
+            SELECT DISTINCT store.*
+            FROM store
+            JOIN service ON service.store_id = store.store_id
+            WHERE store.store_name LIKE ?
+            AND service.service_name = ?
+            ''',
+            ('%' + search_query + '%', service_filter)
+        ).fetchall()
+    elif service_filter:
+        stores_raw = conn.execute(
+            '''
+            SELECT DISTINCT store.*
+            FROM store
+            JOIN service ON service.store_id = store.store_id
+            WHERE service.service_name = ?
+            ''',
+            (service_filter,)
+        ).fetchall()
+    elif search_query:
+        stores_raw = conn.execute(
             'SELECT * FROM store WHERE store_name LIKE ?',
             ('%' + search_query + '%',)
         ).fetchall()
     else:
-        stores = conn.execute(
+        stores_raw = conn.execute(
             'SELECT * FROM store'
         ).fetchall()
+
+    # For the filter dropdown: every distinct service name across all stores.
+    all_services = conn.execute(
+        'SELECT DISTINCT service_name FROM service ORDER BY service_name'
+    ).fetchall()
+
+    # sqlite3.Row objects are read-only, so convert each store to a plain
+    # dict first, then bolt on the two live/computed fields the template
+    # needs. Dict lookups work the same as Row lookups in Jinja
+    # (store['x']), so nothing in the template has to change for the
+    # fields that already existed.
+    stores = []
+    for row in stores_raw:
+        store = dict(row)
+
+        # How many customers are currently WAITING for any service at this
+        # store right now (Member 2's queue table, joined through service
+        # so we don't need a store_id column on queue itself).
+        waiting_count = conn.execute(
+            '''
+            SELECT COUNT(*) AS c
+            FROM queue q
+            JOIN service s ON q.service_id = s.service_id
+            WHERE s.store_id = ?
+            AND q.queue_status = 'WAITING'
+            ''',
+            (store['store_id'],)
+        ).fetchone()['c']
+
+        # A store counts as "open" if it has at least one open counter
+        # (Member 3's counter table). There's no separate per-service open
+        # flag in the schema, so this is a store-wide approximation.
+        open_counters = conn.execute(
+            "SELECT COUNT(*) AS c FROM counter WHERE store_id = ? AND counter_status = 'open'",
+            (store['store_id'],)
+        ).fetchone()['c']
+
+        store['waiting_count'] = waiting_count
+        store['is_open'] = open_counters > 0
+        stores.append(store)
 
     return render_template(
         'stores.html',
         stores=stores,
         search_query=search_query,
+        service_filter=service_filter,
+        all_services=all_services,
         username=current_username
     )
 
