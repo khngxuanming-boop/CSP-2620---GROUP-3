@@ -645,6 +645,48 @@ def store_details(store_id):
         username=session.get('username')
     )
 
+# Customer Profile (view/edit own account) ---> Week 7
+
+# GET  -> show the logged-in user's own username/email.
+# POST -> let them update their email and/or set a new password.
+# Deliberately does NOT touch username or role - those aren't meant to
+# change after signup, and role changes are an admin concern, not a
+# customer self-service one.
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM user WHERE user_id = ?', (session['user_id'],)).fetchone()
+
+    error = None
+    success = None
+
+    if request.method == 'POST':
+        new_email = request.form.get('email', '').strip()
+        new_password = request.form.get('password', '').strip()
+
+        # Password field is optional - only touch it if they actually typed
+        # something, so leaving it blank just keeps the current password.
+        if new_password:
+            conn.execute(
+                'UPDATE user SET email = ?, password = ? WHERE user_id = ?',
+                (new_email, new_password, session['user_id'])
+            )
+        else:
+            conn.execute(
+                'UPDATE user SET email = ? WHERE user_id = ?',
+                (new_email, session['user_id'])
+            )
+        conn.commit()
+
+        # Re-fetch so the page shows the values that actually got saved.
+        user = conn.execute('SELECT * FROM user WHERE user_id = ?', (session['user_id'],)).fetchone()
+        success = "Profile updated successfully."
+
+    return render_template('profile.html', user=user, error=error, success=success)
+
 # User Logout ---> Week 3
 @app.route('/logout')
 def logout():
