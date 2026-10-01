@@ -298,6 +298,9 @@
                 <a href="/logout" style="color: #f87171; text-decoration: none; font-size: 0.875rem; font-weight: 600; padding: 6px 14px; border-radius: 8px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25);">
                     Logout
                 </a>
+                <a href="/profile" style="color: #93c5fd; text-decoration: none; font-size: 0.875rem; font-weight: 600;">
+                    My Profile
+                </a>
             </div>
 
         </div>
@@ -324,13 +327,22 @@
             <div class="store-card">
                 <div class="store-card-header">
                     <h2>{{ store['store_name'] }}</h2>
-                    <span class="status-badge status-{{ store['store_status'] | lower }}">
-                        {{ store['store_status'] }}
-                    </span>
+                    <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+                        <span class="status-badge status-{{ store['store_status'] | lower }}">
+                            {{ store['store_status'] }}
+                        </span>
+                        <span class="status-badge {{ 'status-open' if store['is_open'] else 'status-closed' }}">
+                            {{ 'OPEN' if store['is_open'] else 'CLOSED' }}
+                        </span>
+                    </div>
                 </div>
 
                 <div class="store-card-body">
                     <div class="metric-row">
+                        <span class="metric-label">Currently Waiting</span>
+                        <span class="metric-value">{{ store['waiting_count'] }} <small>people</small></span>
+                    </div>
+                    <div class="metric-row" style="margin-top: 8px;">
                         <span class="metric-label">Estimated Wait</span>
                         <span class="metric-value">{{ store['estimated_wait_time'] }} <small>mins</small></span>
                     </div>

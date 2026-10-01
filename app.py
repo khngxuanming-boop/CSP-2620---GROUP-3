@@ -141,7 +141,7 @@ def home():
 
 
 # =========================
-# STORE DIRECTORY ---> Week 7 S(Search Filter)
+# STORE DIRECTORY ---> Week 7 (Search Filter)
 # =========================
 
 # Shows every store, with search-by-name and filter-by-service, plus a
@@ -598,7 +598,8 @@ def staff_status():
         store=store
     )
 
-# Store Details Page ---> Week 3 & Week 7 (live queue)
+# Store Details Page ---> Week 3 & Week 7 (Live queue)
+
 @app.route('/store/<int:store_id>')
 def store_details(store_id):
     # Check if the user has a session, if not, redirect to login
@@ -617,15 +618,30 @@ def store_details(store_id):
     # Grab all active services linked to this store from Member 3's service table
     services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
 
-    # Same live "how many waiting" / "is it open" numbers as the directory
-    # page, so this page stays consistent with the card the customer clicked.
-    waiting_count = conn.execute(
+    # Walk-in vs appointment queues are told apart by the queue_number
+    # prefix Member 2 already generates: 'W-xxx' for walk-ins
+    # (walk_in_queue()) and 'A-xxx' for appointments that have checked in
+    # (check_in_appointment()). No new column needed - just filter on that.
+    walkin_waiting = conn.execute(
         '''
         SELECT COUNT(*) AS c
         FROM queue q
         JOIN service s ON q.service_id = s.service_id
         WHERE s.store_id = ?
         AND q.queue_status = 'WAITING'
+        AND q.queue_number LIKE 'W-%'
+        ''',
+        (store_id,)
+    ).fetchone()['c']
+
+    appt_waiting = conn.execute(
+        '''
+        SELECT COUNT(*) AS c
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        AND q.queue_number LIKE 'A-%'
         ''',
         (store_id,)
     ).fetchone()['c']
@@ -635,13 +651,56 @@ def store_details(store_id):
         (store_id,)
     ).fetchone()['c']
 
+    # Does the logged-in customer currently have a live queue entry (either
+    # WAITING or already being SERVING) at THIS store? Pick the most recent
+    # one if somehow there's more than one.
+    my_queue_row = conn.execute(
+        '''
+        SELECT q.*
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.user_id = ?
+        AND q.queue_status IN ('WAITING', 'SERVING')
+        ORDER BY q.queue_id DESC
+        LIMIT 1
+        ''',
+        (store_id, session['user_id'])
+    ).fetchone()
+
+    my_queue = None
+    if my_queue_row:
+        my_queue = dict(my_queue_row)
+        # 'W-' / 'A-' prefix tells us which queue type this entry belongs to.
+        my_queue['queue_type'] = 'Walk-in' if my_queue['queue_number'].startswith('W-') else 'Appointment'
+
+        # Same "people ahead of me" maths as Member 2's /api/queues/my-status:
+        # count everyone still WAITING in this exact service's queue who
+        # joined (got a lower queue_id) before I did. 0 ahead once I'm
+        # already SERVING.
+        if my_queue['queue_status'] == 'WAITING':
+            my_queue['people_ahead'] = conn.execute(
+                '''
+                SELECT COUNT(*) AS c
+                FROM queue
+                WHERE service_id = ?
+                AND queue_status = 'WAITING'
+                AND queue_id < ?
+                ''',
+                (my_queue['service_id'], my_queue['queue_id'])
+            ).fetchone()['c']
+        else:
+            my_queue['people_ahead'] = 0
+
     # Render the template and pass along the user's session name
     return render_template(
         'store_details.html',
         store=store,
         services=services,
-        waiting_count=waiting_count,
+        walkin_waiting=walkin_waiting,
+        appt_waiting=appt_waiting,
         is_open=open_counters > 0,
+        my_queue=my_queue,
         username=session.get('username')
     )
 
