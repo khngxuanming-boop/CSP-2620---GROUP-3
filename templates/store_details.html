@@ -16,13 +16,49 @@
             {{ store['store_name'] }}
         </h1>
         
+        <!-- My Queue Status: only shows up if this customer currently has
+             an active entry (WAITING or SERVING) in this store's queue. -->
+        {% if my_queue %}
+        <div style="margin-top: 20px; padding: 18px; border-radius: 10px; background: rgba(37, 99, 235, 0.1); border: 2px solid #2563eb;">
+            <h3 style="margin-top: 0; color: #1d4ed8;">You're in the queue!</h3>
+            <p><strong>Queue Number:</strong> {{ my_queue['queue_number'] }} ({{ my_queue['queue_type'] }})</p>
+            <p><strong>Status:</strong> {{ my_queue['queue_status'] }}</p>
+            {% if my_queue['queue_status'] == 'WAITING' %}
+                {% if my_queue['people_ahead'] == 0 %}
+                    <p style="font-weight: bold; color: #16a34a;">You're next! No one ahead of you.</p>
+                {% else %}
+                    <p><strong>{{ my_queue['people_ahead'] }}</strong> {{ 'person' if my_queue['people_ahead'] == 1 else 'people' }} ahead of you.</p>
+                {% endif %}
+            {% else %}
+                <p style="font-weight: bold; color: #16a34a;">You're being served right now!</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <div style="display: flex; gap: 40px; margin-top: 20px;">
             <!-- Left Column: Store Info -->
             <div style="flex: 1;">
                 <h3 style="color: #4b5563;">Store Information</h3>
                 <p><strong>Status:</strong> <span style="color: #10b981;">{{ store['store_status'] }}</span></p>
+                <p><strong>Currently:</strong>
+                    <span style="color: {{ '#10b981' if is_open else '#ef4444' }}; font-weight: bold;">
+                        {{ 'OPEN' if is_open else 'CLOSED' }}
+                    </span>
+                </p>
                 <p><strong>Operating Hours:</strong> {{ store['operating_hours'] }}</p>
-                <p><strong>Current Wait Time:</strong> {{ store['estimated_wait_time'] }} minutes</p>
+                <p><strong>Estimated Wait Time:</strong> {{ store['estimated_wait_time'] }} minutes</p>
+
+                <h3 style="color: #4b5563; margin-top: 20px;">Live Queue</h3>
+                <div style="display: flex; gap: 12px;">
+                    <div style="flex: 1; background: rgba(0, 0, 0, 0.05); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold;">{{ walkin_waiting }}</div>
+                        <div style="font-size: 0.85em; color: #6b7280;">Walk-in waiting</div>
+                    </div>
+                    <div style="flex: 1; background: rgba(0, 0, 0, 0.05); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.5em; font-weight: bold;">{{ appt_waiting }}</div>
+                        <div style="font-size: 0.85em; color: #6b7280;">Appointment waiting</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Right Column: Services Available -->
