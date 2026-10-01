@@ -1665,8 +1665,8 @@ def get_queue_history():
                 """
                 SELECT q.*
                 FROM queue q
-                JOIN counter c ON q.counter_id = c.counter_id
-                WHERE c.store_id = ?
+                JOIN service s ON q.service_id = s.service_id
+                WHERE s.store_id = ?
                 AND q.queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
                 ORDER BY q.queue_id DESC
                 """,
