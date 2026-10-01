@@ -156,12 +156,12 @@ def store_discovery():
 
     if search_query:
         stores = conn.execute(
-            'SELECT * FROM store WHERE store_name LIKE ?',
+            "SELECT * FROM store WHERE store_status = 'APPROVED' AND store_name LIKE ?",
             ('%' + search_query + '%',)
         ).fetchall()
     else:
         stores = conn.execute(
-            'SELECT * FROM store'
+            "SELECT * FROM store WHERE store_status = 'APPROVED'"
         ).fetchall()
 
     return render_template(
@@ -541,7 +541,8 @@ def store_details(store_id):
     # Grab all active services linked to this store from Member 3's service table
     services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
 
-
+    if store['store_status'] != 'APPROVED':
+        return "Store not available", 404
     # Fall back error response if someone manually type a fake store ID in the URL
     if not store:
         return "Store not found", 404
