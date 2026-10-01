@@ -1655,22 +1655,36 @@ def get_counter_queue(counter_id):
 # GET - View queue history
 @app.route('/api/queues/history', methods=['GET'])
 def get_queue_history():
-
+    store_id = request.args.get('store_id')
     conn = get_db_connection()
 
-    queues = conn.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
-        ORDER BY queue_id DESC
-        """
-    ).fetchall()
+    try:
+        if store_id and store_id != 'ALL':
+            queues = conn.execute(
+                """
+                SELECT q.*
+                FROM queue q
+                JOIN counter c ON q.counter_id = c.counter_id
+                WHERE c.store_id = ?
+                AND q.queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
+                ORDER BY q.queue_id DESC
+                """,
+                (store_id,)
+            ).fetchall()
+        else:
+            queues = conn.execute(
+                """
+                SELECT q.*
+                FROM queue q
+                WHERE q.queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
+                ORDER BY q.queue_id DESC
+                """
+            ).fetchall()
 
-
-    return jsonify([
-        dict(row) for row in queues
-    ]), 200
+        return jsonify([dict(row) for row in queues]), 200
+    except Exception as e:
+        print(f"Error fetching queue history: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # GET - View queue status summary
 @app.route('/api/counters/<int:counter_id>/queue/status', methods=['GET'])
@@ -1866,34 +1880,53 @@ def get_queue_stats():
     if session.get('role') != 'ADMIN':
         return jsonify({'error': 'Admin access required'}), 403
 
-    period = request.args.get('period', 'day')  # day | week | month | year
+    period = request.args.get('period', 'day')
+    store_id = request.args.get('store_id')
 
     period_formats = {
         'day':   '%Y-%m-%d',
-        'week':  '%Y-%W',      # ISO-ish year-week
+        'week':  '%Y-%W',
         'month': '%Y-%m',
         'year':  '%Y'
     }
 
     if period not in period_formats:
-        return jsonify({'error': 'period must be one of: day, week, month, year'}), 400
+        return jsonify({'error': 'Invalid period'}), 400
 
     fmt = period_formats[period]
-
     conn = get_db_connection()
 
-    rows = conn.execute(
-        f"""
-        SELECT strftime('{fmt}', created_at) AS period_label,
-               COUNT(*) AS total_queues
-        FROM queue
-        GROUP BY period_label
-        ORDER BY period_label DESC
-        LIMIT 30
-        """
-    ).fetchall()
+    try:
+        if store_id and store_id != 'ALL':
+            rows = conn.execute(
+                f"""
+                SELECT strftime('{fmt}', q.created_at) AS period_label,
+                       COUNT(*) AS total_queues
+                FROM queue q
+                JOIN counter c ON q.counter_id = c.counter_id
+                WHERE c.store_id = ?
+                GROUP BY period_label
+                ORDER BY period_label DESC
+                LIMIT 30
+                """,
+                (store_id,)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                f"""
+                SELECT strftime('{fmt}', created_at) AS period_label,
+                       COUNT(*) AS total_queues
+                FROM queue
+                GROUP BY period_label
+                ORDER BY period_label DESC
+                LIMIT 30
+                """
+            ).fetchall()
 
-    return jsonify([dict(row) for row in rows]), 200
+        return jsonify([dict(row) for row in rows]), 200
+    except Exception as e:
+        print(f"Error fetching queue stats: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/stats/stores', methods=['GET'])
