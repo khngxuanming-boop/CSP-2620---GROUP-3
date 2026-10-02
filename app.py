@@ -1704,36 +1704,38 @@ def get_counter_queue(counter_id):
         dict(row) for row in queues
     ]), 200
 
-# GET - View queue history
+# GET - View queue history (optional filters: store_id, date=YYYY-MM-DD)
 @app.route('/api/queues/history', methods=['GET'])
 def get_queue_history():
     store_id = request.args.get('store_id')
+    date = request.args.get('date')
     conn = get_db_connection()
 
     try:
-        if store_id and store_id != 'ALL':
-            queues = conn.execute(
-                """
-                SELECT q.*
-                FROM queue q
-                JOIN service s ON q.service_id = s.service_id
-                WHERE s.store_id = ?
-                AND q.queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
-                ORDER BY q.queue_id DESC
-                """,
-                (store_id,)
-            ).fetchall()
-        else:
-            queues = conn.execute(
-                """
-                SELECT q.*
-                FROM queue q
-                WHERE q.queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
-                ORDER BY q.queue_id DESC
-                """
-            ).fetchall()
+        sql = """
+            SELECT q.*,
+                   s.service_name,
+                   c.counter_name,
+                   datetime(q.created_at, 'localtime') AS created_local
+            FROM queue q
+            LEFT JOIN service s ON q.service_id = s.service_id
+            LEFT JOIN counter c ON q.counter_id = c.counter_id
+            WHERE q.queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
+        """
+        params = []
 
-        return jsonify([dict(row) for row in queues]), 200
+        if store_id and store_id != 'ALL':
+            sql += " AND s.store_id = ?"
+            params.append(store_id)
+
+        if date:
+            sql += " AND date(q.created_at, 'localtime') = ?"
+            params.append(date)
+
+        sql += " ORDER BY q.queue_id DESC"
+
+        rows = conn.execute(sql, params).fetchall()
+        return jsonify([dict(row) for row in rows]), 200
     except Exception as e:
         print(f"Error fetching queue history: {e}")
         return jsonify({'error': str(e)}), 500

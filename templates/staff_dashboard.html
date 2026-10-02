@@ -738,14 +738,17 @@
     <!-- ================= QUEUE HISTORY ================= -->
     <section id="history-section" class="staff-section staff-card">
       <div class="staff-card-body">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
           <div>
             <h4 class="section-title mb-1">Queue History</h4>
-            <p class="section-subtitle">Recently completed, skipped and cancelled queues.</p>
+            <p class="section-subtitle">Completed, skipped and cancelled queues for the selected day.</p>
           </div>
-          <button class="btn btn-outline-secondary btn-sm" onclick="loadHistory()">
-            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-          </button>
+          <div class="d-flex gap-2 align-items-center">
+            <input type="date" id="historyDate" class="form-control form-control-sm" style="width:auto;"
+              onchange="loadHistory()">
+            <button class="btn btn-outline-secondary btn-sm" onclick="setHistoryToday()">Today</button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="clearHistoryDate()">All dates</button>
+          </div>
         </div>
 
         <div class="table-responsive">
@@ -756,11 +759,12 @@
                 <th>Service</th>
                 <th>Status</th>
                 <th>Counter</th>
+                <th>Time</th>
               </tr>
             </thead>
             <tbody id="historyTableBody">
               <tr>
-                <td colspan="4" class="empty-row">
+                <td colspan="5" class="empty-row">
                   <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                   Loading history...
                 </td>
@@ -1105,11 +1109,31 @@
     // ==============================
     // QUEUE HISTORY
     // ==============================
+        function todayString() {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 10);
+    }
+
+    function setHistoryToday() {
+      document.getElementById("historyDate").value = todayString();
+      loadHistory();
+    }
+
+    function clearHistoryDate() {
+      document.getElementById("historyDate").value = "";
+      loadHistory();
+    }
+
     async function loadHistory() {
       const tbody = document.getElementById("historyTableBody");
+      const date = document.getElementById("historyDate").value;
 
       try {
-        const response = await fetch("/api/queues/history");
+        let url = `/api/queues/history?store_id=${storeId}`;
+        if (date) url += `&date=${date}`;
+
+        const response = await fetch(url);
         const data = await response.json();
 
         if (!response.ok) {
@@ -1117,52 +1141,44 @@
           return;
         }
 
-        tbody.innerHTML = "";
-
         if (data.length === 0) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="4" class="empty-row">
+              <td colspan="5" class="empty-row">
                 <i class="bi bi-clock-history fs-3 d-block mb-2 text-muted"></i>
-                No queue history found.
+                ${date ? "No queue history on this date." : "No queue history found."}
               </td>
             </tr>
           `;
           return;
         }
 
-        data.forEach(queue => {
-          tbody.innerHTML += `
-            <tr>
-              <td>
-                <span class="queue-badge">${queue.queue_number || "-"}</span>
-              </td>
-              <td>${queue.service_id || "-"}</td>
-              <td>
-                <span class="badge ${queue.queue_status === "COMPLETED"
-              ? "bg-success"
-              : queue.queue_status === "SKIPPED"
-                ? "bg-warning text-dark"
-                : "bg-danger"
-            }">
-                  ${queue.queue_status}
-                </span>
-              </td>
-              <td>${queue.counter_id || "-"}</td>
-            </tr>
-          `;
-        });
+        tbody.innerHTML = data.map(queue => `
+          <tr>
+            <td><span class="queue-badge">${queue.queue_number || "-"}</span></td>
+            <td>${queue.service_name || "-"}</td>
+            <td>
+              <span class="badge ${queue.queue_status === "COMPLETED"
+                ? "bg-success"
+                : queue.queue_status === "SKIPPED"
+                  ? "bg-warning text-dark"
+                  : "bg-danger"}">
+                ${queue.queue_status}
+              </span>
+            </td>
+            <td>${queue.counter_name || "-"}</td>
+            <td class="text-muted small">${queue.created_local || "-"}</td>
+          </tr>
+        `).join("");
       } catch (error) {
         console.error(error);
         tbody.innerHTML = `
           <tr>
-            <td colspan="4" class="empty-row text-danger">
-              Failed to load history.
-            </td>
+            <td colspan="5" class="empty-row text-danger">Failed to load history.</td>
           </tr>
         `;
       }
-    }
+    }F
 
     // ==============================
     // NAVIGATION ACTIVE STATE
@@ -1322,6 +1338,7 @@
     // ==============================
     // INITIALIZATION & TIMERS
     // ==============================
+    document.getElementById("historyDate").value = todayString();
     loadDashboard();
     loadHistory();
     loadServices();
