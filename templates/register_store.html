@@ -1,25 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Your Store</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        body.rs-body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+            box-sizing: border-box;
+            background: radial-gradient(900px 500px at 15% -10%, rgba(59,130,246,0.18), transparent 60%), #0b1220;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        .rs-card {
+            width: 100%;
+            max-width: 540px;
+            box-sizing: border-box;
+            background: #131c2e;
+            border: 1px solid #26334b;
+            border-top: 4px solid #3b82f6;
+            border-radius: 18px;
+            padding: 36px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+            color: #e8edf6;
+        }
+
+        .rs-card h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+            font-weight: 800;
+            color: #e8edf6;
+        }
+
+        .rs-card .rs-lead {
+            margin: 0 0 26px;
+            color: #8493ad;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .rs-card label {
+            display: block;
+            margin: 0 0 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e8edf6;
+        }
+
+        .rs-card input[type="text"],
+        .rs-card textarea {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 0 0 20px;
+            padding: 12px 14px;
+            background: #0f1727;
+            color: #e8edf6;
+            border: 1px solid #26334b;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        .rs-card textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .rs-card input::placeholder,
+        .rs-card textarea::placeholder {
+            color: #5b6a85;
+        }
+
+        .rs-card input:focus,
+        .rs-card textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.2);
+        }
+
+        .rs-card button.rs-submit {
+            display: block;
+            width: 100%;
+            margin: 6px 0 0;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #fff;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .rs-card button.rs-submit:hover {
+            background: #3b82f6;
+        }
+    </style>
 </head>
-<body>
-    <div class="card" style="max-width: 500px; margin: 50px auto;">
+
+<body class="rs-body">
+    <div class="rs-card">
         <h1>Register Your Store</h1>
-        <p style="color: #6b7280;">Your store will stay Pending until reviewed by a system admin.</p>
+        <p class="rs-lead">Your store will stay Pending until reviewed by a system admin.</p>
 
         <form method="POST">
             <label>Store Name</label>
-            <input type="text" name="name" required>
+            <input type="text" name="name" placeholder="e.g. Burger Shop" required>
 
             <label>Operating Hours</label>
             <input type="text" name="hours" placeholder="e.g. Mon–Fri 9am–6pm" required>
-            
+
             <label>Store Description</label>
             <textarea name="description" rows="4" placeholder="Tell the admin what your store does, what services you plan to offer, etc." required></textarea>
-            
-            <button type="submit" style="width: 100%; margin-top: 15px;">Submit for Review</button>
+
+            <button type="submit" class="rs-submit">Submit for Review</button>
         </form>
     </div>
 </body>

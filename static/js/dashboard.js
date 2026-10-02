@@ -232,14 +232,9 @@ document.addEventListener("DOMContentLoaded", function () {
               alert("Failed to cancel queue: " + data.error);
             } else {
               alert("Queue cancelled successfully!");
-              cancelBtn.innerText = "Back to stores";
-              cancelBtn.className = "btn btn-secondary w-100 mt-3";
-              const newBtn = cancelBtn.cloneNode(true);
-              cancelBtn.parentNode.replaceChild(newBtn, cancelBtn);
-              newBtn.addEventListener("click", function () {
-                window.location.href = "/stores";
-              });
+              fetchQueueStatus();
             }
+            
           })
           .catch((error) => {
             console.error("Error:", error);

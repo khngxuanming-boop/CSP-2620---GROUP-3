@@ -391,15 +391,40 @@ def reset_password(token):
 
 @app.route('/my-store')
 def my_store():
-    if 'user_id' not in session:
+    if session.get('role') != 'STAFF':
         return redirect(url_for('login'))
 
     conn = get_db_connection()
     stores = conn.execute(
-        'SELECT * FROM store WHERE owner_id = ?', (session['user_id'],)
+        'SELECT * FROM store WHERE owner_id = ? ORDER BY store_id DESC',
+        (session['user_id'],)
     ).fetchall()
 
     return render_template('my_store.html', stores=stores, username=session.get('username'))
+
+
+@app.route('/my-store/<int:store_id>/revoke', methods=['POST'])
+def revoke_store(store_id):
+    if session.get('role') != 'STAFF':
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    store = conn.execute(
+        'SELECT * FROM store WHERE store_id = ? AND owner_id = ?',
+        (store_id, session['user_id'])
+    ).fetchone()
+
+    if not store:
+        return "Store not found or you do not have access.", 403
+
+    # An approved store is live, so it can't be withdrawn here
+    if store['store_status'] == 'APPROVED':
+        return "An approved store can't be withdrawn.", 400
+
+    conn.execute('DELETE FROM store WHERE store_id = ?', (store_id,))
+    conn.commit()
+
+    return redirect(url_for('my_store'))
 
 # Store registration ----> Week 4: Adding form
 @app.route('/register_store', methods=['GET', 'POST'])
@@ -1050,32 +1075,47 @@ def update_counter(counter_id):
 
 
 # DELETE - Remove a counter
+# DELETE - Remove a counter
 @app.route('/api/counters/<int:counter_id>', methods=['DELETE'])
 def delete_counter(counter_id):
+    if session.get('role') != 'STAFF':
+        return jsonify({'error': 'Staff access required'}), 403
 
     conn = get_db_connection()
 
+    # The counter must belong to a store owned by the logged-in staff
     counter = conn.execute(
-        'SELECT * FROM counter WHERE counter_id = ?',
-        (counter_id,)
+        """
+        SELECT c.*
+        FROM counter c
+        JOIN store s ON c.store_id = s.store_id
+        WHERE c.counter_id = ?
+        AND s.owner_id = ?
+        """,
+        (counter_id, session['user_id'])
     ).fetchone()
 
     if not counter:
-        return jsonify({
-            'error': 'Counter not found'
-        }), 404
+        return jsonify({'error': 'Counter not found or you do not have access'}), 404
 
-    conn.execute(
-        'DELETE FROM counter WHERE counter_id = ?',
+    # Don't delete a counter that is serving someone right now
+    serving = conn.execute(
+        """
+        SELECT 1 FROM queue
+        WHERE counter_id = ? AND queue_status = 'SERVING'
+        """,
         (counter_id,)
-    )
+    ).fetchone()
 
+    if serving:
+        return jsonify({
+            'error': 'This counter is serving a customer. Complete or skip them first.'
+        }), 400
+
+    conn.execute('DELETE FROM counter WHERE counter_id = ?', (counter_id,))
     conn.commit()
 
-    return jsonify({
-        'message': 'Counter deleted successfully'
-    }), 200
-
+    return jsonify({'message': 'Counter deleted successfully'}), 200
 # =========================
 # COUNTER OPEN / CLOSE
 # =========================

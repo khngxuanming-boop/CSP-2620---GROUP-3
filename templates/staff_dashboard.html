@@ -897,11 +897,41 @@
                 >
                    <i class="bi bi-megaphone me-1"></i> Call Next Customer
                 </button>
+
+                <button
+                   class="btn btn-outline-secondary btn-sm w-100"
+                   onclick="deleteCounter(${counter.counter_id})"
+                >
+                   <i class="bi bi-trash me-1"></i> Delete Counter
+                </button>
               </div>
             </div>
           </div>
         `;
       });
+    }
+
+    // ==============================
+    // DELETE COUNTER
+    // ==============================
+    async function deleteCounter(counterId) {
+      if (!confirm('Delete this counter? This cannot be undone.')) return;
+
+      try {
+        const response = await fetch(`/api/counters/${counterId}`, { method: 'DELETE' });
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage(data.error || 'Unable to delete counter', 'danger');
+          return;
+        }
+
+        showMessage('Counter deleted', 'success');
+        loadDashboard();
+      } catch (error) {
+        console.error(error);
+        showMessage('Failed to delete counter', 'danger');
+      }
     }
 
     // ==============================

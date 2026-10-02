@@ -44,8 +44,9 @@ CREATE TABLE IF NOT EXISTS counter (
     store_id INTEGER NOT NULL,
     counter_name TEXT NOT NULL,
     counter_status TEXT NOT NULL DEFAULT 'closed',
-    FOREIGN KEY (store_id)
-    REFERENCES store(store_id)
+    service_id INTEGER,
+    FOREIGN KEY (store_id) REFERENCES store(store_id),
+    FOREIGN KEY (service_id) REFERENCES service(service_id)
 );
 
 
