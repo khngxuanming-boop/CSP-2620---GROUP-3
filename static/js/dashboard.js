@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const peopleAheadEl = document.getElementById("peopleAhead");
   const waitTimeEl = document.getElementById("waitTime");
   const queueStatusEl = document.getElementById("queueStatus");
+  const backBtn = document.getElementById("backToStoreBtn");
   const cancelBtn = document.getElementById("cancelQueueBtn");
   const counterNameEl = document.getElementById("counterName");
   const hiddenStoreIdEl = document.getElementById("currentStoreId");
@@ -144,6 +145,17 @@ document.addEventListener("DOMContentLoaded", function () {
           counterNameEl.innerText = data.counter_name ?? "-";
         }
 
+        const finished = ["COMPLETED", "SKIPPED", "CANCELLED"];
+        const isFinished = finished.includes(data.status);
+
+        if (backBtn) {
+          backBtn.href = `/store/${data.store_id}`;
+          backBtn.style.display = isFinished ? "inline-block" : "none";
+        }
+        if (cancelBtn && isFinished) {
+          cancelBtn.style.display = "none";
+        }
+
         if (lastQueueStatus && lastQueueStatus !== data.status) {
           if (data.status === "SERVING") {
             alert(
@@ -156,7 +168,7 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("✅ Your service is completed. Thank you!");
           } else if (data.status === "SKIPPED") {
             alert("⚠️ You have been skipped. Please contact the staff.");
-          } else if (data === "CANCELED") {
+          } else if (data.status === "CANCELLED") {
             alert("❌ Your queue has been cancelled.");
           }
         }
@@ -202,6 +214,8 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("WebSocket disconnected.");
   });
 
+
+
   // Cancel Queue Button Click Handler
   if (cancelBtn) {
     cancelBtn.addEventListener("click", function () {
@@ -218,14 +232,9 @@ document.addEventListener("DOMContentLoaded", function () {
               alert("Failed to cancel queue: " + data.error);
             } else {
               alert("Queue cancelled successfully!");
-              cancelBtn.innerText = "Back to stores";
-              cancelBtn.className = "btn btn-secondary w-100 mt-3";
-              const newBtn = cancelBtn.cloneNode(true);
-              cancelBtn.parentNode.replaceChild(newBtn, cancelBtn);
-              newBtn.addEventListener("click", function () {
-                window.location.href = "/stores";
-              });
+              fetchQueueStatus();
             }
+            
           })
           .catch((error) => {
             console.error("Error:", error);

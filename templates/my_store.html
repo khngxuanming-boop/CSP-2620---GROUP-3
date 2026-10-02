@@ -1,60 +1,197 @@
-<!-- WEEK 4 ADDITION OF STORE OWNER DASHBOARD -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>My Store Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Store</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        body.ms-body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 0 16px 48px;
+            box-sizing: border-box;
+            background: radial-gradient(900px 500px at 15% -10%, rgba(59,130,246,0.18), transparent 60%), #0b1220;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: #e8edf6;
+        }
+
+        .ms-top {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 22px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #8493ad;
+        }
+
+        .ms-top strong { color: #e8edf6; }
+        .ms-links { display: flex; gap: 18px; }
+        .ms-links a { text-decoration: none; font-weight: 600; }
+        .ms-links .dir { color: #34d399; }
+        .ms-links .out { color: #f87171; }
+
+        .ms-wrap { max-width: 760px; margin: 0 auto; }
+
+        .ms-wrap h1 {
+            margin: 8px 0 20px;
+            font-size: 28px;
+            font-weight: 800;
+            color: #e8edf6;
+        }
+
+        .ms-card {
+            background: #131c2e;
+            border: 1px solid #26334b;
+            border-left: 4px solid #3b82f6;
+            border-radius: 16px;
+            padding: 26px;
+            margin-bottom: 20px;
+            box-shadow: 0 18px 44px rgba(0,0,0,0.35);
+            text-align: left;
+        }
+
+        .ms-card.approved { border-left-color: #34d399; }
+        .ms-card.pending  { border-left-color: #fbbf24; }
+        .ms-card.rejected { border-left-color: #f87171; }
+
+        .ms-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .ms-head h2 { margin: 0; font-size: 21px; font-weight: 700; color: #e8edf6; }
+
+        .ms-pill {
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 12.5px;
+            font-weight: 700;
+        }
+
+        .ms-pill.approved { background: rgba(52,211,153,0.15); color: #34d399; }
+        .ms-pill.pending  { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .ms-pill.rejected { background: rgba(248,113,113,0.15); color: #f87171; }
+
+        .ms-info { margin: 18px 0 0; display: grid; gap: 10px; font-size: 14.5px; }
+        .ms-info div { display: flex; gap: 10px; }
+        .ms-info dt { min-width: 130px; color: #8493ad; }
+        .ms-info dd { margin: 0; color: #e8edf6; }
+
+        .ms-reason {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: rgba(248,113,113,0.1);
+            border: 1px solid rgba(248,113,113,0.3);
+            color: #fca5a5;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .ms-msg {
+            margin-top: 16px;
+            font-size: 14px;
+            color: #8493ad;
+            line-height: 1.5;
+        }
+
+        .ms-actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .ms-actions form { margin: 0; }
+
+        .ms-btn {
+            display: inline-block;
+            margin: 0;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            line-height: 1.2;
+        }
+
+        .ms-btn.primary { background: #2563eb; color: #fff; }
+        .ms-btn.primary:hover { background: #3b82f6; }
+        .ms-btn.ghost { background: transparent; color: #e8edf6; border-color: #26334b; }
+        .ms-btn.ghost:hover { border-color: #3b82f6; }
+        .ms-btn.danger { background: transparent; color: #f87171; border-color: rgba(248,113,113,0.45); }
+        .ms-btn.danger:hover { background: rgba(248,113,113,0.12); }
+
+        .ms-empty { text-align: center; padding: 44px 24px; }
+        .ms-empty p { margin: 0 0 18px; color: #8493ad; }
+    </style>
 </head>
-<body>
-    <div style="text-align: right; padding: 20px; max-width: 1000px; margin: 0 auto;">
-        <span>Welcome, <strong style="color: #2563eb;">{{ username }}</strong>!</span> |
-        <a href="/stores" style="color: #10b981; font-weight: bold; margin-right: 15px; text-decoration: none;">Back to Directory</a> |
-        <a href="/logout" style="color: #ef4444; text-decoration: none; font-weight: bold;">Logout</a>
+
+<body class="ms-body">
+    <div class="ms-top">
+        <span>Signed in as <strong>{{ username }}</strong></span>
+        <div class="ms-links">
+            <a class="dir" href="/stores">Back to Directory</a>
+            <a class="out" href="/logout">Logout</a>
+        </div>
     </div>
 
-    <div style="max-width: 800px; margin: 0 auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1>My Stores</h1>
-            <a href="/register_store"><button>+ Register New Store</button></a>
-        </div>
+    <div class="ms-wrap">
+        <h1>My Store</h1>
 
         {% for store in stores %}
-            <div class="card" style="margin-bottom: 20px; text-align: left;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2 style="margin: 0;">{{ store['store_name'] }}</h2>
-
-                    {% if store['store_status'] == 'PENDING' %}
-                        <span style="background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 20px; font-weight: bold;">Pending Review</span>
-                    {% elif store['store_status'] == 'APPROVED' %}
-                        <span style="background: #d1fae5; color: #065f46; padding: 5px 12px; border-radius: 20px; font-weight: bold;">Approved</span>
-                    {% elif store['store_status'] == 'REJECTED' %}
-                        <span style="background: #fee2e2; color: #991b1b; padding: 5px 12px; border-radius: 20px; font-weight: bold;">Rejected</span>
+            {% set st = store['store_status']|lower %}
+            <div class="ms-card {{ st }}">
+                <div class="ms-head">
+                    <h2>{{ store['store_name'] }}</h2>
+                    {% if st == 'pending' %}
+                        <span class="ms-pill pending">Pending review</span>
+                    {% elif st == 'approved' %}
+                        <span class="ms-pill approved">Approved</span>
+                    {% elif st == 'rejected' %}
+                        <span class="ms-pill rejected">Rejected</span>
                     {% endif %}
                 </div>
 
-                <p><strong>Operating Hours:</strong> {{ store['operating_hours'] }}</p>
+                <dl class="ms-info">
+                    <div><dt>Operating hours</dt><dd>{{ store['operating_hours'] or '-' }}</dd></div>
+                    {% if store['store_description'] %}
+                        <div><dt>Description</dt><dd>{{ store['store_description'] }}</dd></div>
+                    {% endif %}
+                </dl>
 
-                {% if store['store_status'] == 'REJECTED' and store['rejection_reason'] %}
-                    <p style="color: #991b1b;"><strong>Reason:</strong> {{ store['rejection_reason'] }}</p>
+                {% if st == 'rejected' and store['rejection_reason'] %}
+                    <div class="ms-reason"><strong>Why it was rejected:</strong> {{ store['rejection_reason'] }}</div>
+                {% elif st == 'pending' %}
+                    <p class="ms-msg">An admin is reviewing your store. You can open the queue dashboard once it's approved.</p>
                 {% endif %}
 
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    {% if store['store_status'] != 'APPROVED' %}
-                        <a href="/my-store/{{ store['store_id'] }}/edit"><button>Edit</button></a>
-                        <form method="POST" action="/my-store/{{ store['store_id'] }}/revoke" style="display:inline;">
-                            <button type="submit" style="background: #ef4444;">Withdraw Application</button>
-                        </form>
+                <div class="ms-actions">
+                    {% if st == 'approved' %}
+                        <a class="ms-btn primary" href="/staff/dashboard/{{ store['store_id'] }}">Manage Queue</a>
+                        <a class="ms-btn ghost" href="/store/{{ store['store_id'] }}">View Store Page</a>
                     {% else %}
-                        <a href="/store/{{ store['store_id'] }}"><button>View Store Page</button></a>
-                        <a href="/staff/dashboard/{{ store['store_id'] }}"><button>Manage Queue</button></a>
-                        <a href="/my-store/{{ store['store_id'] }}/edit"><button>Edit Details</button></a>
-                        <!-- Reviews section placeholder — needs a shared 'review' table, not yet in schema -->
-                        <p style="color: #9ca3af; font-style: italic; margin-left: 10px;">Reviews coming soon</p>
+                        {% if st == 'rejected' %}
+                            <a class="ms-btn primary" href="/edit-store/{{ store['store_id'] }}">Edit and Resubmit</a>
+                        {% endif %}
+                        <form method="POST" action="/my-store/{{ store['store_id'] }}/revoke"
+                              onsubmit="return confirm('Withdraw this application? You can register a new store afterwards.');">
+                            <button type="submit" class="ms-btn danger">Withdraw Application</button>
+                        </form>
                     {% endif %}
                 </div>
             </div>
         {% else %}
-            <p style="text-align: center;">You haven't registered a store yet.</p>
+            <div class="ms-card ms-empty">
+                <p>You haven't registered a store yet.</p>
+                <a class="ms-btn primary" href="/register_store">Register Your Store</a>
+            </div>
         {% endfor %}
     </div>
 </body>

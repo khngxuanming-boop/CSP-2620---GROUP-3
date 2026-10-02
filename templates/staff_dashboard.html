@@ -563,56 +563,71 @@
     </section>
 
     <!-- ================= SUMMARY CARDS ================= -->
-    <div class="row g-4 mb-4">
-    <div class="col-lg-4 col-md-6">
-      <div class="staff-stat">
-        <div class="staff-stat-head">
-          <span class="staff-stat-label">Customers Waiting</span>
-          <div class="staff-stat-icon icon-waiting">
-            <i class="bi bi-people"></i>
+    <div class="row g-3 mb-4 align-items-stretch">
+      <!-- Customers Waiting Card -->
+      <div class="col-12 col-md-4">
+        <div class="staff-stat h-100 d-flex flex-column justify-content-between p-3 p-xl-4">
+          <div>
+            <div class="staff-stat-head mb-2">
+              <span class="staff-stat-label">Customers Waiting</span>
+              <div class="staff-stat-icon icon-waiting">
+                <i class="bi bi-people"></i>
+              </div>
+            </div>
+            <div id="waitingCount" class="staff-stat-number mb-3">0</div>
+          </div>
+
+          <!-- Clean Split Pill Badges -->
+          <div class="pt-3 border-top mt-auto">
+            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+              <span class="badge bg-light text-dark border px-2.5 py-2 font-monospace fw-normal flex-fill text-center">
+                <i class="bi bi-person-walk text-primary me-1"></i>
+                Walk-in: <strong id="walkInCount" class="text-dark">0</strong>
+              </span>
+              <span class="badge bg-light text-dark border px-2.5 py-2 font-monospace fw-normal flex-fill text-center">
+                <i class="bi bi-calendar-check text-success me-1"></i>
+                Appointment: <strong id="appointmentCount" class="text-dark">0</strong>
+              </span>
+            </div>
           </div>
         </div>
-        <div id="waitingCount" class="staff-stat-number">0</div>
-
-        <!-- Walk-in & Appointment Breakdown -->
-        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-          <small class="text-muted">
-            <i class="bi bi-person-walk text-primary me-1"></i> Walk-In: <strong id="walkInCount"
-              class="text-dark">0</strong>
-          </small>
-          <small class="text-muted">
-            <i class="bi bi-calendar-check text-success me-1"></i> Appointment: <strong id="appointmentCount"
-              class="text-dark">0</strong>
-          </small>
-        </div>
       </div>
-    </div>
 
-    <div class="col-lg-4 col-md-6">
-      <div class="staff-stat">
-        <div class="staff-stat-head">
-          <span class="staff-stat-label">Currently Serving</span>
-          <div class="staff-stat-icon icon-serving">
-            <i class="bi bi-ticket-perforated"></i>
+      <!-- Currently Serving Card -->
+      <div class="col-12 col-md-4">
+        <div class="staff-stat h-100 d-flex flex-column justify-content-between p-3 p-xl-4">
+          <div>
+            <div class="staff-stat-head mb-2">
+              <span class="staff-stat-label">Currently Serving</span>
+              <div class="staff-stat-icon icon-serving">
+                <i class="bi bi-ticket-perforated"></i>
+              </div>
+            </div>
+            <div id="servingCount" class="staff-stat-number">0</div>
+          </div>
+          <div class="pt-3 border-top mt-auto">
+            <small class="text-muted d-block">Active counter sessions</small>
           </div>
         </div>
-        <div id="servingCount" class="staff-stat-number">0</div>
-        <small class="text-muted mt-2 d-block">Active counter sessions</small>
       </div>
-    </div>
 
-    <div class="col-lg-4 col-md-6">
-      <div class="staff-stat">
-        <div class="staff-stat-head">
-          <span class="staff-stat-label">Completed</span>
-          <div class="staff-stat-icon icon-completed">
-            <i class="bi bi-check2-circle"></i>
+      <!-- Completed Card -->
+      <div class="col-12 col-md-4">
+        <div class="staff-stat h-100 d-flex flex-column justify-content-between p-3 p-xl-4">
+          <div>
+            <div class="staff-stat-head mb-2">
+              <span class="staff-stat-label">Completed</span>
+              <div class="staff-stat-icon icon-completed">
+                <i class="bi bi-check2-circle"></i>
+              </div>
+            </div>
+            <div id="completedCount" class="staff-stat-number">0</div>
+          </div>
+          <div class="pt-3 border-top mt-auto">
+            <small class="text-muted d-block">Successfully served today</small>
           </div>
         </div>
-        <div id="completedCount" class="staff-stat-number">0</div>
-        <small class="text-muted mt-2 d-block">Successfully served today</small>
       </div>
-    </div>
     </div>
 
     <!-- ================= COUNTERS ================= -->
@@ -631,6 +646,9 @@
         <div id="addCounterForm" style="display:none;" class="mb-4 p-3 border rounded bg-light">
           <div class="input-group">
             <input type="text" id="newCounterName" class="form-control" placeholder="Counter name (e.g. Counter 1)">
+            <select id="newCounterService" class="form-select" style="max-width: 220px;">
+              <option value="">All services</option>
+            </select>
             <button class="btn btn-success" onclick="createCounter()">Save Counter</button>
             <button class="btn btn-outline-secondary" onclick="hideAddCounterForm()">Cancel</button>
           </div>
@@ -864,6 +882,11 @@
                 <div class="text-muted small mb-3">
                   Counter ID: <strong>#${counter.counter_id}</strong>
                 </div>
+                <div class="mb-3">
+                  <span class="badge bg-light text-dark border">
+                    <i class="bi bi-tag me-1"></i>${counter.service_name || "All services"}
+                  </span>
+                </div>
               </div>
 
               <div class="d-flex flex-column gap-2 mt-3">
@@ -882,11 +905,41 @@
                 >
                    <i class="bi bi-megaphone me-1"></i> Call Next Customer
                 </button>
+
+                <button
+                   class="btn btn-outline-secondary btn-sm w-100"
+                   onclick="deleteCounter(${counter.counter_id})"
+                >
+                   <i class="bi bi-trash me-1"></i> Delete Counter
+                </button>
               </div>
             </div>
           </div>
         `;
       });
+    }
+
+    // ==============================
+    // DELETE COUNTER
+    // ==============================
+    async function deleteCounter(counterId) {
+      if (!confirm('Delete this counter? This cannot be undone.')) return;
+
+      try {
+        const response = await fetch(`/api/counters/${counterId}`, { method: 'DELETE' });
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage(data.error || 'Unable to delete counter', 'danger');
+          return;
+        }
+
+        showMessage('Counter deleted', 'success');
+        loadDashboard();
+      } catch (error) {
+        console.error(error);
+        showMessage('Failed to delete counter', 'danger');
+      }
     }
 
     // ==============================
@@ -976,7 +1029,7 @@
         tbody.innerHTML += `
           <tr>
             <td>
-              <span class="queue-badge">Q-${String(queue.queue_id).padStart(3, "0")}</span>
+             <span class="queue-badge">${queue.queue_number || "-"}</span>
             </td>
             <td class="fw-medium">${queue.service_id || "-"}</td>
             <td>
@@ -1082,7 +1135,7 @@
           tbody.innerHTML += `
             <tr>
               <td>
-                <span class="queue-badge">Q-${String(queue.queue_id).padStart(3, "0")}</span>
+                <span class="queue-badge">${queue.queue_number || "-"}</span>
               </td>
               <td>${queue.service_id || "-"}</td>
               <td>
@@ -1137,6 +1190,12 @@
           return;
         }
 
+        const serviceSelect = document.getElementById('newCounterService');
+        if (serviceSelect) {
+          serviceSelect.innerHTML = '<option value="">All services</option>' +
+            services.map(s => `<option value="${s.service_id}">${s.service_name}</option>`).join('');
+        }
+
         tbody.innerHTML = '';
 
         if (services.length === 0) {
@@ -1189,7 +1248,7 @@
         const response = await fetch('/api/counters', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ store_id: storeId, counter_name: name })
+          body: JSON.stringify({ store_id: storeId, counter_name: name, service_id: document.getElementById('newCounterService').value || null })
         });
 
         const data = await response.json();
