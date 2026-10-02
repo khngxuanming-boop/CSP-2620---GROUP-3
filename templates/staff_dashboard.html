@@ -991,7 +991,7 @@
         tbody.innerHTML += `
           <tr>
             <td>
-              <span class="queue-badge">Q-${String(queue.queue_id).padStart(3, "0")}</span>
+             <span class="queue-badge">${queue.queue_number || "-"}</span>
             </td>
             <td class="fw-medium">${queue.service_id || "-"}</td>
             <td>
@@ -1097,7 +1097,7 @@
           tbody.innerHTML += `
             <tr>
               <td>
-                <span class="queue-badge">Q-${String(queue.queue_id).padStart(3, "0")}</span>
+                <span class="queue-badge">${queue.queue_number || "-"}</span>
               </td>
               <td>${queue.service_id || "-"}</td>
               <td>

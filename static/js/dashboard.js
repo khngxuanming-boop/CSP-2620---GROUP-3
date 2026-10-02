@@ -202,6 +202,12 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("WebSocket disconnected.");
   });
 
+  const backBtn = document.getElementById('backToStoreBtn');
+  backBtn.href = `/store/${data.store_id}`;
+
+  const finished = ['COMPLETED', 'SKIPPED', 'CANCELLED'];
+  backBtn.style.display = finished.includes(data.status) ? 'inline-block' : 'none';
+
   // Cancel Queue Button Click Handler
   if (cancelBtn) {
     cancelBtn.addEventListener("click", function () {
