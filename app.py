@@ -234,12 +234,28 @@ def store_discovery():
         store['is_open'] = open_counters > 0
         stores.append(store)
 
+    # Open/Closed filter
+    status_filter = request.args.get('status', '')
+    if status_filter == 'open':
+        stores = [s for s in stores if s['is_open']]
+    elif status_filter == 'closed':
+        stores = [s for s in stores if not s['is_open']]
+
+    # A-Z / Z-A sort
+    sort = request.args.get('sort', '')
+    if sort == 'name_asc':
+        stores.sort(key=lambda s: s['store_name'].lower())
+    elif sort == 'name_desc':
+        stores.sort(key=lambda s: s['store_name'].lower(), reverse=True)
+
     return render_template(
         'stores.html',
         stores=stores,
         search_query=search_query,
         service_filter=service_filter,
         all_services=all_services,
+        status_filter=status_filter,
+        sort=sort,
         username=current_username
     )
 
