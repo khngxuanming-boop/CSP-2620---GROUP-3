@@ -540,10 +540,6 @@
             <i class="bi bi-clock-history"></i> Queue History
         </button>
 
-        <button class="nav-btn" onclick="showSection('activity', this)">
-            <i class="bi bi-activity"></i> Recent Activity
-        </button>
-
         <button class="nav-btn" onclick="showSection('statistics', this)">
             📈 Statistics
         </button>
@@ -621,33 +617,6 @@
 
             </div>
 
-        </div>
-
-        <!-- ================= RECENT ACTIVITY ================= -->
-        <div id="activity-section" class="admin-section" style="display: none;">
-            <div class="dashboard-card">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <div class="card-title">Recent Activity</div>
-                        <div class="card-description">Latest system activities and logs.</div>
-                    </div>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="loadActivity()">
-                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-                    </button>
-                </div>
-
-                <div id="activityList">
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <i class="bi bi-info-circle"></i>
-                        </div>
-                        <div>
-                            <div class="activity-text">Loading activities...</div>
-                            <div class="activity-time">Please wait</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- ================= STORE PROPOSALS ================= -->
