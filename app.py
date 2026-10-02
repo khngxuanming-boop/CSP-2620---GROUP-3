@@ -453,14 +453,15 @@ def register_store():
         store_name = request.form['name']
         hours = request.form['hours']
         description = request.form.get('description', '')
+        wait_time = request.form.get('estimated_wait_time', 5)
 
         conn.execute(
             """
             INSERT INTO store
-            (store_name, operating_hours, store_status, owner_id, store_description)
-            VALUES (?, ?, 'PENDING', ?, ?)
+            (store_name, operating_hours, store_status, owner_id, store_description, estimated_wait_time)
+            VALUES (?, ?, 'PENDING', ?, ?, ?)
             """,
-            (store_name, hours, session['user_id'], description)
+            (store_name, hours, session['user_id'], description, wait_time)
         )
         conn.commit()
 
