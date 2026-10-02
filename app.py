@@ -1852,7 +1852,21 @@ def get_staff_dashboard(store_id):
         AND q.queue_status = 'CANCELLED'
         """,
         (store_id,)
+    ).fetchone() 
+    
+    split = conn.execute(
+        """
+        SELECT
+            SUM(CASE WHEN q.queue_number LIKE 'W-%' THEN 1 ELSE 0 END) AS walk_in,
+            SUM(CASE WHEN q.queue_number LIKE 'A-%' THEN 1 ELSE 0 END) AS appointment
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        """,
+        (store_id,)
     ).fetchone()
+
 
 
     return jsonify({
@@ -1865,6 +1879,8 @@ def get_staff_dashboard(store_id):
 
         'queue_summary': {
             'waiting': waiting['total'],
+            'walk_in': split['walk_in'] or 0,
+            'appointment': split['appointment'] or 0,
             'serving': serving['total'],
             'completed': completed['total'],
             'skipped': skipped['total'],
