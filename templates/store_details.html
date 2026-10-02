@@ -39,14 +39,16 @@
             <!-- Left Column: Store Info -->
             <div style="flex: 1;">
                 <h3 style="color: #4b5563;">Store Information</h3>
-                <p><strong>Status:</strong> <span style="color: #10b981;">{{ store['store_status'] }}</span></p>
-                <p><strong>Currently:</strong>
-                    <span style="color: {{ '#10b981' if is_open else '#ef4444' }}; font-weight: bold;">
-                        {{ 'OPEN' if is_open else 'CLOSED' }}
-                    </span>
-                </p>
-                <p><strong>Operating Hours:</strong> {{ store['operating_hours'] }}</p>
-                <p><strong>Estimated Wait Time:</strong> {{ store['estimated_wait_time'] }} minutes</p>
+                <div style="background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 9px; padding: 16px;">
+                    <p><strong>Status:</strong> <span style="color: #10b981;">{{ store['store_status'] }}</span></p>
+                    <p><strong>Currently:</strong>
+                        <span style="color: {{ '#10b981' if is_open else '#ef4444' }}; font-weight: bold;">
+                            {{ 'OPEN' if is_open else 'CLOSED' }}
+                        </span>
+                    </p>
+                    <p><strong>Operating Hours:</strong> {{ store['operating_hours'] }}</p>
+                    <p style="margin-bottom: 0;"><strong>Estimated Wait Time:</strong> {{ store['estimated_wait_time'] }} minutes</p>
+                </div>
 
                 <h3 style="color: #4b5563; margin-top: 20px;">Live Queue</h3>
                 <div style="display: flex; gap: 12px;">
