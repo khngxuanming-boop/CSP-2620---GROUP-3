@@ -646,6 +646,9 @@
         <div id="addCounterForm" style="display:none;" class="mb-4 p-3 border rounded bg-light">
           <div class="input-group">
             <input type="text" id="newCounterName" class="form-control" placeholder="Counter name (e.g. Counter 1)">
+            <select id="newCounterService" class="form-select" style="max-width: 220px;">
+              <option value="">All services</option>
+            </select>
             <button class="btn btn-success" onclick="createCounter()">Save Counter</button>
             <button class="btn btn-outline-secondary" onclick="hideAddCounterForm()">Cancel</button>
           </div>
@@ -878,6 +881,11 @@
                 </div>
                 <div class="text-muted small mb-3">
                   Counter ID: <strong>#${counter.counter_id}</strong>
+                </div>
+                <div class="mb-3">
+                  <span class="badge bg-light text-dark border">
+                    <i class="bi bi-tag me-1"></i>${counter.service_name || "All services"}
+                  </span>
                 </div>
               </div>
 
@@ -1182,6 +1190,12 @@
           return;
         }
 
+        const serviceSelect = document.getElementById('newCounterService');
+        if (serviceSelect) {
+          serviceSelect.innerHTML = '<option value="">All services</option>' +
+            services.map(s => `<option value="${s.service_id}">${s.service_name}</option>`).join('');
+        }
+
         tbody.innerHTML = '';
 
         if (services.length === 0) {
@@ -1234,7 +1248,7 @@
         const response = await fetch('/api/counters', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ store_id: storeId, counter_name: name })
+          body: JSON.stringify({ store_id: storeId, counter_name: name, service_id: document.getElementById('newCounterService').value || null })
         });
 
         const data = await response.json();

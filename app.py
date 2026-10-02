@@ -60,6 +60,11 @@ def init_db():
     conn = get_db_connection()
     with open('schema.sql') as f:
         conn.executescript(f.read())
+
+    cols = [row['name'] for row in conn.execute("PRAGMA table_info(counter)")]
+    if 'service_id' not in cols:
+        conn.execute("ALTER TABLE counter ADD COLUMN service_id INTEGER")
+
     conn.commit()
 
 def create_admin():
@@ -985,9 +990,10 @@ def create_counter():
     if session.get('role') != 'STAFF':
         return jsonify({'error': 'Staff access required'}), 403
 
-    data = request.get_json()
+    data = request.get_json() or {}
     store_id = data.get('store_id')
     counter_name = data.get('counter_name')
+    service_id = data.get('service_id') or None
 
     if not store_id or not counter_name:
         return jsonify({'error': 'store_id and counter_name are required'}), 400
@@ -1002,16 +1008,23 @@ def create_counter():
     if not store:
         return jsonify({'error': 'You do not have access to this store'}), 403
 
+    # The service must belong to this same store
+    if service_id:
+        service = conn.execute(
+            'SELECT 1 FROM service WHERE service_id = ? AND store_id = ?',
+            (service_id, store_id)
+        ).fetchone()
+        if not service:
+            return jsonify({'error': 'Service not found in this store'}), 400
+
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO counter (store_id, counter_name) VALUES (?, ?)",
-        (store_id, counter_name)
+        "INSERT INTO counter (store_id, counter_name, service_id) VALUES (?, ?, ?)",
+        (store_id, counter_name, service_id)
     )
     conn.commit()
-    counter_id = cursor.lastrowid
 
-    return jsonify({'message': 'Counter created successfully', 'counter_id': counter_id}), 201
-
+    return jsonify({'message': 'Counter created successfully', 'counter_id': cursor.lastrowid}), 201
 
 # READ - Get all counters for a store
 @app.route('/api/counters/<int:store_id>', methods=['GET'])
@@ -1388,43 +1401,46 @@ def call_next_customer(counter_id):
 
     # Check whether counter exists
     counter = conn.execute(
-        """
-        SELECT *
-        FROM counter
-        WHERE counter_id = ?
-        """,
+        "SELECT * FROM counter WHERE counter_id = ?",
         (counter_id,)
     ).fetchone()
 
     if not counter:
-        return jsonify({
-            'error': 'Counter not found'
-        }), 404
+        return jsonify({'error': 'Counter not found'}), 404
 
     # Check whether counter is open
     if counter['counter_status'] != 'open':
-        return jsonify({
-            'error': 'Counter is closed'
-        }), 400
+        return jsonify({'error': 'Counter is closed'}), 400
 
-    # Find the next waiting customer assigned to this counter
-    queue = conn.execute(
-        """
-        SELECT q.*
-        FROM queue q
-        JOIN service s ON q.service_id = s.service_id
-        WHERE s.store_id = ?
-        AND q.queue_status = 'WAITING'
-        ORDER BY q.queue_id ASC
-        LIMIT 1
-        """,
-        (counter['store_id'],)
-    ).fetchone()
+    # A counter tied to a service only calls that service's customers
+    if counter['service_id']:
+        queue = conn.execute(
+            """
+            SELECT *
+            FROM queue
+            WHERE service_id = ?
+            AND queue_status = 'WAITING'
+            ORDER BY queue_id ASC
+            LIMIT 1
+            """,
+            (counter['service_id'],)
+        ).fetchone()
+    else:
+        queue = conn.execute(
+            """
+            SELECT q.*
+            FROM queue q
+            JOIN service s ON q.service_id = s.service_id
+            WHERE s.store_id = ?
+            AND q.queue_status = 'WAITING'
+            ORDER BY q.queue_id ASC
+            LIMIT 1
+            """,
+            (counter['store_id'],)
+        ).fetchone()
 
     if not queue:
-        return jsonify({
-            'message': 'No customers waiting'
-        }), 404
+        return jsonify({'message': 'No customers waiting'}), 404
 
     # Change queue status to SERVING
     conn.execute(
@@ -1436,10 +1452,9 @@ def call_next_customer(counter_id):
         """,
         (counter_id, queue['queue_id'])
     )
-
     conn.commit()
 
-    # Member 2 (Eugene): Notification thorugh email
+    # Member 2 (Eugene): Notification through email
     user_info = conn.execute(
         """
         SELECT u.email, u.username, c.counter_name, s.store_name
@@ -1466,16 +1481,12 @@ def call_next_customer(counter_id):
 
     # Get updated queue
     updated_queue = conn.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE queue_id = ?
-        """,
+        "SELECT * FROM queue WHERE queue_id = ?",
         (queue['queue_id'],)
     ).fetchone()
 
     socketio.emit('queue_status_updated', {'queue_id': queue['queue_id']}, to=f"store_{counter['store_id']}")
-    
+
     return jsonify({
         'message': 'Next customer called successfully',
         'queue': dict(updated_queue)
@@ -1824,12 +1835,13 @@ def get_staff_dashboard(store_id):
             'error': 'Store not found'
         }), 404
 
-    # Get all counters for this store
+       # Get all counters for this store
     counters = conn.execute(
         """
-        SELECT *
-        FROM counter
-        WHERE store_id = ?
+        SELECT c.*, s.service_name
+        FROM counter c
+        LEFT JOIN service s ON c.service_id = s.service_id
+        WHERE c.store_id = ?
         """,
         (store_id,)
     ).fetchall()
