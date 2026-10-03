@@ -17,8 +17,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
         :root {
@@ -122,15 +120,18 @@
             color: #fca5a5;
         }
 
-        /* SUB-NAVIGATION */
+
+
         .admin-navigation {
             background: #ffffff;
             padding: 8px 32px;
             display: flex;
+            justify-content: center;
             gap: 8px;
             border-bottom: 1px solid var(--admin-border);
             overflow-x: auto;
         }
+
 
         .nav-btn {
             border: none;
@@ -1262,7 +1263,7 @@
                 </div>
             `;
         }
-      
+
 
         async function loadStoreStats() {
             const period = document.getElementById('storePeriodSelect').value;
