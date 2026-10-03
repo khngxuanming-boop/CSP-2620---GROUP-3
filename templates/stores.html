@@ -146,6 +146,74 @@
             background: #1d4ed8 !important;
             transform: translateY(-1px);
         }
+        /* Funnel / filter toggle button - sits right next to Search */
+        .btn-filter {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 12px !important;
+            padding: 10px 14px !important;
+            cursor: pointer;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            width: auto !important;
+            margin: 0 !important;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .btn-filter:hover {
+            background: rgba(255, 255, 255, 0.18) !important;
+        }
+
+        /* Turns blue when a filter is actually applied, so it's obvious
+        at a glance that something is filtered even if the panel is closed. */
+        .btn-filter.active {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+        }
+
+        /* Filter panel: hidden by default, toggled open by the funnel button */
+        .filter-panel {
+            margin-top: 12px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            display: none;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .filter-group label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-group select {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 8px 10px;
+            min-width: 160px;
+            cursor: pointer;
+        }
+
+        .filter-group select option {
+            background: #1e293b;
+            color: #ffffff;
+        }
 
         /* Store Cards Grid */
         .store-grid {
@@ -319,9 +387,63 @@
                     <input type="text" name="search" placeholder="Search for a business or store..."
                         value="{{ search_query }}" class="search-input">
                     <button type="submit" class="btn-search">Search</button>
+
+                    <!-- Funnel button: just toggles the panel below, doesn't submit anything itself -->
+                    <button type="button" id="filterToggleBtn"
+                        class="btn-filter {{ 'active' if service_filter or status_filter or sort else '' }}"
+                        onclick="toggleFilters()" title="Filters">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="4 4 20 4 14 12.5 14 19 10 21 10 12.5 4 4"></polygon>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Starts open automatically if a filter from a previous search is
+                     still active, so it doesn't look like the filter silently vanished. -->
+                <div id="filterPanel" class="filter-panel"
+                    style="display: {{ 'flex' if service_filter or status_filter or sort else 'none' }};">
+
+                    <div class="filter-group">
+                        <label for="service">Service</label>
+                        <select name="service" id="service">
+                            <option value="">All services</option>
+                            {% for svc in all_services %}
+                                <option value="{{ svc['service_name'] }}" {% if svc['service_name'] == service_filter %}selected{% endif %}>
+                                    {{ svc['service_name'] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="status">Status</label>
+                        <select name="status" id="status">
+                            <option value="" {% if status_filter == '' %}selected{% endif %}>Open & Closed</option>
+                            <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open only</option>
+                            <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed only</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="sort">Sort</label>
+                        <select name="sort" id="sort">
+                            <option value="" {% if sort == '' %}selected{% endif %}>Default order</option>
+                            <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>Name (A &rarr; Z)</option>
+                            <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>Name (Z &rarr; A)</option>
+                        </select>
+                    </div>
                 </div>
             </form>
         </section>
+
+        <script>
+            function toggleFilters() {
+                const panel = document.getElementById('filterPanel');
+                const isOpen = panel.style.display === 'flex';
+                panel.style.display = isOpen ? 'none' : 'flex';
+            }
+        </script>
 
         <!-- Store Grid Cards -->
         <section class="store-grid">
