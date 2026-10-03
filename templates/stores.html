@@ -437,7 +437,15 @@
                             </option>
                         </select>
                     </div>
-
+                    
+                    <div class="filter-group">
+                        <label for="sort">Sort</label>
+                        <select name="sort" id="sort">
+                            <option value="" {% if sort == '' %}selected{% endif %}>Default order</option>
+                            <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>Name (A &rarr; Z)</option>
+                            <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>Name (Z &rarr; A)</option>
+                        </select>
+                    </div>
 
                 </div>
             </form>
