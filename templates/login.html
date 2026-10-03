@@ -1,46 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Login to Queues</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+<style>
+    /* Full Page Split-Screen Layout */
+    body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        background-color: #f8fafc;
+    }
+
+    .login-wrapper {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    /* Left Side - Compact Info Section */
+    .login-info {
+        width: 35%;
+        max-width: 420px;
+        min-width: 320px;
+        padding: 40px 36px;
+
+        background: linear-gradient(145deg, #241b75, #34377e);
+        color: white;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    /* Logo */
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+
+    .logo-icon {
+        width: 36px;
+        height: 36px;
+        background: white;
+        color: #111112;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .logo-text {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    /* Main Heading */
+    .login-info h2 {
+        font-size: 28px;
+        line-height: 1.25;
+        margin: 0 0 12px;
+    }
+
+    .login-info h2 span {
+        color: #ff8065;
+    }
+
+    /* Description */
+    .login-info p {
+        font-size: 14px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0 0 24px;
+    }
+
+    /* Features */
+    .features {
+        margin-top: 10px;
+    }
+
+    .feature {
+        display: flex;
+        align-items: center;
+        margin-bottom: 14px;
+        font-size: 13.5px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .feature-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ff8065;
+        font-size: 12px;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    /* Right Side - Form Container */
+    .login-card-area {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    /* Responsive adjustment for mobile screens */
+    @media (max-width: 768px) {
+        .login-wrapper {
+            flex-direction: column;
+        }
+
+        .login-info {
+            width: 100%;
+            max-width: 100%;
+            padding: 30px 24px;
+        }
+
+        .login-info h2 {
+            font-size: 24px;
+        }
+
+        .features {
+            display: none; /* Hide feature bullets on small screens to save space */
+        }
+    }
+</style>
+
 <body>
-    <div class="card" style="max-width: 400px; margin: 50px auto;">
-        <h1>Welcome Back!</h1>
-
-        {% if error %}
-        <p style="color: #ef4444; font-weight: bold; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 5px;">
-            {{ error }}
-        </p>
-        {% endif %}
-
-        <form method="POST">
-            <label>Username</label>
-            <input type="text" name="username" required style="width: 100%; box-sizing: border-box;">
-            
-            <label>Password</label>
-            <div style="position: relative;">
-                <input type="password" name="password" id="password" required style="width: 100%; padding-right: 40px; box-sizing: border-box;">
-                <span onclick="togglePassword('password', this)" style="position: absolute; right: 12px; top: 50%;
-                 transform: translateY(-75%); cursor: pointer; user-select: none; display: flex; align-items: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" 
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                </span>
+    <div class="login-wrapper">
+        <!-- Left Side Hero Section -->
+        <div class="login-info">
+            <div class="logo">
+                <div class="logo-icon">Q</div>
+                <div class="logo-text">Queues</div>
             </div>
 
-            <button type="submit" style="width: 100%; margin-top: 15px;">Sign In</button>
-        </form>
+            <h2>
+                Manage your queue<br>
+                <span>smarter.</span>
+            </h2>
 
-        <p style="text-align: center; margin-top: 15px;">
-            Don't have an account? <a href="/register" style="color: #2563eb;">Register here</a>
-        </p>
-        <p style="text-align: center; margin-top: 5px;">
-            <a href="/forgot_password" style="color: #2563eb;">Forgot password?</a>
-        </p>
+            <p>
+                Easily manage appointments, queues, and services in one simple platform.
+            </p>
+
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">✓</div>
+                    <span>Manage queues efficiently</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">✓</div>
+                    <span>Track queue status in real time</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">✓</div>
+                    <span>Manage stores and services</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side Form -->
+        <div class="login-card-area">
+            <div class="card" style="max-width: 400px; width: 100%; margin: 0 auto;">
+                <h1>Welcome Back!</h1>
+
+                {% if error %}
+                <p style="color: #ef4444; font-weight: bold; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 5px;">
+                    {{ error }}
+                </p>
+                {% endif %}
+
+                <form method="POST">
+                    <label>Username</label>
+                    <input type="text" name="username" required style="width: 100%; box-sizing: border-box;">
+
+                    <label>Password</label>
+                    <div style="position: relative;">
+                        <input type="password" name="password" id="password" required style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+                        <span onclick="togglePassword('password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-75%); cursor: pointer; user-select: none; display: flex; align-items: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                    </div>
+
+                    <button type="submit" style="width: 100%; margin-top: 15px;">Sign In</button>
+                </form>
+
+                <p style="text-align: center; margin-top: 15px;">
+                    Don't have an account? <a href="/register" style="color: #2563eb;">Register here</a>
+                </p>
+                <p style="text-align: center; margin-top: 5px;">
+                    <a href="/forgot_password" style="color: #2563eb;">Forgot password?</a>
+                </p>
+            </div>
+        </div>
     </div>
+
     <script>
         function togglePassword(inputId, icon) {
             const input = document.getElementById(inputId);
@@ -53,4 +227,5 @@
         }
     </script>
 </body>
+
 </html>
