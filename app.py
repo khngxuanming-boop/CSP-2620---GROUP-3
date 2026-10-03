@@ -23,6 +23,19 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
 mail = Mail(app)
 
+def auto_rebuild_db():
+    if not os.path.exists(DB_NAME):
+        print("Database not found. Creating a new one...")
+        try:
+            with sqlite3.connect(DB_NAME) as conn:
+                with open('schema.sql', 'r', encoding='utf-8') as f:
+                    conn.executescript(f.read())
+            import test_db
+            print("Database created and initialized successfully.")
+        except Exception as e:
+            print(f"Error creating database: {e}")
+auto_rebuild_db()
+
 def send_verification_email(email, code):
     """Send a 6-digit verification code to the given email.
     Returns True if it sent successfully, False otherwise (and logs the error)."""
@@ -163,36 +176,35 @@ def store_discovery():
     # service is picked we JOIN through the service table and DISTINCT the
     # result so a store offering that service more than once (shouldn't
     # happen, but just in case) doesn't show up twice.
-    if search_query and service_filter:
-        stores_raw = conn.execute(
-            '''
-            SELECT DISTINCT store.*
-            FROM store
-            JOIN service ON service.store_id = store.store_id
-            WHERE store.store_name LIKE ?
-            AND service.service_name = ?
-            ''',
-            ('%' + search_query + '%', service_filter)
-        ).fetchall()
-    elif service_filter:
-        stores_raw = conn.execute(
-            '''
-            SELECT DISTINCT store.*
-            FROM store
-            JOIN service ON service.store_id = store.store_id
-            WHERE service.service_name = ?
-            ''',
-            (service_filter,)
-        ).fetchall()
-    elif search_query:
-        stores_raw = conn.execute(
-            'SELECT * FROM store WHERE store_name LIKE ?',
-            ('%' + search_query + '%',)
-        ).fetchall()
-    else:
-        stores_raw = conn.execute(
-            'SELECT * FROM store'
-        ).fetchall()
+        # Customers only ever see APPROVED stores
+    sql = '''
+        SELECT DISTINCT store.*
+        FROM store
+        LEFT JOIN service ON service.store_id = store.store_id
+        WHERE store.store_status = 'APPROVED'
+    '''
+    params = []
+
+    if search_query:
+        sql += ' AND store.store_name LIKE ?'
+        params.append('%' + search_query + '%')
+
+    if service_filter:
+        sql += ' AND service.service_name = ?'
+        params.append(service_filter)
+
+    stores_raw = conn.execute(sql, params).fetchall()
+
+    # Only list services offered by approved stores in the filter dropdown
+    all_services = conn.execute(
+        '''
+        SELECT DISTINCT service.service_name
+        FROM service
+        JOIN store ON store.store_id = service.store_id
+        WHERE store.store_status = 'APPROVED'
+        ORDER BY service.service_name
+        '''
+    ).fetchall()
 
     # For the filter dropdown: every distinct service name across all stores.
     all_services = conn.execute(
@@ -232,6 +244,9 @@ def store_discovery():
 
         store['waiting_count'] = waiting_count
         store['is_open'] = open_counters > 0
+        per_person = store['estimated_wait_time'] or 5
+        store['estimated_wait'] = waiting_count * per_person
+
         stores.append(store)
 
     # Open/Closed filter
@@ -629,7 +644,7 @@ def store_details(store_id):
     store = conn.execute('SELECT * FROM store WHERE store_id =?', (store_id,)).fetchone()
 
     # Fall back error response if someone manually type a fake store ID in the URL
-    if not store:
+    if not store or store['store_status'] != 'APPROVED':
         return "Store not found", 404
 
     # Grab all active services linked to this store from Member 3's service table
@@ -2020,8 +2035,34 @@ def get_staff_dashboard(store_id):
         """,
         (store_id,)
     ).fetchone()
+ 
+        # Waiting walk-ins (queue numbers start with 'W-')
+    walk_in = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        AND q.queue_number LIKE 'W-%'
+        """,
+        (store_id,)
+    ).fetchone()
 
-    # Count currently serving
+    # Waiting appointments that have checked in (queue numbers start with 'A-')
+    appointment = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        AND q.queue_number LIKE 'A-%'
+        """,
+        (store_id,)
+    ).fetchone()
+
+ # Count currently serving
     serving = conn.execute(
         """
         SELECT COUNT(*) AS total
@@ -2032,6 +2073,7 @@ def get_staff_dashboard(store_id):
         """,
         (store_id,)
     ).fetchone()
+
 
     # Count completed
     completed = conn.execute(
@@ -2080,6 +2122,8 @@ def get_staff_dashboard(store_id):
 
         'queue_summary': {
             'waiting': waiting['total'],
+            'walk_in': walk_in['total'],
+            'appointment': appointment['total'],
             'serving': serving['total'],
             'completed': completed['total'],
             'skipped': skipped['total'],

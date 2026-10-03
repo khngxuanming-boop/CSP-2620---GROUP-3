@@ -7,7 +7,7 @@
     <title>Discover Stores</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-/* =====================================================
+        /* =====================================================
    DISCOVER STORES DIRECTORY STYLES
 ===================================================== */
 
@@ -99,15 +99,15 @@
         }
 
         .search-input-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 16px;
-        padding: 6px 6px 6px 18px;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 6px 6px 6px 18px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .search-input-group:focus-within {
@@ -120,8 +120,10 @@
             background: transparent !important;
             border: none !important;
             outline: none !important;
-            color: #ffffff;
-            font-size: 1rem;
+            color: #ffffff !important;
+            caret-color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 500;
             padding: 10px 0;
         }
 
@@ -146,6 +148,7 @@
             background: #1d4ed8 !important;
             transform: translateY(-1px);
         }
+
         /* Funnel / filter toggle button - sits right next to Search */
         .btn-filter {
             background: rgba(255, 255, 255, 0.08) !important;
@@ -184,6 +187,10 @@
             flex-wrap: wrap;
             gap: 16px;
             justify-content: center;
+        }
+
+        .filter-panel.open {
+            display: flex;
         }
 
         .filter-group {
@@ -351,24 +358,29 @@
 <body>
 
     <!-- Top Navigation Header -->
- <header style="width: 100%; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 14px 0; margin-bottom: 30px;">
-        <div style="max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;">
-            
+    <header
+        style="width: 100%; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 14px 0; margin-bottom: 30px;">
+        <div
+            style="max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;">
+
             <!-- Brand Logo -->
             <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
                 <span style="font-size: 1.25rem;">⚡</span>
-                <span style="font-size: 1.4rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">Queues</span>
+                <span
+                    style="font-size: 1.4rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">Queues</span>
             </a>
-            
+
             <!-- User Info & Logout -->
             <div style="display: flex; align-items: center; gap: 18px;">
                 <span style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.7);">
                     Welcome, <strong style="color: #3b82f6;">{{ username }}</strong>
                 </span>
-                <a href="/logout" style="color: #f87171; text-decoration: none; font-size: 0.875rem; font-weight: 600; padding: 6px 14px; border-radius: 8px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25);">
+                <a href="/logout"
+                    style="color: #f87171; text-decoration: none; font-size: 0.875rem; font-weight: 600; padding: 6px 14px; border-radius: 8px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25);">
                     Logout
                 </a>
-                <a href="/profile" style="color: #93c5fd; text-decoration: none; font-size: 0.875rem; font-weight: 600;">
+                <a href="/profile"
+                    style="color: #93c5fd; text-decoration: none; font-size: 0.875rem; font-weight: 600;">
                     My Profile
                 </a>
             </div>
@@ -401,17 +413,17 @@
 
                 <!-- Starts open automatically if a filter from a previous search is
                      still active, so it doesn't look like the filter silently vanished. -->
-                <div id="filterPanel" class="filter-panel"
-                    style="display: {{ 'flex' if service_filter or status_filter or sort else 'none' }};">
+                <div id="filterPanel" class="filter-panel {{ 'open' if service_filter or status_filter else '' }}">
 
                     <div class="filter-group">
                         <label for="service">Service</label>
                         <select name="service" id="service">
                             <option value="">All services</option>
                             {% for svc in all_services %}
-                                <option value="{{ svc['service_name'] }}" {% if svc['service_name'] == service_filter %}selected{% endif %}>
-                                    {{ svc['service_name'] }}
-                                </option>
+                            <option value="{{ svc['service_name'] }}" {% if svc['service_name']==service_filter
+                                %}selected{% endif %}>
+                                {{ svc['service_name'] }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -419,20 +431,14 @@
                     <div class="filter-group">
                         <label for="status">Status</label>
                         <select name="status" id="status">
-                            <option value="" {% if status_filter == '' %}selected{% endif %}>Open & Closed</option>
-                            <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open only</option>
-                            <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed only</option>
+                            <option value="" {% if status_filter=='' %}selected{% endif %}>Open & Closed</option>
+                            <option value="open" {% if status_filter=='open' %}selected{% endif %}>Open only</option>
+                            <option value="closed" {% if status_filter=='closed' %}selected{% endif %}>Closed only
+                            </option>
                         </select>
                     </div>
 
-                    <div class="filter-group">
-                        <label for="sort">Sort</label>
-                        <select name="sort" id="sort">
-                            <option value="" {% if sort == '' %}selected{% endif %}>Default order</option>
-                            <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>Name (A &rarr; Z)</option>
-                            <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>Name (Z &rarr; A)</option>
-                        </select>
-                    </div>
+
                 </div>
             </form>
         </section>
@@ -468,7 +474,9 @@
                     </div>
                     <div class="metric-row" style="margin-top: 8px;">
                         <span class="metric-label">Estimated Wait</span>
-                        <span class="metric-value">{{ store['estimated_wait_time'] }} <small>mins</small></span>
+                        <span class="metric-value">
+                            {{ store['estimated_wait'] }} <small>mins</small>
+                        </span>
                     </div>
                 </div>
 
