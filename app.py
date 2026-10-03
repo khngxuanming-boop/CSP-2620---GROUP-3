@@ -511,14 +511,15 @@ def register_store():
         store_name = request.form['name']
         hours = request.form['hours']
         description = request.form.get('description', '')
+        wait_time = request.form.get('estimated_wait_time', 5)
 
         conn.execute(
             """
             INSERT INTO store
-            (store_name, operating_hours, store_status, owner_id, store_description)
-            VALUES (?, ?, 'PENDING', ?, ?)
+            (store_name, operating_hours, store_status, owner_id, store_description, estimated_wait_time)
+            VALUES (?, ?, 'PENDING', ?, ?, ?)
             """,
-            (store_name, hours, session['user_id'], description)
+            (store_name, hours, session['user_id'], description, wait_time)
         )
         conn.commit()
 
@@ -1865,25 +1866,41 @@ def get_counter_queue(counter_id):
         dict(row) for row in queues
     ]), 200
 
-# GET - View queue history
+# GET - View queue history (optional filters: store_id, date=YYYY-MM-DD)
 @app.route('/api/queues/history', methods=['GET'])
 def get_queue_history():
-
+    store_id = request.args.get('store_id')
+    date = request.args.get('date')
     conn = get_db_connection()
 
-    queues = conn.execute(
+    try:
+        sql = """
+            SELECT q.*,
+                   s.service_name,
+                   c.counter_name,
+                   datetime(q.created_at, 'localtime') AS created_local
+            FROM queue q
+            LEFT JOIN service s ON q.service_id = s.service_id
+            LEFT JOIN counter c ON q.counter_id = c.counter_id
+            WHERE q.queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
         """
-        SELECT *
-        FROM queue
-        WHERE queue_status IN ('COMPLETED', 'SKIPPED', 'CANCELLED')
-        ORDER BY queue_id DESC
-        """
-    ).fetchall()
+        params = []
 
+        if store_id and store_id != 'ALL':
+            sql += " AND s.store_id = ?"
+            params.append(store_id)
 
-    return jsonify([
-        dict(row) for row in queues
-    ]), 200
+        if date:
+            sql += " AND date(q.created_at, 'localtime') = ?"
+            params.append(date)
+
+        sql += " ORDER BY q.queue_id DESC"
+
+        rows = conn.execute(sql, params).fetchall()
+        return jsonify([dict(row) for row in rows]), 200
+    except Exception as e:
+        print(f"Error fetching queue history: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # GET - View queue status summary
 @app.route('/api/counters/<int:counter_id>/queue/status', methods=['GET'])
