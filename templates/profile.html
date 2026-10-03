@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div style="text-align: right; padding: 20px; max-width: 500px; margin: 0 auto;">
+        <a href="/stores" style="color: #10b981; font-weight: bold; margin-right: 15px; text-decoration: none;">Back to Directory</a> |
+        <a href="/logout" style="color: #ef4444; font-weight: bold; text-decoration: none;">Logout</a>
+    </div>
+
+    <div class="card" style="max-width: 400px; margin: 30px auto;">
+        <h1>My Profile</h1>
+        <p style="color: #6b7280;">Username: <strong>{{ user['username'] }}</strong> (cannot be changed)</p>
+
+        {% if error %}
+            <p style="color: #ef4444;">{{ error }}</p>
+        {% endif %}
+        {% if success %}
+            <p style="color: #22c55e;">{{ success }}</p>
+        {% endif %}
+
+        <form method="POST">
+            <label>Email</label>
+            <input type="email" name="email" value="{{ user['email'] or '' }}" style="width: 100%; box-sizing: border-box;">
+
+            <label style="margin-top: 10px; display: block;">New Password</label>
+            <input type="password" name="password" placeholder="Leave blank to keep current password" style="width: 100%; box-sizing: border-box;">
+
+            <button type="submit" style="width: 100%; margin-top: 15px;">Save Changes</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+/* static/style.css - pastel theme */
+body {
+    font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #180b78 0%, #1d2143 50%, #4f5b7e 100%);
+    background-attachment: fixed;
+    color: #475569;
+    margin: 0;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1, h2 { color: #7c93d8; }
+
+.card {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #e9d8fd;
+    border-radius: 16px;
+    padding: 30px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(124, 152, 216, 0.15);
+    margin-bottom: 20px;
+}
+
+input[type="text"], input[type="email"], input[type="password"], select, textarea {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0 20px 0;
+    border-radius: 8px;
+    border: 1px solid #e0d7f7;
+    background-color: #fbfaff;
+    color: #475569;
+    font-family: inherit;
+}
+
+button {
+    background-color: #b5c2fd;
+    color: #271d95;
+    font-weight: bold;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #8b9cfa;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+a { color: #7c93e0; text-decoration: none; }
+a:hover { text-decoration: underline; }

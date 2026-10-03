@@ -60,11 +60,6 @@ def init_db():
     conn = get_db_connection()
     with open('schema.sql') as f:
         conn.executescript(f.read())
-
-    cols = [row['name'] for row in conn.execute("PRAGMA table_info(counter)")]
-    if 'service_id' not in cols:
-        conn.execute("ALTER TABLE counter ADD COLUMN service_id INTEGER")
-
     conn.commit()
 
 def create_admin():
@@ -146,33 +141,121 @@ def home():
 
 
 # =========================
-# STORE DIRECTORY
+# STORE DIRECTORY ---> Week 7 (Search Filter)
 # =========================
 
+# Shows every store, with search-by-name and filter-by-service, plus a
+# live "X waiting" count and an open/closed badge per store so customers
+# don't have to click into every store to see if it's worth queueing.
 @app.route('/stores')
 def store_discovery():
 
     search_query = request.args.get('search', '')
+    # ?service=... from the new filter dropdown (empty string = "All services")
+    service_filter = request.args.get('service', '')
 
     # Grab the logged in user's name from memory
     current_username = session.get('username')
 
     conn = get_db_connection()
 
-    if search_query:
-        stores = conn.execute(
-            "SELECT * FROM store WHERE store_status = 'APPROVED' AND store_name LIKE ?",
+    # Build the store list depending on which filters are active. When a
+    # service is picked we JOIN through the service table and DISTINCT the
+    # result so a store offering that service more than once (shouldn't
+    # happen, but just in case) doesn't show up twice.
+    if search_query and service_filter:
+        stores_raw = conn.execute(
+            '''
+            SELECT DISTINCT store.*
+            FROM store
+            JOIN service ON service.store_id = store.store_id
+            WHERE store.store_name LIKE ?
+            AND service.service_name = ?
+            ''',
+            ('%' + search_query + '%', service_filter)
+        ).fetchall()
+    elif service_filter:
+        stores_raw = conn.execute(
+            '''
+            SELECT DISTINCT store.*
+            FROM store
+            JOIN service ON service.store_id = store.store_id
+            WHERE service.service_name = ?
+            ''',
+            (service_filter,)
+        ).fetchall()
+    elif search_query:
+        stores_raw = conn.execute(
+            'SELECT * FROM store WHERE store_name LIKE ?',
             ('%' + search_query + '%',)
         ).fetchall()
     else:
-        stores = conn.execute(
-            "SELECT * FROM store WHERE store_status = 'APPROVED'"
+        stores_raw = conn.execute(
+            'SELECT * FROM store'
         ).fetchall()
+
+    # For the filter dropdown: every distinct service name across all stores.
+    all_services = conn.execute(
+        'SELECT DISTINCT service_name FROM service ORDER BY service_name'
+    ).fetchall()
+
+    # sqlite3.Row objects are read-only, so convert each store to a plain
+    # dict first, then bolt on the two live/computed fields the template
+    # needs. Dict lookups work the same as Row lookups in Jinja
+    # (store['x']), so nothing in the template has to change for the
+    # fields that already existed.
+    stores = []
+    for row in stores_raw:
+        store = dict(row)
+
+        # How many customers are currently WAITING for any service at this
+        # store right now (Member 2's queue table, joined through service
+        # so we don't need a store_id column on queue itself).
+        waiting_count = conn.execute(
+            '''
+            SELECT COUNT(*) AS c
+            FROM queue q
+            JOIN service s ON q.service_id = s.service_id
+            WHERE s.store_id = ?
+            AND q.queue_status = 'WAITING'
+            ''',
+            (store['store_id'],)
+        ).fetchone()['c']
+
+        # A store counts as "open" if it has at least one open counter
+        # (Member 3's counter table). There's no separate per-service open
+        # flag in the schema, so this is a store-wide approximation.
+        open_counters = conn.execute(
+            "SELECT COUNT(*) AS c FROM counter WHERE store_id = ? AND counter_status = 'open'",
+            (store['store_id'],)
+        ).fetchone()['c']
+
+        store['waiting_count'] = waiting_count
+        store['is_open'] = open_counters > 0
+        stores.append(store)
+
+    # Open/Closed filter
+    status_filter = request.args.get('status', '')
+    if status_filter == 'open':
+        stores = [s for s in stores if s['is_open']]
+    elif status_filter == 'closed':
+        stores = [s for s in stores if not s['is_open']]
+
+    # A-Z / Z-A sort
+    sort = request.args.get('sort', '')
+    if sort == 'name_asc':
+        stores.sort(key=lambda s: s['store_name'].lower())
+    elif sort == 'name_desc':
+        stores.sort(key=lambda s: s['store_name'].lower(), reverse=True)
 
     return render_template(
         'stores.html',
         stores=stores,
         search_query=search_query,
+        service_filter=service_filter,
+        all_services=all_services,
+        status_filter=status_filter,
+        sort=sort,
         username=current_username
     )
 
@@ -396,40 +479,15 @@ def reset_password(token):
 
 @app.route('/my-store')
 def my_store():
-    if session.get('role') != 'STAFF':
+    if 'user_id' not in session:
         return redirect(url_for('login'))
 
     conn = get_db_connection()
     stores = conn.execute(
-        'SELECT * FROM store WHERE owner_id = ? ORDER BY store_id DESC',
-        (session['user_id'],)
+        'SELECT * FROM store WHERE owner_id = ?', (session['user_id'],)
     ).fetchall()
 
     return render_template('my_store.html', stores=stores, username=session.get('username'))
-
-
-@app.route('/my-store/<int:store_id>/revoke', methods=['POST'])
-def revoke_store(store_id):
-    if session.get('role') != 'STAFF':
-        return redirect(url_for('login'))
-
-    conn = get_db_connection()
-    store = conn.execute(
-        'SELECT * FROM store WHERE store_id = ? AND owner_id = ?',
-        (store_id, session['user_id'])
-    ).fetchone()
-
-    if not store:
-        return "Store not found or you do not have access.", 403
-
-    # An approved store is live, so it can't be withdrawn here
-    if store['store_status'] == 'APPROVED':
-        return "An approved store can't be withdrawn.", 400
-
-    conn.execute('DELETE FROM store WHERE store_id = ?', (store_id,))
-    conn.commit()
-
-    return redirect(url_for('my_store'))
 
 # Store registration ----> Week 4: Adding form
 @app.route('/register_store', methods=['GET', 'POST'])
@@ -557,7 +615,8 @@ def staff_status():
         store=store
     )
 
-# Store Details Page ---> Week 3
+# Store Details Page ---> Week 3 & Week 7 (Live queue)
+
 @app.route('/store/<int:store_id>')
 def store_details(store_id):
     # Check if the user has a session, if not, redirect to login
@@ -569,17 +628,140 @@ def store_details(store_id):
     # Grab the specific store record based on the clicked store id.
     store = conn.execute('SELECT * FROM store WHERE store_id =?', (store_id,)).fetchone()
 
-    # Grab all active services linked to this store from Member 3's service table
-    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
-
-    if store['store_status'] != 'APPROVED':
-        return "Store not available", 404
     # Fall back error response if someone manually type a fake store ID in the URL
     if not store:
         return "Store not found", 404
 
+    # Grab all active services linked to this store from Member 3's service table
+    services = conn.execute('SELECT * FROM service WHERE store_id = ?', (store_id,)).fetchall()
+
+    # Walk-in vs appointment queues are told apart by the queue_number
+    # prefix Member 2 already generates: 'W-xxx' for walk-ins
+    # (walk_in_queue()) and 'A-xxx' for appointments that have checked in
+    # (check_in_appointment()). No new column needed - just filter on that.
+    walkin_waiting = conn.execute(
+        '''
+        SELECT COUNT(*) AS c
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        AND q.queue_number LIKE 'W-%'
+        ''',
+        (store_id,)
+    ).fetchone()['c']
+
+    appt_waiting = conn.execute(
+        '''
+        SELECT COUNT(*) AS c
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        AND q.queue_number LIKE 'A-%'
+        ''',
+        (store_id,)
+    ).fetchone()['c']
+
+    open_counters = conn.execute(
+        "SELECT COUNT(*) AS c FROM counter WHERE store_id = ? AND counter_status = 'open'",
+        (store_id,)
+    ).fetchone()['c']
+
+    # Does the logged-in customer currently have a live queue entry (either
+    # WAITING or already being SERVING) at THIS store? Pick the most recent
+    # one if somehow there's more than one.
+    my_queue_row = conn.execute(
+        '''
+        SELECT q.*
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.user_id = ?
+        AND q.queue_status IN ('WAITING', 'SERVING')
+        ORDER BY q.queue_id DESC
+        LIMIT 1
+        ''',
+        (store_id, session['user_id'])
+    ).fetchone()
+
+    my_queue = None
+    if my_queue_row:
+        my_queue = dict(my_queue_row)
+        # 'W-' / 'A-' prefix tells us which queue type this entry belongs to.
+        my_queue['queue_type'] = 'Walk-in' if my_queue['queue_number'].startswith('W-') else 'Appointment'
+
+        # Same "people ahead of me" maths as Member 2's /api/queues/my-status:
+        # count everyone still WAITING in this exact service's queue who
+        # joined (got a lower queue_id) before I did. 0 ahead once I'm
+        # already SERVING.
+        if my_queue['queue_status'] == 'WAITING':
+            my_queue['people_ahead'] = conn.execute(
+                '''
+                SELECT COUNT(*) AS c
+                FROM queue
+                WHERE service_id = ?
+                AND queue_status = 'WAITING'
+                AND queue_id < ?
+                ''',
+                (my_queue['service_id'], my_queue['queue_id'])
+            ).fetchone()['c']
+        else:
+            my_queue['people_ahead'] = 0
+
     # Render the template and pass along the user's session name
-    return render_template('store_details.html', store=store, services=services, username=session.get('username'))
+    return render_template(
+        'store_details.html',
+        store=store,
+        services=services,
+        walkin_waiting=walkin_waiting,
+        appt_waiting=appt_waiting,
+        is_open=open_counters > 0,
+        my_queue=my_queue,
+        username=session.get('username')
+    )
+
+# Customer Profile (view/edit own account) ---> Week 7
+
+# GET  -> show the logged-in user's own username/email.
+# POST -> let them update their email and/or set a new password.
+# Deliberately does NOT touch username or role - those aren't meant to
+# change after signup, and role changes are an admin concern, not a
+# customer self-service one.
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM user WHERE user_id = ?', (session['user_id'],)).fetchone()
+
+    error = None
+    success = None
+
+    if request.method == 'POST':
+        new_email = request.form.get('email', '').strip()
+        new_password = request.form.get('password', '').strip()
+
+        # Password field is optional - only touch it if they actually typed
+        # something, so leaving it blank just keeps the current password.
+        if new_password:
+            conn.execute(
+                'UPDATE user SET email = ?, password = ? WHERE user_id = ?',
+                (new_email, new_password, session['user_id'])
+            )
+        else:
+            conn.execute(
+                'UPDATE user SET email = ? WHERE user_id = ?',
+                (new_email, session['user_id'])
+            )
+        conn.commit()
+
+        # Re-fetch so the page shows the values that actually got saved.
+        user = conn.execute('SELECT * FROM user WHERE user_id = ?', (session['user_id'],)).fetchone()
+        success = "Profile updated successfully."
+
+    return render_template('profile.html', user=user, error=error, success=success)
 
 # User Logout ---> Week 3
 @app.route('/logout')
@@ -991,10 +1173,9 @@ def create_counter():
     if session.get('role') != 'STAFF':
         return jsonify({'error': 'Staff access required'}), 403
 
-    data = request.get_json() or {}
+    data = request.get_json()
     store_id = data.get('store_id')
     counter_name = data.get('counter_name')
-    service_id = data.get('service_id') or None
 
     if not store_id or not counter_name:
         return jsonify({'error': 'store_id and counter_name are required'}), 400
@@ -1009,23 +1190,16 @@ def create_counter():
     if not store:
         return jsonify({'error': 'You do not have access to this store'}), 403
 
-    # The service must belong to this same store
-    if service_id:
-        service = conn.execute(
-            'SELECT 1 FROM service WHERE service_id = ? AND store_id = ?',
-            (service_id, store_id)
-        ).fetchone()
-        if not service:
-            return jsonify({'error': 'Service not found in this store'}), 400
-
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO counter (store_id, counter_name, service_id) VALUES (?, ?, ?)",
-        (store_id, counter_name, service_id)
+        "INSERT INTO counter (store_id, counter_name) VALUES (?, ?)",
+        (store_id, counter_name)
     )
     conn.commit()
+    counter_id = cursor.lastrowid
 
-    return jsonify({'message': 'Counter created successfully', 'counter_id': cursor.lastrowid}), 201
+    return jsonify({'message': 'Counter created successfully', 'counter_id': counter_id}), 201
+
 
 # READ - Get all counters for a store
 @app.route('/api/counters/<int:store_id>', methods=['GET'])
@@ -1089,47 +1263,32 @@ def update_counter(counter_id):
 
 
 # DELETE - Remove a counter
-# DELETE - Remove a counter
 @app.route('/api/counters/<int:counter_id>', methods=['DELETE'])
 def delete_counter(counter_id):
-    if session.get('role') != 'STAFF':
-        return jsonify({'error': 'Staff access required'}), 403
 
     conn = get_db_connection()
 
-    # The counter must belong to a store owned by the logged-in staff
     counter = conn.execute(
-        """
-        SELECT c.*
-        FROM counter c
-        JOIN store s ON c.store_id = s.store_id
-        WHERE c.counter_id = ?
-        AND s.owner_id = ?
-        """,
-        (counter_id, session['user_id'])
-    ).fetchone()
-
-    if not counter:
-        return jsonify({'error': 'Counter not found or you do not have access'}), 404
-
-    # Don't delete a counter that is serving someone right now
-    serving = conn.execute(
-        """
-        SELECT 1 FROM queue
-        WHERE counter_id = ? AND queue_status = 'SERVING'
-        """,
+        'SELECT * FROM counter WHERE counter_id = ?',
         (counter_id,)
     ).fetchone()
 
-    if serving:
+    if not counter:
         return jsonify({
-            'error': 'This counter is serving a customer. Complete or skip them first.'
-        }), 400
+            'error': 'Counter not found'
+        }), 404
 
-    conn.execute('DELETE FROM counter WHERE counter_id = ?', (counter_id,))
+    conn.execute(
+        'DELETE FROM counter WHERE counter_id = ?',
+        (counter_id,)
+    )
+
     conn.commit()
 
-    return jsonify({'message': 'Counter deleted successfully'}), 200
+    return jsonify({
+        'message': 'Counter deleted successfully'
+    }), 200
+
 # =========================
 # COUNTER OPEN / CLOSE
 # =========================
@@ -1402,46 +1561,43 @@ def call_next_customer(counter_id):
 
     # Check whether counter exists
     counter = conn.execute(
-        "SELECT * FROM counter WHERE counter_id = ?",
+        """
+        SELECT *
+        FROM counter
+        WHERE counter_id = ?
+        """,
         (counter_id,)
     ).fetchone()
 
     if not counter:
-        return jsonify({'error': 'Counter not found'}), 404
+        return jsonify({
+            'error': 'Counter not found'
+        }), 404
 
     # Check whether counter is open
     if counter['counter_status'] != 'open':
-        return jsonify({'error': 'Counter is closed'}), 400
+        return jsonify({
+            'error': 'Counter is closed'
+        }), 400
 
-    # A counter tied to a service only calls that service's customers
-    if counter['service_id']:
-        queue = conn.execute(
-            """
-            SELECT *
-            FROM queue
-            WHERE service_id = ?
-            AND queue_status = 'WAITING'
-            ORDER BY queue_id ASC
-            LIMIT 1
-            """,
-            (counter['service_id'],)
-        ).fetchone()
-    else:
-        queue = conn.execute(
-            """
-            SELECT q.*
-            FROM queue q
-            JOIN service s ON q.service_id = s.service_id
-            WHERE s.store_id = ?
-            AND q.queue_status = 'WAITING'
-            ORDER BY q.queue_id ASC
-            LIMIT 1
-            """,
-            (counter['store_id'],)
-        ).fetchone()
+    # Find the next waiting customer assigned to this counter
+    queue = conn.execute(
+        """
+        SELECT q.*
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE s.store_id = ?
+        AND q.queue_status = 'WAITING'
+        ORDER BY q.queue_id ASC
+        LIMIT 1
+        """,
+        (counter['store_id'],)
+    ).fetchone()
 
     if not queue:
-        return jsonify({'message': 'No customers waiting'}), 404
+        return jsonify({
+            'message': 'No customers waiting'
+        }), 404
 
     # Change queue status to SERVING
     conn.execute(
@@ -1453,9 +1609,10 @@ def call_next_customer(counter_id):
         """,
         (counter_id, queue['queue_id'])
     )
+
     conn.commit()
 
-    # Member 2 (Eugene): Notification through email
+    # Member 2 (Eugene): Notification thorugh email
     user_info = conn.execute(
         """
         SELECT u.email, u.username, c.counter_name, s.store_name
@@ -1482,12 +1639,16 @@ def call_next_customer(counter_id):
 
     # Get updated queue
     updated_queue = conn.execute(
-        "SELECT * FROM queue WHERE queue_id = ?",
+        """
+        SELECT *
+        FROM queue
+        WHERE queue_id = ?
+        """,
         (queue['queue_id'],)
     ).fetchone()
 
     socketio.emit('queue_status_updated', {'queue_id': queue['queue_id']}, to=f"store_{counter['store_id']}")
-
+    
     return jsonify({
         'message': 'Next customer called successfully',
         'queue': dict(updated_queue)
@@ -1838,13 +1999,12 @@ def get_staff_dashboard(store_id):
             'error': 'Store not found'
         }), 404
 
-       # Get all counters for this store
+    # Get all counters for this store
     counters = conn.execute(
         """
-        SELECT c.*, s.service_name
-        FROM counter c
-        LEFT JOIN service s ON c.service_id = s.service_id
-        WHERE c.store_id = ?
+        SELECT *
+        FROM counter
+        WHERE store_id = ?
         """,
         (store_id,)
     ).fetchall()
@@ -1907,21 +2067,7 @@ def get_staff_dashboard(store_id):
         AND q.queue_status = 'CANCELLED'
         """,
         (store_id,)
-    ).fetchone() 
-    
-    split = conn.execute(
-        """
-        SELECT
-            SUM(CASE WHEN q.queue_number LIKE 'W-%' THEN 1 ELSE 0 END) AS walk_in,
-            SUM(CASE WHEN q.queue_number LIKE 'A-%' THEN 1 ELSE 0 END) AS appointment
-        FROM queue q
-        JOIN service s ON q.service_id = s.service_id
-        WHERE s.store_id = ?
-        AND q.queue_status = 'WAITING'
-        """,
-        (store_id,)
     ).fetchone()
-
 
 
     return jsonify({
@@ -1934,8 +2080,6 @@ def get_staff_dashboard(store_id):
 
         'queue_summary': {
             'waiting': waiting['total'],
-            'walk_in': split['walk_in'] or 0,
-            'appointment': split['appointment'] or 0,
             'serving': serving['total'],
             'completed': completed['total'],
             'skipped': skipped['total'],
@@ -1952,53 +2096,34 @@ def get_queue_stats():
     if session.get('role') != 'ADMIN':
         return jsonify({'error': 'Admin access required'}), 403
 
-    period = request.args.get('period', 'day')
-    store_id = request.args.get('store_id')
+    period = request.args.get('period', 'day')  # day | week | month | year
 
     period_formats = {
         'day':   '%Y-%m-%d',
-        'week':  '%Y-%W',
+        'week':  '%Y-%W',      # ISO-ish year-week
         'month': '%Y-%m',
         'year':  '%Y'
     }
 
     if period not in period_formats:
-        return jsonify({'error': 'Invalid period'}), 400
+        return jsonify({'error': 'period must be one of: day, week, month, year'}), 400
 
     fmt = period_formats[period]
+
     conn = get_db_connection()
 
-    try:
-        if store_id and store_id != 'ALL':
-            rows = conn.execute(
-                f"""
-                SELECT strftime('{fmt}', q.created_at) AS period_label,
-                       COUNT(*) AS total_queues
-                FROM queue q
-                JOIN counter c ON q.counter_id = c.counter_id
-                WHERE c.store_id = ?
-                GROUP BY period_label
-                ORDER BY period_label DESC
-                LIMIT 30
-                """,
-                (store_id,)
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                f"""
-                SELECT strftime('{fmt}', created_at) AS period_label,
-                       COUNT(*) AS total_queues
-                FROM queue
-                GROUP BY period_label
-                ORDER BY period_label DESC
-                LIMIT 30
-                """
-            ).fetchall()
+    rows = conn.execute(
+        f"""
+        SELECT strftime('{fmt}', created_at) AS period_label,
+               COUNT(*) AS total_queues
+        FROM queue
+        GROUP BY period_label
+        ORDER BY period_label DESC
+        LIMIT 30
+        """
+    ).fetchall()
 
-        return jsonify([dict(row) for row in rows]), 200
-    except Exception as e:
-        print(f"Error fetching queue stats: {e}")
-        return jsonify({'error': str(e)}), 500
+    return jsonify([dict(row) for row in rows]), 200
 
 
 @app.route('/api/stats/stores', methods=['GET'])
