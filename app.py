@@ -1854,11 +1854,12 @@ def get_counter_queue(counter_id):
     # Get queues for this counter
     queues = conn.execute(
         """
-        SELECT *
-        FROM queue
-        WHERE counter_id = ?
-        AND queue_status IN ('WAITING', 'SERVING')
-        ORDER BY queue_id ASC
+        SELECT q.*, s.service_name
+        FROM queue q
+        JOIN service s ON q.service_id = s.service_id
+        WHERE q.counter_id = ?
+        AND q.queue_status IN ('WAITING', 'SERVING')
+        ORDER BY q.queue_id ASC
         """,
         (counter_id,)
     ).fetchall()
@@ -2127,11 +2128,12 @@ def get_queue_stats():
     if session.get('role') != 'ADMIN':
         return jsonify({'error': 'Admin access required'}), 403
 
-    period = request.args.get('period', 'day')  # day | week | month | year
+    period = request.args.get('period', 'day')
+    store_id = request.args.get('store_id')   # <-- read it
 
     period_formats = {
         'day':   '%Y-%m-%d',
-        'week':  '%Y-%W',      # ISO-ish year-week
+        'week':  '%Y-%W',
         'month': '%Y-%m',
         'year':  '%Y'
     }
@@ -2140,22 +2142,35 @@ def get_queue_stats():
         return jsonify({'error': 'period must be one of: day, week, month, year'}), 400
 
     fmt = period_formats[period]
-
     conn = get_db_connection()
 
-    rows = conn.execute(
-        f"""
-        SELECT strftime('{fmt}', created_at) AS period_label,
-               COUNT(*) AS total_queues
-        FROM queue
-        GROUP BY period_label
-        ORDER BY period_label DESC
-        LIMIT 30
-        """
-    ).fetchall()
+    if store_id and store_id != 'ALL':
+        rows = conn.execute(
+            f"""
+            SELECT strftime('{fmt}', q.created_at) AS period_label,
+                   COUNT(*) AS total_queues
+            FROM queue q
+            JOIN service s ON q.service_id = s.service_id
+            WHERE s.store_id = ?
+            GROUP BY period_label
+            ORDER BY period_label DESC
+            LIMIT 30
+            """,
+            (store_id,)
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            f"""
+            SELECT strftime('{fmt}', created_at) AS period_label,
+                   COUNT(*) AS total_queues
+            FROM queue
+            GROUP BY period_label
+            ORDER BY period_label DESC
+            LIMIT 30
+            """
+        ).fetchall()
 
     return jsonify([dict(row) for row in rows]), 200
-
 
 @app.route('/api/stats/stores', methods=['GET'])
 def get_store_stats():

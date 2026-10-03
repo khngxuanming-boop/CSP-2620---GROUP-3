@@ -1091,10 +1091,14 @@
         /* =====================================================
            STATISTICS 
         ===================================================== */
+        let queueStatsRequestId = 0;
+
         async function loadQueueStats() {
             const period = document.getElementById('queuePeriodSelect').value;
             const chartType = document.getElementById('queueChartType').value;
             const selectedStoreId = document.getElementById('statsStoreFilterSelect')?.value || 'ALL';
+
+            const thisRequestId = ++queueStatsRequestId;   // mark this call uniquely
 
             try {
                 let url = `/api/stats/queues?period=${period}`;
@@ -1105,37 +1109,25 @@
                 const response = await fetch(url);
                 const data = await response.json();
 
+                // If a newer request has started since this one began, drop this result
+                if (thisRequestId !== queueStatsRequestId) return;
+
                 if (!response.ok || !data || data.length === 0) {
                     renderEmptyChart('queueChart');
                     return;
                 }
 
                 const rows = [...data].reverse();
-
                 const labels = rows.map(r => r.period_label);
                 const totals = rows.map(r => r.total_queues);
 
                 if (chartType === 'bar') {
-                    renderBarChart(
-                        'queueChart',
-                        'queueChartRef',
-                        labels,
-                        totals,
-                        'Total Queues',
-                        '#3a7bd5'
-                    );
+                    renderBarChart('queueChart', 'queueChartRef', labels, totals, 'Total Queues', '#3a7bd5');
                 } else {
-                    renderTrendChart(
-                        'queueChart',
-                        'queueChartRef',
-                        labels,
-                        totals,
-                        'Total Queues',
-                        '#3b82f6'
-                    );
+                    renderTrendChart('queueChart', 'queueChartRef', labels, totals, 'Total Queues', '#3b82f6');
                 }
-
             } catch (error) {
+                if (thisRequestId !== queueStatsRequestId) return;
                 console.error('Queue statistics error:', error);
                 renderEmptyChart('queueChart');
             }
@@ -1265,13 +1257,18 @@
         }
 
 
+        let storeStatsRequestId = 0;
+
         async function loadStoreStats() {
             const period = document.getElementById('storePeriodSelect').value;
             const chartType = document.getElementById('storeChartType').value;
+            const thisRequestId = ++storeStatsRequestId;
 
             try {
                 const response = await fetch(`/api/stats/stores?period=${period}`);
                 const data = await response.json();
+
+                if (thisRequestId !== storeStatsRequestId) return;
 
                 if (!response.ok || data.length === 0) {
                     renderEmptyChart('storeChart');
@@ -1279,31 +1276,16 @@
                 }
 
                 const rows = [...data].reverse();
-
                 const labels = rows.map(r => r.period_label);
                 const totals = rows.map(r => r.total_registered);
 
                 if (chartType === 'bar') {
-                    renderBarChart(
-                        'storeChart',
-                        'storeChartRef',
-                        labels,
-                        totals,
-                        'Stores Registered',
-                        '#3a7bd5'
-                    );
+                    renderBarChart('storeChart', 'storeChartRef', labels, totals, 'Stores Registered', '#3a7bd5');
                 } else {
-                    renderTrendChart(
-                        'storeChart',
-                        'storeChartRef',
-                        labels,
-                        totals,
-                        'Stores Registered',
-                        '#3b82f6'
-                    );
+                    renderTrendChart('storeChart', 'storeChartRef', labels, totals, 'Stores Registered', '#3b82f6');
                 }
-
             } catch (error) {
+                if (thisRequestId !== storeStatsRequestId) return;
                 console.error('Store statistics error:', error);
                 renderEmptyChart('storeChart');
             }
