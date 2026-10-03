@@ -1035,7 +1035,7 @@
             <td>
              <span class="queue-badge">${queue.queue_number || "-"}</span>
             </td>
-            <td class="fw-medium">${queue.service_id || "-"}</td>
+            <td class="fw-medium">${queue.service_name || "-"}</td>
             <td>
               <span class="badge ${queue.queue_status === "SERVING" ? "bg-primary" : "bg-warning text-dark"}">
                 ${queue.queue_status}
