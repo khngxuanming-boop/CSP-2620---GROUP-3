@@ -23,6 +23,19 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
 mail = Mail(app)
 
+def auto_rebuild_db():
+    if not os.path.exists(DB_NAME):
+        print("Database not found. Creating a new one...")
+        try:
+            with sqlite3.connect(DB_NAME) as conn:
+                with open('schema.sql', 'r', encoding='utf-8') as f:
+                    conn.executescript(f.read())
+            import test_db
+            print("Database created and initialized successfully.")
+        except Exception as e:
+            print(f"Error creating database: {e}")
+auto_rebuild_db()
+
 def send_verification_email(email, code):
     """Send a 6-digit verification code to the given email.
     Returns True if it sent successfully, False otherwise (and logs the error)."""
