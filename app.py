@@ -777,41 +777,50 @@ def logout():
 #======================================================================
 # -- Member 2(Eugene): Appointment & Queue Api
 #======================================================================
+# 1. Socket.IO: Room Management
 @socketio.on('join_store_room')
 def on_join_store_room(data):
+    # Assign users to specific "rooms" based on the store they are queuing at
+    # This allows broadcasting updates to users in different stores
     store_id = data.get('store_id')
     if store_id:
         room = f"store_{store_id}"
         join_room(room)
         print(f"User joined {room}")
 
-# POST /api/appointments
+# 2. POST /api/appointments (Create Appointment)
 @app.route('/api/appointments', methods=['POST'])
 def create_appointment():
     data = request.get_json(silent=True) or {}
 
+    # Validation: Ensure all required fields are provided
     required = ['user_id', 'service_id', 'appt_datetime']
     if not all(data.get(key) for key in required):
         return jsonify({'error': 'Missing required fields'}), 400
 
     conn = get_db_connection()    
     try:
+        # Check if the user exists in the database
         user = conn.execute('SELECT 1 FROM user WHERE user_id = ?', (data['user_id'],)).fetchone()
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
+        # Check if the service exists in the database
         service = conn.execute('SELECT 1 FROM service WHERE service_id = ?', (data['service_id'],)).fetchone()
         if not service:
             return jsonify({'error': 'Service not found'}), 404
-        
+
+        # Use context manager (with conn) to auto commit transaction
         with conn:
             cursor = conn.cursor()
+            # Parameterized query to prevent SQL injection
             cursor.execute(
                 "INSERT INTO appointment (user_id, service_id, appt_datetime, appt_status) VALUES (?, ?, ?, 'BOOKED')",
                 (data['user_id'], data['service_id'], data['appt_datetime'])
             )
-            appt_id = cursor.lastrowid
+            appt_id = cursor.lastrowid # Retrieve the newly generated Appointment ID
 
+        # Trigger internal function to create notification for user
         create_notification(
             data['user_id'],
             "Your appoinment has been booked successfully."
@@ -821,7 +830,7 @@ def create_appointment():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# POST /api/queues/walk-in
+# 3. POST /api/queues/walk-in (Create Walk-in Queue)
 @app.route('/api/queues/walk-in', methods=['POST'])
 def walk_in_queue():
     data = request.get_json(silent=True) or {}
@@ -834,15 +843,19 @@ def walk_in_queue():
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
+        # Fetch the store_id associated with the requested service
         service = conn.execute('SELECT store_id FROM service WHERE service_id = ?', (data['service_id'],)).fetchone()
         if not service:
             return jsonify({'error': 'Service not found'}), 404
         store_id = service['store_id']
 
+        # Use BEGIN IMMEDIATE to lock the database for writing, preventing race conditions when generating queue numbers
+        # (Ensures that two users can't get the same queue number if they join at the same time)
         conn.execute("BEGIN IMMEDIATE")
         with conn:
             cursor = conn.cursor()
 
+            # Findt the last walk-in queue number for this store and increment it to generate the next queue number
             cursor.execute("""
                 SELECT q.queue_number
                 FROM queue q
@@ -851,8 +864,9 @@ def walk_in_queue():
                 ORDER BY q.queue_id DESC LIMIT 1
             """, (store_id,))
             last_record = cursor.fetchone()
+            # Auto-increment logic: # Auto-increment logic: Parse the number part (e.g., 'W-005' -> 5 + 1 -> 6)
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
-            queue_number = f"W-{next_num:03d}"
+            queue_number = f"W-{next_num:03d}" # Format as 'W-001', 'W-002', etc.
 
             cursor.execute(
                 "INSERT INTO queue (user_id, service_id, counter_id, queue_number, queue_status) VALUES (?, ?, NULL, ?, 'WAITING')",
@@ -865,17 +879,20 @@ def walk_in_queue():
                 f"You have successfully joined the queue. Your queue number is {queue_number}."
             )
 
+        # Broadcast the update ONLY to user currently in this store's room
+        # So that other stores' users don't get spammed with irrelevant updates
         socketio.emit('queue_status_updated', {'queue_id': queue_id}, to=f"store_{store_id}")
 
         return jsonify({'message': 'Successfully joined the walk-in queue!', 'queue_id': queue_id, 'queue_number': queue_number}),201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# PUT /api/appointments/<appt_id>/check-in
+# 4. PUT /api/appointments/<appt_id>/check-in (Appointment Check-in (Convert to Queue))
 @app.route('/api/appointments/<int:appt_id>/check-in', methods=['PUT'])
 def check_in_appointment(appt_id):
     conn = get_db_connection()
     try:
+        # Use database lock to safely generate the next queue number
         conn.execute("BEGIN IMMEDIATE")
         with conn:
             cursor = conn.cursor()
@@ -885,6 +902,7 @@ def check_in_appointment(appt_id):
 
             if not appt:
                 return jsonify({'error': 'Appointment not found'}), 404
+            # State validation: ONLY 'BOOKED' appointments can be checked in
             if appt['appt_status'] != 'BOOKED':
                 return jsonify({'error': 'Appointment cannot be checked in'}), 400
 
@@ -895,6 +913,7 @@ def check_in_appointment(appt_id):
             
             store_id = service['store_id']
 
+            # Find the latest appointment queue number for this store and increment it to generate the next queue number
             cursor.execute("""
                 SELECT q.queue_number
                 FROM queue q
@@ -906,6 +925,7 @@ def check_in_appointment(appt_id):
             next_num = int(last_record['queue_number'].split('-')[1]) + 1 if last_record else 1
             queue_number = f"A-{next_num:03d}"
 
+            # Transaction: Update appointment status AND insert into queue simultaneously
             cursor.execute("UPDATE appointment SET appt_status = 'CHECKED_IN' WHERE appt_id = ?", (appt_id,))
             cursor.execute(
                 "INSERT INTO queue (user_id, service_id, counter_id, queue_number, queue_status) VALUES (?, ?, NULL, ?, 'WAITING')",
@@ -913,13 +933,14 @@ def check_in_appointment(appt_id):
             )
             queue_id = cursor.lastrowid
 
+        # Notify store frontend to refresh data
         socketio.emit('queue_status_updated', {'queue_id': queue_id}, to=f"store_{store_id}")
 
         return jsonify({'message': 'Appointment checked in successfully!', 'queue_id': queue_id, 'queue_number': queue_number}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# GET /api/queues/my-status
+# 5. GET /api/queues/my-status (Queue Status Calculation)
 @app.route('/api/queues/my-status', methods=['GET'])
 def get_my_queue_status():
     queue_id = request.args.get('queue_id', type=int)
@@ -929,6 +950,7 @@ def get_my_queue_status():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
+        # Retrieve comprehensive queue data by joining multiple tables
         cursor.execute("""
             SELECT q.queue_status, q.queue_number, q.service_id, q.counter_id, c.counter_name, s.store_id, s.service_name, st.store_name, st.estimated_wait_time
             FROM queue q
@@ -948,6 +970,8 @@ def get_my_queue_status():
         # If no counter has been assigned yet
         counter_name = my_queue['counter_name'] or '-'
 
+        # If user is no longer WAITING (e.g. SERVING or COMPLETED)
+        # return early with 0 wait time to save database queries
         if status != 'WAITING':
             return jsonify({
                 'queue_number': queue_number,
@@ -960,13 +984,16 @@ def get_my_queue_status():
                 'service_name': my_queue['service_name']
             }), 200
 
+        # Calculate logical queue position: Count users with the same service
+        # still WAITING status and queue_id smaller than the current user's queue_id (queue_id < current queue_id)
         cursor.execute(
             "SELECT COUNT(*) AS people_ahead FROM queue WHERE service_id = ? AND queue_status = 'WAITING' AND queue_id < ?",
             (my_queue['service_id'], queue_id)
         )
         people_ahead = cursor.fetchone()['people_ahead']
+        # Calculate dynamic wait time
         db_time = my_queue['estimated_wait_time']
-        per_person_time = db_time if db_time else 5
+        per_person_time = db_time if db_time else 5 # # Fallback to 5 mins if seller or staff not set
         wait_time = (people_ahead + 1) * per_person_time
 
         return jsonify({
@@ -982,7 +1009,7 @@ def get_my_queue_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# GET /api/notifications
+# 6. GET /api/notifications (User Notifications)
 @app.route('/api/notifications', methods=['GET'])
 def get_notification():
     user_id = request.args.get('user_id', type=int)
@@ -1001,6 +1028,7 @@ def get_notification():
             (user_id,)
         ).fetchall()
 
+        # List comprehension to serialize SQLite rows into a JSON array
         return jsonify([
             {
                 'notification_id': notification['notification_id'],
@@ -1012,7 +1040,7 @@ def get_notification():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Page Routes
+# 7. Page Routes
 @app.route('/booking')
 def booking_page():
     return render_template('booking.html')
@@ -1024,13 +1052,6 @@ def check_in_page():
 @app.route('/dashboard')
 def dashboard_page():
     return render_template('dashboard.html')
-
-# Test Session Route for Development Purposes
-@app.route('/set-test-session/<int:user_id>')
-def set_test_session(user_id):
-    session['user_id'] = user_id
-    session['username'] = f'testuser_{user_id}'
-    return f"Test session set! You are now logged in as User ID: {user_id}"
 
 
 #======================================================================
