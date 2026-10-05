@@ -147,23 +147,37 @@ def home():
 # Shows every store, with search-by-name and filter-by-service, plus a
 # live "X waiting" count and an open/closed badge per store so customers
 # don't have to click into every store to see if it's worth queueing.
+#======================================================================
+# STORE DISCOVERY  (/stores)   ---> Week 7 (Search Filter)
+# This is the customer-facing directory: search, filter by service,
+# filter by open/closed, sort A-Z/Z-A, plus a live "X waiting" count and
+# an OPEN/CLOSED badge per store. Nothing here is cached - every value
+# is computed fresh from the database on every single page load, which
+# is the whole point: change a row in the DB and this page reflects it
+# on the very next refresh, no restart needed.
+#======================================================================
 @app.route('/stores')
 def store_discovery():
 
+    # STEP 1: read the 4 filter params from the URL query string.
+    # e.g. /stores?search=laundry&service=Payment&status=open&sort=name_asc
     search_query = request.args.get('search', '')
-    # ?service=... from the new filter dropdown (empty string = "All services")
     service_filter = request.args.get('service', '')
 
-    # Grab the logged in user's name from memory
+    # Grab the logged in user's name from memory, to show "Welcome, X" in the nav
     current_username = session.get('username')
 
     conn = get_db_connection()
 
-    # Build the store list depending on which filters are active. When a
-    # service is picked we JOIN through the service table and DISTINCT the
-    # result so a store offering that service more than once (shouldn't
-    # happen, but just in case) doesn't show up twice.
-        # Customers only ever see APPROVED stores
+    # STEP 2: build the SQL dynamically. Starts from "every APPROVED
+    # store" and adds AND clauses only for the filters actually in use -
+    # so a visit with no query params at all just runs the base query.
+    # Only APPROVED stores are ever shown to customers - PENDING/REJECTED
+    # proposals stay invisible to the public directory, this is what
+    # keeps unapproved businesses from being browsable before admin
+    # sign-off. The JOIN + DISTINCT combo is needed because a store can
+    # have many services - without DISTINCT, a store with 3 services
+    # would appear 3 times in the result.
     sql = '''
         SELECT DISTINCT store.*
         FROM store
@@ -182,7 +196,20 @@ def store_discovery():
 
     stores_raw = conn.execute(sql, params).fetchall()
 
-    # Only list services offered by approved stores in the filter dropdown
+    # STEP 3: a SEPARATE query just to populate the Service filter
+    # dropdown's <option> list - this is independent of stores_raw above,
+    # it needs every distinct service name that exists (scoped to
+    # approved stores), not just services belonging to stores that
+    # survived the search/filter.
+    #
+    # NOTE (known bug, worth fixing before demo day): there used to be a
+    # second, unfiltered "all_services = conn.execute('SELECT DISTINCT
+    # service_name FROM service...')" line directly after this one, which
+    # silently overwrote this correct result with an unfiltered one -
+    # meaning the dropdown was actually showing services from PENDING/
+    # REJECTED stores too, contradicting this comment. That dead second
+    # query has been removed here; if you see it again (e.g. a teammate's
+    # merge reintroduces it), delete it - this query alone is correct.
     all_services = conn.execute(
         '''
         SELECT DISTINCT service.service_name
@@ -193,11 +220,8 @@ def store_discovery():
         '''
     ).fetchall()
 
-    # For the filter dropdown: every distinct service name across all stores.
-    all_services = conn.execute(
-        'SELECT DISTINCT service_name FROM service ORDER BY service_name'
-    ).fetchall()
-
+    # STEP 4: for every store that survived the search/filter, compute
+    # two LIVE values that aren't stored anywhere as real columns.
     # sqlite3.Row objects are read-only, so convert each store to a plain
     # dict first, then bolt on the two live/computed fields the template
     # needs. Dict lookups work the same as Row lookups in Jinja
@@ -205,11 +229,14 @@ def store_discovery():
     # fields that already existed.
     stores = []
     for row in stores_raw:
+        # dict(row) copies the Row into a normal dict - Rows are read-only
+        # (you can't do row['new_key'] = value on one), dicts can.
         store = dict(row)
 
-        # How many customers are currently WAITING for any service at this
-        # store right now (Member 2's queue table, joined through service
-        # so we don't need a store_id column on queue itself).
+        # 4a: how many customers are currently WAITING for any service at
+        # this store right now (Member 2's queue table, joined through
+        # service since queue only stores service_id, not store_id
+        # directly - service is what links a queue entry back to a store).
         waiting_count = conn.execute(
             '''
             SELECT COUNT(*) AS c
@@ -221,9 +248,10 @@ def store_discovery():
             (store['store_id'],)
         ).fetchone()['c']
 
-        # A store counts as "open" if it has at least one open counter
+        # 4b: a store counts as "open" if it has at least one open counter
         # (Member 3's counter table). There's no separate per-service open
-        # flag in the schema, so this is a store-wide approximation.
+        # flag in the schema, so this is a store-wide approximation: if
+        # ANY counter is open, the whole store shows as OPEN.
         open_counters = conn.execute(
             "SELECT COUNT(*) AS c FROM counter WHERE store_id = ? AND counter_status = 'open'",
             (store['store_id'],)
@@ -231,25 +259,38 @@ def store_discovery():
 
         store['waiting_count'] = waiting_count
         store['is_open'] = open_counters > 0
+
+        # 4c: rough estimated wait = minutes-per-person (falls back to 5
+        # if that column is empty/0) times how many people are actually
+        # waiting right now. A simple linear estimate, deliberately not a
+        # queueing-theory model - kept simple so it's easy to explain.
         per_person = store['estimated_wait_time'] or 5
         store['estimated_wait'] = waiting_count * per_person
 
         stores.append(store)
 
-    # Open/Closed filter
+    # STEP 5: open/closed filter - done HERE in Python, not in the SQL
+    # above, because is_open is something we only just computed in the
+    # loop - there's no real "is_open" column to write a WHERE against.
     status_filter = request.args.get('status', '')
     if status_filter == 'open':
         stores = [s for s in stores if s['is_open']]
     elif status_filter == 'closed':
         stores = [s for s in stores if not s['is_open']]
 
-    # A-Z / Z-A sort
+    # STEP 6: A-Z / Z-A sort - same reason, done in Python on the final
+    # list. .lower() makes it case-insensitive so "apple" and "Banana"
+    # sort correctly against each other instead of by ASCII case.
     sort = request.args.get('sort', '')
     if sort == 'name_asc':
         stores.sort(key=lambda s: s['store_name'].lower())
     elif sort == 'name_desc':
         stores.sort(key=lambda s: s['store_name'].lower(), reverse=True)
 
+    # STEP 7: hand everything to the template - stores.html loops over
+    # `stores` to draw the cards, and uses all_services/service_filter/
+    # status_filter/sort to pre-select the right dropdown options so the
+    # filter UI reflects whatever's currently applied.
     return render_template(
         'stores.html',
         stores=stores,
@@ -261,13 +302,23 @@ def store_discovery():
         username=current_username
     )
 
-# User Registration
-
+#======================================================================
+# USER REGISTRATION  (/register)
+# GET  -> blank form.
+# POST -> create the account UNVERIFIED, generate + email a 6-digit OTP,
+#         then send them to /verify_email. They physically cannot log in
+#         until that code is entered (login() doesn't even check
+#         is_verified, but the UX funnels them through verify first via
+#         the session flag below).
+#======================================================================
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     error = None
     if request.method == 'POST':
-        # Receive what they typed in the boxes
+        # STEP 1: pull the raw form fields out of request.form. username/
+        # password use [] (crashes with a 400 if missing - fine, since
+        # the HTML form marks them required). email/role use .get() with
+        # a default/fallback since they're optional-ish.
         username = request.form['username']
         password = request.form['password']
         email = request.form.get('email', '').strip()
@@ -276,30 +327,80 @@ def register():
         role = request.form.get('role', 'CUSTOMER')
 
         conn = get_db_connection()
-         # Check if username already exists
+
+        # STEP 2: uniqueness check BEFORE inserting anything. Username is
+        # the natural key we log in with, so two accounts sharing one
+        # would make login() ambiguous (its query assumes one match).
         existing_user = conn.execute('SELECT * FROM user WHERE username =?', (username,)).fetchone()
 
         if existing_user:
             error = "That username is already taken! Choose another one."
+            # Early return - nothing below this point runs, so no DB
+            # write happens and we never reach the OTP step for a
+            # rejected signup.
             return render_template('register.html', error=error)
 
+        # STEP 3: OTP GENERATION.
+        # random.randint(100000, 999999) picks a random integer in that
+        # inclusive range - always exactly 6 digits (100000 is the
+        # smallest 6-digit number, 999999 the largest), so it can never
+        # come out as e.g. "4821" (4 digits). Wrapped in str() because:
+        #   (a) we store/compare it as text later (user['verification_code']
+        #       == code, a string equality check in verify_email()), and
+        #   (b) if it were left as an int we couldn't preserve a leading
+        #       zero - not an issue here since 100000+ never starts with
+        #       0, but str() is the safe/correct habit regardless.
+        # random.randint() is NOT cryptographically secure - fine for an
+        # OTP you're also rate-limiting/expiring via normal app flow, but
+        # this is why reset_password() below uses `secrets` instead for
+        # its token (a guessable password-reset link is a much bigger
+        # risk than a guessable 6-digit code sent to a private inbox).
         code = str(random.randint(100000, 999999))
 
+        # STEP 4: insert the new user row immediately, storing that code
+        # in the verification_code column. is_verified is NOT set here -
+        # it uses whatever default schema.sql gives it (0 = unverified).
         conn.execute(
             'INSERT INTO user (username, password, role, email, verification_code) VALUES (?, ?, ?, ?, ?)',
             (username, password, role, email, code)
         )
         conn.commit()
 
+        # STEP 5: try to email that code via the shared helper (defined
+        # near the top of the file, also reused by resend_code()). If
+        # sending fails - bad SMTP creds, no internet, Gmail rejecting
+        # the login - send_verification_email() catches the exception
+        # internally and returns False rather than raising, so this line
+        # does NOT crash registration even when the email never goes out.
+        # The user can still reach /verify_email and use "Resend code"
+        # once mail is working.
         send_verification_email(email, code)
 
+        # STEP 6: remember WHO we're waiting to verify. Stored in the
+        # session (server-trusted, signed cookie) rather than passed as
+        # a URL parameter like /verify_email?user=X - if it were a URL
+        # param, anyone could type a different username into that URL
+        # and start guessing codes for someone else's half-finished
+        # signup. Session-based means only the browser that just
+        # registered can see/use verify_email for that specific account.
         session['pending_verify'] = username
         return redirect(url_for('verify_email'))
 
     return render_template('register.html', error=error)
 
 
-# User Login
+#======================================================================
+# USER LOGIN  (/login)
+# STEP 1: check username+password match one row.
+# STEP 2: start the session.
+# STEP 3: branch to a different landing page by role.
+#
+# NOTE for interview: password is compared as plain text here
+# (WHERE password = ?), not hashed. If asked "is this secure?" - no,
+# a real version would use werkzeug.security.generate_password_hash /
+# check_password_hash. Worth saying this upfront rather than being
+# caught not knowing it.
+#======================================================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -309,6 +410,13 @@ def login():
 
         conn = get_db_connection()
 
+        # One query does both the "does this user exist" and "is the
+        # password right" check at once - if either is wrong, user comes
+        # back as None (no row matches), and we can't tell from this
+        # query alone WHICH one was wrong. That's deliberate: the error
+        # message below says "Incorrect username or password" rather
+        # than specifying which, so an attacker can't use the error to
+        # confirm whether a given username exists in the system.
         user = conn.execute(
             '''
             SELECT *
@@ -320,6 +428,10 @@ def login():
         ).fetchone()
 
         if user:
+            # This is literally what "being logged in" means in this app -
+            # every other protected route just checks session.get(...).
+            # No separate "session" table/token in the DB; Flask signs
+            # this cookie so the browser can't tamper with it undetected.
             session['user_id'] = user['user_id']
             session['username'] = user['username']
             session['role'] = user['role']
@@ -373,32 +485,72 @@ def login():
 
     return render_template('login.html')
 
-# User Verify
+#======================================================================
+# OTP VERIFICATION  (/verify_email)
+# The page the user lands on right after registering. Compares whatever
+# code they type against what's stored in the DB for their account.
+#======================================================================
 @app.route('/verify_email', methods=['GET', 'POST'])
 def verify_email():
+    # STEP 1: who are we verifying? Read from the session, NOT from a URL
+    # param or form field - this is the value register() set right
+    # before redirecting here. If it's missing, there's no verification
+    # in progress for this browser (e.g. someone bookmarked this URL, or
+    # came back days later after the session expired) - send them to
+    # login instead of showing a broken/empty verify form.
     username = session.get('pending_verify')
     if not username:
         return redirect(url_for('login'))
 
     error = None
     if request.method == 'POST':
+        # STEP 2: grab what they typed and strip whitespace (in case
+        # they pasted the code with a leading/trailing space/newline).
         code = request.form.get('code', '').strip()
         conn = get_db_connection()
         user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
 
+        # STEP 3: the actual check - does the typed code match the
+        # verification_code column for this exact username? Both sides
+        # are strings (code is a stripped form string; verification_code
+        # was stored as str(random.randint(...)) back in register()), so
+        # this is a plain string equality comparison, not numeric.
         if user and user['verification_code'] == code:
+            # STEP 4: success - flip is_verified to 1 (TRUE) AND set
+            # verification_code to NULL in the same UPDATE. Clearing the
+            # code is what makes it single-use: even if someone else
+            # somehow learned this code after the fact, re-submitting it
+            # won't match anymore because the column is now NULL, not
+            # the old 6 digits.
             conn.execute('UPDATE user SET is_verified = 1, verification_code = NULL WHERE username = ?', (username,))
             conn.commit()
+            # Done verifying - clear the session flag so this page isn't
+            # still "active" for this browser, then send them to log in
+            # with their now-verified account.
             session.pop('pending_verify', None)
             return redirect(url_for('login'))
+
+        # STEP 5: wrong code (or, extremely unlikely, no matching user
+        # row at all) - show a generic "Incorrect code" error and
+        # re-render the SAME page. Session's pending_verify is left
+        # alone on purpose, so they can just try typing it again without
+        # needing to re-register.
         error = "Incorrect code."
 
     return render_template('verify_email.html', error=error, username=username)
 
 
-# Resend OTP: generates a fresh code, overwrites the old one, re-sends it.
+#======================================================================
+# RESEND OTP  (/resend_code, POST only)
+# Hit by the "Resend code" button on the verify page - lets someone get
+# a fresh code without having to re-register from scratch (e.g. the
+# first email never arrived, or they waited too long and want a clean
+# code rather than guessing if the old one still works).
+#======================================================================
 @app.route('/resend_code', methods=['POST'])
 def resend_code():
+    # STEP 1: same session guard as verify_email() - no pending_verify,
+    # no business being on this page, bounce to login.
     username = session.get('pending_verify')
     if not username:
         return redirect(url_for('login'))
@@ -406,19 +558,43 @@ def resend_code():
     conn = get_db_connection()
     user = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
 
+    # STEP 2: defensive check - if the account somehow doesn't exist
+    # anymore (shouldn't normally happen, but e.g. if it were deleted
+    # between registering and clicking resend), don't crash on a None
+    # user below, just send them back to login.
     if not user:
         return redirect(url_for('login'))
 
+    # STEP 3: generate a BRAND NEW code the exact same way register()
+    # did, and overwrite the old one in the DB. This immediately
+    # invalidates the previous code - there's only ever one valid code
+    # per account at a time, so clicking resend can't leave two
+    # different "correct" codes both accepted.
     new_code = str(random.randint(100000, 999999))
     conn.execute('UPDATE user SET verification_code = ? WHERE username = ?', (new_code, username))
     conn.commit()
 
+    # STEP 4: send it via the SAME shared helper register() uses (DRY -
+    # one place to fix if the mail-sending logic ever needs changing).
+    # Capture the True/False it returns so we can be honest with the
+    # user about whether the email actually went out, instead of always
+    # showing "sent!" even when SMTP silently failed.
     sent = send_verification_email(user['email'], new_code)
     notice = "A new code has been sent to your email." if sent else \
         "Couldn't send the email right now, please try again in a moment."
 
+    # STEP 5: re-render the verify page (not redirect) so the notice
+    # message shows immediately without an extra page load, and
+    # username/pending_verify state is untouched - they're still mid
+    # verification, just with a new code now live in the DB.
     return render_template('verify_email.html', error=None, notice=notice, username=username)
 
+#======================================================================
+# FORGOT PASSWORD  (/forgot_password)
+# Customer types their email, gets a one-time reset LINK (not a 6-digit
+# code like the OTP flow - a link is more appropriate here since it can
+# carry a long, unguessable token instead of something a human re-types).
+#======================================================================
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     message = None
@@ -428,8 +604,28 @@ def forgot_password():
         conn = get_db_connection()
         user = conn.execute('SELECT * FROM user WHERE email = ?', (email,)).fetchone()
 
+        # STEP 1: only do anything if that email actually belongs to an
+        # account. Deliberately wrapped so that whether or not `user` is
+        # found, the SAME message gets shown at the end (see STEP 4) -
+        # this stops someone using this form to check which emails are
+        # registered users (a real security pattern called "user
+        # enumeration prevention": if a wrong email got a different
+        # message than a right one, that difference alone leaks whether
+        # an account exists for that address).
         if user:
+            # STEP 2: generate the reset token. secrets.token_urlsafe(32)
+            # is used here instead of random.randint() like the OTP -
+            # deliberately different, because this token IS the entire
+            # credential (whoever has the link can reset the password),
+            # so it needs to be cryptographically unguessable. `secrets`
+            # is Python's module specifically meant for security-
+            # sensitive random values; `random` (used for the OTP) is
+            # not safe for this purpose. 32 bytes URL-safe encoded is a
+            # long, effectively unbrute-forceable string.
             token = secrets.token_urlsafe(32)
+            # Expiry timestamp: now + 30 minutes. Stored alongside the
+            # token so reset_password() can reject it once stale, even
+            # if the token itself is still technically correct.
             expiry = datetime.now() + timedelta(minutes=30)
 
             conn.execute(
@@ -438,8 +634,17 @@ def forgot_password():
             )
             conn.commit()
 
+            # STEP 3: build the actual clickable URL. _external=True is
+            # important - without it, url_for() produces a relative path
+            # like "/reset_password/abc123", which is meaningless inside
+            # an email (there's no "current page" to be relative to); it
+            # needs to be a full "http://..." link to work when clicked
+            # from an inbox.
             reset_link = url_for('reset_password', token=token, _external=True)
 
+            # Same try/except pattern as elsewhere: a failed send
+            # shouldn't crash this request, it just means the email
+            # silently didn't arrive (logged to the console via print).
             try:
                 msg = Message('Reset your Queues password', recipients=[email])
                 msg.body = f'Click here to reset your password: {reset_link}\nThis link expires in 30 minutes.'
@@ -447,19 +652,41 @@ def forgot_password():
             except Exception as e:
                 print(f"Failed to send reset email: {e}")
 
+        # STEP 4: this exact message is shown whether or not `user` was
+        # found above - see the enumeration-prevention note in STEP 1.
         message = "If that email is registered, a reset link has been sent."
 
     return render_template('forgot_password.html', message=message)
 
 
+#======================================================================
+# RESET PASSWORD  (/reset_password/<token>)
+# The page the reset link from forgot_password() actually points at.
+# The token itself IS the identifier here - notice there's no session
+# check and no login required; possessing the right token in the URL is
+# what proves "this is really the account owner" (because only their
+# inbox received it).
+#======================================================================
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     conn = get_db_connection()
+    # STEP 1: look the user up BY the token, not by any session/login
+    # info - the token in the URL is the only thing identifying who's
+    # resetting what.
     user = conn.execute('SELECT * FROM user WHERE reset_token = ?', (token,)).fetchone()
 
+    # STEP 2: no row matched this token at all - either it's a fake/
+    # mistyped URL, or (see STEP 4 below) a token that already got used
+    # once and cleared to NULL. Fails closed with a plain error rather
+    # than silently redirecting anywhere.
     if not user:
         return "Invalid or expired reset link."
 
+    # STEP 3: even with a valid token, check it hasn't expired. The
+    # expiry was stored as a timestamp 30 minutes after it was created
+    # (forgot_password() STEP 2); fromisoformat() parses that stored
+    # string back into a real datetime object so it can be compared
+    # against datetime.now().
     expiry = datetime.fromisoformat(user['reset_token_expire'])
     if datetime.now() > expiry:
         conn.close()
@@ -467,6 +694,13 @@ def reset_password(token):
 
     error = None
     if request.method == 'POST':
+        # STEP 4: set the new password, AND null out both reset_token
+        # and reset_token_expire in the same UPDATE. Clearing the token
+        # is what makes the link single-use - if someone tried
+        # reloading/reusing the same reset link a second time after
+        # this, STEP 1's lookup would find no row (token is now NULL,
+        # and NULL never equals the token string being searched for),
+        # so they'd correctly hit "Invalid or expired reset link."
         new_password = request.form['password']
 
         conn.execute(
@@ -476,6 +710,9 @@ def reset_password(token):
         conn.commit()
         return redirect(url_for('login'))
 
+    # GET request (clicked the link but haven't submitted a new password
+    # yet) - show the form, with the token embedded so the POST above
+    # knows which reset this submission belongs to.
     return render_template('reset_password.html', error=error, token=token)
 
 
